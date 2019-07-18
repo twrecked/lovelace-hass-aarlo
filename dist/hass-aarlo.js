@@ -17,7 +17,7 @@ class AarloGlance extends LitElement {
             _stream: String,
             _video: String,
             _library: String,
-            _library_base: Number,
+            _libraryBase: Number,
 
             // What are we currently doing?
             _streamHidden: String,
@@ -42,7 +42,7 @@ class AarloGlance extends LitElement {
         this._stream = null;
         this._video = null;
         this._library = null;
-        this._library_base = null;
+        this._libraryBase = null;
 
         this._streamHidden      = 'hidden';
         this._videoHidden       = 'hidden';
@@ -195,7 +195,7 @@ class AarloGlance extends LitElement {
             <div id="aarlo-wrapper" class="base-16x9">
                 <video class="${this._streamHidden} video-16x9"
                     id="stream-${this._cameraId}"
-                    poster="${this._stream_poster}"
+                    poster="${this._streamPoster}"
                     autoplay playsinline controls
                     onended="${(e) => { this.stopStream(this._cameraId); }}"
                     on-tap="${(e) => { this.stopStream(this._cameraId); }}"
@@ -203,8 +203,8 @@ class AarloGlance extends LitElement {
                         Your browser does not support the video tag.
                 </video>
                 <video class="${this._videoHidden} video-16x9"
-                    src="${this._video}" type="${this._video_type}"
-                    poster="${this._video_poster}"
+                    src="${this._video}" type="${this._videoType}"
+                    poster="${this._videoPoster}"
                     autoplay playsinline controls
                     onended="${(e) => { this.stopVideo(this._cameraId); }}"
                     on-tap="${(e) => { this.stopVideo(this._cameraId); }}"
@@ -258,7 +258,7 @@ class AarloGlance extends LitElement {
                     <ha-icon @click="${(e) => { this.showOrStopStream(this._cameraId); }}" class="${this._playOn} ${this._playHidden}" icon="${this._playIcon}" title="${this._playText}"></ha-icon>
                     <ha-icon @click="${(e) => { this.updateSnapshot(this._cameraId); }}" class="${this._snapshotOn} ${this._snapshotHidden}" icon="${this._snapshotIcon}" title="${this._snapshotText}"></ha-icon>
                     <ha-icon @click="${(e) => { this.moreInfo(this._batteryId); }}" class="${this._batteryState} ${this._batteryHidden}" icon="mdi:${this._batteryIcon}" title="${this._batteryText}"></ha-icon>
-                    <ha-icon @click="${(e) => { this.moreInfo(this._signalId); }}" class="state-update ${this._signalHidden}" icon="${this._signalIcon}" title="${this._signal_text}"></ha-icon>
+                    <ha-icon @click="${(e) => { this.moreInfo(this._signalId); }}" class="state-update ${this._signalHidden}" icon="${this._signalIcon}" title="${this._signalText}"></ha-icon>
                 </div>
                 <div class="box-title ${this._topDate?'hidden':''} ${this._dateHidden}" title="${this._imageFullDate}">
                     ${this._imageDate}
@@ -277,13 +277,13 @@ class AarloGlance extends LitElement {
             </div>
             <div class="box box-bottom-small ${this._libraryHidden}">
                 <div >
-                    <ha-icon @click="${(e) => { this.setLibraryBase(this._library_base - 9); }}" class="${this._libraryPrevHidden} state-on" icon="mdi:chevron-left" title="previous"></ha-icon>
+                    <ha-icon @click="${(e) => { this.setLibraryBase(this._libraryBase - 9); }}" class="${this._libraryPrevHidden} state-on" icon="mdi:chevron-left" title="previous"></ha-icon>
                 </div>
                 <div >
                     <ha-icon @click="${(e) => { this.stopLibrary(); }}" class="state-on" icon="mdi:close" title="close library"></ha-icon>
                 </div>
                 <div >
-                    <ha-icon @click="${(e) => { this.setLibraryBase(this._library_base + 9); }}" class="${this._libraryNextHidden} state-on" icon="mdi:chevron-right" title="next"></ha-icon>
+                    <ha-icon @click="${(e) => { this.setLibraryBase(this._libraryBase + 9); }}" class="${this._libraryNextHidden} state-on" icon="mdi:chevron-right" title="next"></ha-icon>
                 </div>
             </div>
         `;
@@ -318,21 +318,21 @@ class AarloGlance extends LitElement {
         // what are we showing?
         var show = this._config.show || [];
 
-        this._playHidden     = show.includes('play') ? '' : 'hidden';
-        this._snapshotHidden = show.includes('snapshot') ? '' : 'hidden';
-        this._batteryHidden  = show.includes('battery') || show.includes('battery_level') ? '' : 'hidden';
-        this._signalHidden   = show.includes('signal_strength') ? '' : 'hidden';
-        this._motionHidden   = show.includes('motion') ? '' : 'hidden';
-        this._soundHidden    = show.includes('sound') ? '' : 'hidden';
-        this._capturedHidden = show.includes('captured') || show.includes('captured_today') ? '' : 'hidden';
-        this._dateHidden     = show.includes('image_date') ? '' : 'hidden';
+        this._playHidden     = show.includes('play') ? '':'hidden';
+        this._snapshotHidden = show.includes('snapshot') ? '':'hidden';
+        this._batteryHidden  = show.includes('battery') || show.includes('battery_level') ? '':'hidden';
+        this._signalHidden   = show.includes('signal_strength') ? '':'hidden';
+        this._motionHidden   = show.includes('motion') ? '':'hidden';
+        this._soundHidden    = show.includes('sound') ? '':'hidden';
+        this._capturedHidden = show.includes('captured') || show.includes('captured_today') ? '':'hidden';
+        this._dateHidden     = show.includes('image_date') ? '':'hidden';
 
-        this._doorHidden      = this._doorId === undefined ? 'hidden':''
-        this._doorLockHidden  = this._doorLockId === undefined ? 'hidden':''
-        this._doorBellHidden  = this._doorBellId === undefined ? 'hidden':''
-        this._door2Hidden     = this._door2Id === undefined ? 'hidden':''
-        this._door2LockHidden = this._door2LockId === undefined ? 'hidden':''
-        this._door2BellHidden = this._door2BellId === undefined ? 'hidden':''
+        this._doorHidden      = this._doorId ? '':'hidden'
+        this._doorLockHidden  = this._doorLockId ? '':'hidden'
+        this._doorBellHidden  = this._doorBellId ? '':'hidden'
+        this._door2Hidden     = this._door2Id ? '':'hidden'
+        this._door2LockHidden = this._door2LockId ? '':'hidden'
+        this._door2BellHidden = this._door2BellId ? '':'hidden'
 
         this._playOn   = 'not-used'
         this._playText = 'not-used'
@@ -347,14 +347,14 @@ class AarloGlance extends LitElement {
         this._batteryIcon  = 'not-used';
         this._batteryState = 'state-update';
 
-        this._signal_text = 'not-used';
-        this._signalIcon  = 'mdi:wifi-strength-4';
+        this._signalText = 'not-used';
+        this._signalIcon = 'mdi:wifi-strength-4';
 
         this._motionOn   = 'not-used';
         this._motionText = 'not-used';
 
-        this._soundOn    = 'not-used'
-        this._soundText  = 'not-used'
+        this._soundOn   = 'not-used'
+        this._soundText = 'not-used'
 
         this._capturedText = 'not-used';
         this._capturedOn   = ''
@@ -370,16 +370,16 @@ class AarloGlance extends LitElement {
         this._doorLockOn    = 'not-used'
         this._doorLockText  = 'not-used'
         this._doorLockIcon  = 'not-used'
-        this._door2LockOn    = 'not-used'
-        this._door2LockText  = 'not-used'
-        this._door2LockIcon  = 'not-used'
+        this._door2LockOn   = 'not-used'
+        this._door2LockText = 'not-used'
+        this._door2LockIcon = 'not-used'
 
         this._doorBellOn    = 'not-used'
         this._doorBellText  = 'not-used'
         this._doorBellIcon  = 'not-used'
-        this._door2BellOn    = 'not-used'
-        this._door2BellText  = 'not-used'
-        this._door2BellIcon  = 'not-used'
+        this._door2BellOn   = 'not-used'
+        this._door2BellText = 'not-used'
+        this._door2BellIcon = 'not-used'
     }
 
     updateState( oldValue ) {
@@ -428,9 +428,9 @@ class AarloGlance extends LitElement {
         }
 
         if( this._snapshotHidden == '' ) {
-            this._snapshotOn    = '';
-            this._snapshotText  = 'click to update image'
-            this._snapshotIcon  = 'mdi:camera'
+            this._snapshotOn   = '';
+            this._snapshotText = 'click to update image'
+            this._snapshotIcon = 'mdi:camera'
         }
 
         // SENSORS
@@ -440,19 +440,19 @@ class AarloGlance extends LitElement {
                 this._batteryIcon  = 'power-plug';
                 this._batteryState = 'state-update';
             } else {
-                var battery         = this.getState(this._hass,this._batteryId,0);
-                var batteryPrefix   = camera.attributes.charging ? 'battery-charging' : 'battery'
-                this._batteryText   = 'Battery Strength: ' + battery.state +'%';
-                this._batteryIcon   = batteryPrefix + ( battery.state < 10 ? '-outline' :
+                var battery        = this.getState(this._hass,this._batteryId,0);
+                var batteryPrefix  = camera.attributes.charging ? 'battery-charging' : 'battery'
+                this._batteryText  = 'Battery Strength: ' + battery.state +'%';
+                this._batteryIcon  = batteryPrefix + ( battery.state < 10 ? '-outline' :
                                                     ( battery.state > 90 ? '' : '-' + Math.round(battery.state/10) + '0' ) );
-                this._batteryState  = battery.state < 25 ? 'state-warn' : ( battery.state < 15 ? 'state-error' : 'state-update' );
+                this._batteryState = battery.state < 25 ? 'state-warn' : ( battery.state < 15 ? 'state-error' : 'state-update' );
             }
         }
 
         if( this._signalHidden == '' ) {
-            var signal        = this.getState(this._hass,this._signalId,0);
-            this._signal_text = 'Signal Strength: ' + signal.state;
-            this._signalIcon  = signal.state == 0 ? 'mdi:wifi-outline' : 'mdi:wifi-strength-' + signal.state;
+            var signal       = this.getState(this._hass,this._signalId,0);
+            this._signalText = 'Signal Strength: ' + signal.state;
+            this._signalIcon = signal.state == 0 ? 'mdi:wifi-outline' : 'mdi:wifi-strength-' + signal.state;
         }
 
         if( this._motionHidden == '' ) {
@@ -543,12 +543,12 @@ class AarloGlance extends LitElement {
 
             this.emptyLibrary();
             this._libraryHidden     = '';
-            this._libraryPrevHidden = this._library_base > 0 ? '' : 'hidden';
-            this._libraryNextHidden = this._library_base + 9 < this._library.length ? '' : 'hidden';
+            this._libraryPrevHidden = this._libraryBase > 0 ? '' : 'hidden';
+            this._libraryNextHidden = this._libraryBase + 9 < this._library.length ? '' : 'hidden';
             var i;
             var j;
-            var last = Math.min( this._library_base + 9,this._library.length )
-            for( i = 0, j = this._library_base; j < last; i++,j++ ) {
+            var last = Math.min( this._libraryBase + 9,this._library.length )
+            for( i = 0, j = this._libraryBase; j < last; i++,j++ ) {
                 var captured_text = this._library[j].created_at_pretty
                 if ( this._library[j].object && this._library[j].object != '' ) {
                     captured_text += ' (' + this._library[j].object.toLowerCase() + ')'
@@ -602,7 +602,7 @@ class AarloGlance extends LitElement {
                 case '_video':
                 case '_stream':
                 case '_library':
-                case '_library_base':
+                case '_libraryBase':
                     this.updateSource();
                     break;
             }
@@ -643,7 +643,7 @@ class AarloGlance extends LitElement {
         if ( this._hass.states[this._cameraId] == undefined ) {
             throw new Error( 'unknown camera' );
         }
-        if ( this._door && this._hass.states[this._door] == undefined ) {
+        if ( this._doorId && this._hass.states[this._doorId] == undefined ) {
             throw new Error( 'unknown door' )
         }
         if ( this._doorBellId && this._hass.states[this._doorBellId] == undefined ) {
@@ -652,7 +652,7 @@ class AarloGlance extends LitElement {
         if ( this._doorLockId && this._hass.states[this._doorLockId] == undefined ) {
             throw new Error( 'unknown door lock' )
         }
-        if ( this._door2 && this._hass.states[this._door2] == undefined ) {
+        if ( this._door2Id && this._hass.states[this._door2Id] == undefined ) {
             throw new Error( 'unknown door (#2)' )
         }
         if ( this._door2BellId && this._hass.states[this._door2BellId] == undefined ) {
@@ -692,17 +692,17 @@ class AarloGlance extends LitElement {
         this._lastId    = 'sensor.aarlo_last_' + camera;
 
         // on click
-        this._imageClick = config.image_click ? config.image_click : undefined
+        this._imageClick = config.image_click ? config.image_click : false
 
         // door definition
-        this._doorId     = config.door ? config.door: undefined
-        this._doorBellId = config.door_bell ? config.door_bell : undefined
-        this._doorLockId = config.door_lock ? config.door_lock : undefined
+        this._doorId     = config.door ? config.door: null
+        this._doorBellId = config.door_bell ? config.door_bell : null
+        this._doorLockId = config.door_lock ? config.door_lock : null
 
         // door2 definition
-        this._door2Id     = config.door2 ? config.door2: undefined
-        this._door2BellId = config.door2_bell ? config.door2_bell : undefined
-        this._door2LockId = config.door2_lock ? config.door2_lock : undefined
+        this._door2Id     = config.door2 ? config.door2: null
+        this._door2BellId = config.door2_bell ? config.door2_bell : null
+        this._door2LockId = config.door2_lock ? config.door2_lock : null
 
         // ui configuration
         this._topTitle  = config.top_title ? config.top_title : false
@@ -745,13 +745,13 @@ class AarloGlance extends LitElement {
     async showVideo( id ) {
         var video = await this.readLibrary( id,1 );
         if ( video ) {
-            this._video = video[0].url;
-            this._video_poster = video[0].thumbnail;
-            this._video_type   = "video/mp4"
+            this._video       = video[0].url;
+            this._videoPoster = video[0].thumbnail;
+            this._videoType   = "video/mp4"
         } else {
-            this._video        = null
-            this._video_poster = null
-            this._video_type   = null
+            this._video       = null
+            this._videoPoster = null
+            this._videoType   = null
         }
     }
 
@@ -786,13 +786,13 @@ class AarloGlance extends LitElement {
     async showStream( id ) {
         var stream = await this.readStream( id,1 );
         if ( stream ) {
-            this._stream = stream.url;
-            this._stream_poster = this._image
-            this._stream_type   = 'application/x-mpegURL'
+            this._stream       = stream.url;
+            this._streamPoster = this._image
+            this._streamType   = 'application/x-mpegURL'
         } else {
-            this._stream = null
-            this._stream_poster = null
-            this._stream_type   = null
+            this._stream       = null
+            this._streamPoster = null
+            this._streamType   = null
         }
     }
 
@@ -817,22 +817,22 @@ class AarloGlance extends LitElement {
     async showLibrary( id,base ) {
         this._video = null
         this._library = await this.readLibrary( id,99 )
-        this._library_base = base
+        this._libraryBase = base
     }
 
     async showLibraryVideo( id,index ) {
-        index += this._library_base
+        index += this._libraryBase
         if ( this._library && index < this._library.length ) {
             this._video = this._library[index].url;
-            this._video_poster = this._library[index].thumbnail;
+            this._videoPoster = this._library[index].thumbnail;
         } else {
             this._video = null
-            this._video_poster = null
+            this._videoPoster = null
         }
     }
 
     setLibraryBase( base ) {
-        this._library_base = base
+        this._libraryBase = base
     }
 
     stopLibrary( ) {
