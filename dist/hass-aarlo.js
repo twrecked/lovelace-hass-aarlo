@@ -297,6 +297,11 @@ class AarloGlance extends LitElement {
         `;
     }
 
+	throwError( err ) {
+		console.error( err )
+		throw new Error( err )
+	}
+
     isGood( obj ) {
         return obj == null || obj === undefined ? false : true;
     }
@@ -640,26 +645,26 @@ class AarloGlance extends LitElement {
             return;
         }
 
-        if ( this._hass.states[this._cameraId] == undefined ) {
-            throw new Error( 'unknown camera' );
+        if ( !(this._cameraId in this._hass.states) ) {
+            this.throwError( 'unknown camera' );
         }
-        if ( this._doorId && this._hass.states[this._doorId] == undefined ) {
-            throw new Error( 'unknown door' )
+        if ( this._doorId && !(this._doorId in this._hass.states) ) {
+            this.throwError( 'unknown door' )
         }
-        if ( this._doorBellId && this._hass.states[this._doorBellId] == undefined ) {
-            throw new Error( 'unknown door bell' )
+        if ( this._doorBellId && !(this._doorBellId in this._hass.states) ) {
+            this.throwError( 'unknown door bell' )
         }
-        if ( this._doorLockId && this._hass.states[this._doorLockId] == undefined ) {
-            throw new Error( 'unknown door lock' )
+        if ( this._doorLockId && !(this._doorLockId in this._hass.states) ) {
+            this.throwError( 'unknown door lock' )
         }
-        if ( this._door2Id && this._hass.states[this._door2Id] == undefined ) {
-            throw new Error( 'unknown door (#2)' )
+        if ( this._door2Id && !(this._door2Id in this._hass.states) ) {
+            this.throwError( 'unknown door (#2)' )
         }
-        if ( this._door2BellId && this._hass.states[this._door2BellId] == undefined ) {
-            throw new Error( 'unknown door bell (#2)' )
+        if ( this._door2BellId && !(this._door2BellId in this._hass.states) ) {
+            this.throwError( 'unknown door bell (#2)' )
         }
-        if ( this._door2LockId && this._hass.states[this._door2LockId] == undefined ) {
-            throw new Error( 'unknown door lock (#2)' )
+        if ( this._door2LockId && !(this._door2LockId in this._hass.states) ) {
+            this.throwError( 'unknown door lock (#2)' )
         }
     }
 
@@ -672,11 +677,11 @@ class AarloGlance extends LitElement {
         if( config.camera ) {
             camera = config.camera;
         }
-        if ( camera === undefined ) {
-            throw new Error( 'missing a camera definition' );
+        if( !this.isGood(camera) ) {
+            this.throwError( 'missing a camera definition' );
         }
         if( !config.show ) {
-            throw new Error( 'missing show components' );
+            this.throwError( 'missing show components' );
         }
 
         // save config
