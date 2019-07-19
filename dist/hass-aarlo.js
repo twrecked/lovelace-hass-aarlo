@@ -157,7 +157,9 @@ class AarloGlance extends LitElement {
 
     render() {
 
-        var img = html`
+        return html`
+            ${AarloGlance.outerStyleTemplate}
+            <ha-card>
             ${AarloGlance.innerStyleTemplate}
             <div id="aarlo-wrapper" class="base-16x9">
                 <video class="${this._v.stream} video-16x9"
@@ -200,9 +202,6 @@ class AarloGlance extends LitElement {
                 </div>
                 <div class="${this._v.brokeStatus} img-16x9" style="height: 100px" id="brokenImage"></div>
             </div>
-        `;
-
-        var state = html`
             <div class="box box-top ${this._v.topBar}">
                 <div class="box-title ${this._v.topTitle?'':'hidden'}">
                     ${this._s.cameraName} 
@@ -253,13 +252,6 @@ class AarloGlance extends LitElement {
                     <ha-icon @click="${(e) => { this.setLibraryBase(this._libraryOffset + 9); }}" class="${this._v.libraryNext} state-on" icon="mdi:chevron-right" title="next"></ha-icon>
                 </div>
             </div>
-        `;
-
-        return html`
-            ${AarloGlance.outerStyleTemplate}
-            <ha-card>
-            ${img}
-            ${state}
             </ha-card>
         `;
     }
