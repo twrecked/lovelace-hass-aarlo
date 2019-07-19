@@ -591,15 +591,6 @@ class AarloGlance extends LitElement {
 				case '_library':
 				case '_libraryOffset':
                     this.updateMedia();
-					console.log( 'media updated' )
-                    break;
-
-				case '_statuses':
-					console.log( 'statuses updated' )
-                    break;
-
-				case '_visibility':
-					console.log( 'visibility updated' )
                     break;
             }
 
