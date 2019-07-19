@@ -9,17 +9,16 @@ class AarloGlance extends LitElement {
     static get properties() {
         return {
 
-            // State changes.
-            _hass: Object,
-
             // Source that can change
             _image: String,
             _stream: String,
+            _streamPoster: String,
             _video: String,
+            _videoPoster: String,
             _library: String,
             _libraryBase: Number,
 
-            // What are we currently doing?
+            // What are we currently showing?
             _streamHidden: String,
             _videoHidden: String,
             _libraryHidden: String,
@@ -28,21 +27,29 @@ class AarloGlance extends LitElement {
             _imageHidden: String,
             _topHidden: String,
             _bottomHidden: String,
-            _doorStatusHidden: String,
             _brokeHidden: String,
             _signalHidden: String,
+
+            // Properties of decorations
+            _decorations: String,
         }
     }
 
     constructor() {
         super();
+
         this._hass = null;
+
+        this._cameraName = 'unknown';
+        this._cameraState = 'unknown';
+
         this._config = null;
         this._image = null;
         this._stream = null;
         this._video = null;
         this._library = null;
         this._libraryBase = null;
+        this.emptyLibrary();
 
         this._streamHidden      = 'hidden';
         this._videoHidden       = 'hidden';
@@ -54,28 +61,8 @@ class AarloGlance extends LitElement {
         this._bottomHidden      = 'hidden';
         this._brokeHidden       = 'hidden';
 
-        this._batteryHidden  = 'hidden';
-        this._signalHidden   = 'hidden';
-        this._motionHidden   = 'hidden';
-        this._soundHidden    = 'hidden';
-        this._capturedHidden = 'hidden';
-        this._playHidden     = 'hidden';
-        this._snapshotHidden = 'hidden';
-        this._dateHidden     = 'hidden';
-
-        this._doorStatusHidden = 'hidden';
-        this._doorHidden       = 'hidden';
-        this._doorLockHidden   = 'hidden';
-        this._doorBellHidden   = 'hidden';
-        this._door2Hidden      = 'hidden';
-        this._door2LockHidden  = 'hidden';
-        this._door2BellHidden  = 'hidden';
-
-        this._cameraName = 'unknown';
-        this._cameraState = 'unknown';
-
-        // blank library
-        this.emptyLibrary();
+        this._decorations = '';
+        this.resetDecorations()
     }
 
     static get outerStyleTemplate() {
@@ -240,7 +227,7 @@ class AarloGlance extends LitElement {
                 <div class="box-title ${this._topTitle?'':'hidden'}">
                     ${this._cameraName} 
                 </div>
-                <div class="box-status ${this._topDate?'':'hidden'} ${this._dateHidden}" title="${this._imageFullDate}">
+                <div class="box-status ${this._topDate?'':'hidden'} ${this._d.dateHidden}" title="${this._imageFullDate}">
                     ${this._imageDate}
                 </div>
                 <div class="box-status ${this._topStatus?'':'hidden'}">
@@ -252,24 +239,24 @@ class AarloGlance extends LitElement {
                     ${this._cameraName} 
                 </div>
                 <div>
-                    <ha-icon @click="${(e) => { this.moreInfo(this._motionId); }}" class="${this._motionOn} ${this._motionHidden}" icon="mdi:run-fast" title="${this._motionText}"></ha-icon>
-                    <ha-icon @click="${(e) => { this.moreInfo(this._soundId); }}" class="${this._soundOn} ${this._soundHidden}" icon="mdi:ear-hearing" title="${this._soundText}"></ha-icon>
-                    <ha-icon @click="${(e) => { this.showLibrary(this._cameraId,0); }}" class="${this._capturedOn} ${this._capturedHidden}" icon="${this._capturedIcon}" title="${this._capturedText}"></ha-icon>
-                    <ha-icon @click="${(e) => { this.showOrStopStream(this._cameraId); }}" class="${this._playOn} ${this._playHidden}" icon="${this._playIcon}" title="${this._playText}"></ha-icon>
-                    <ha-icon @click="${(e) => { this.updateSnapshot(this._cameraId); }}" class="${this._snapshotOn} ${this._snapshotHidden}" icon="${this._snapshotIcon}" title="${this._snapshotText}"></ha-icon>
-                    <ha-icon @click="${(e) => { this.moreInfo(this._batteryId); }}" class="${this._batteryState} ${this._batteryHidden}" icon="mdi:${this._batteryIcon}" title="${this._batteryText}"></ha-icon>
-                    <ha-icon @click="${(e) => { this.moreInfo(this._signalId); }}" class="state-update ${this._signalHidden}" icon="${this._signalIcon}" title="${this._signalText}"></ha-icon>
+                    <ha-icon @click="${(e) => { this.moreInfo(this._d.motionId); }}" class="${this._d.motionOn} ${this._d.motionHidden}" icon="mdi:run-fast" title="${this._d.motionText}"></ha-icon>
+                    <ha-icon @click="${(e) => { this.moreInfo(this._d.soundId); }}" class="${this._d.soundOn} ${this._d.soundHidden}" icon="mdi:ear-hearing" title="${this._d.soundText}"></ha-icon>
+                    <ha-icon @click="${(e) => { this.showLibrary(this._cameraId,0); }}" class="${this._d.capturedOn} ${this._d.capturedHidden}" icon="${this._d.capturedIcon}" title="${this._d.capturedText}"></ha-icon>
+                    <ha-icon @click="${(e) => { this.showOrStopStream(this._cameraId); }}" class="${this._d.playOn} ${this._d.playHidden}" icon="${this._d.playIcon}" title="${this._d.playText}"></ha-icon>
+                    <ha-icon @click="${(e) => { this.updateSnapshot(this._cameraId); }}" class="${this._d.snapshotOn} ${this._d.snapshotHidden}" icon="${this._d.snapshotIcon}" title="${this._d.snapshotText}"></ha-icon>
+                    <ha-icon @click="${(e) => { this.moreInfo(this._d.batteryId); }}" class="${this._d.batteryState} ${this._d.batteryHidden}" icon="mdi:${this._d.batteryIcon}" title="${this._d.batteryText}"></ha-icon>
+                    <ha-icon @click="${(e) => { this.moreInfo(this._d.signalId); }}" class="state-update ${this._d.signalHidden}" icon="${this._d.signalIcon}" title="${this._d.signalText}"></ha-icon>
                 </div>
-                <div class="box-title ${this._topDate?'hidden':''} ${this._dateHidden}" title="${this._imageFullDate}">
+                <div class="box-title ${this._topDate?'hidden':''} ${this._d.dateHidden}" title="${this._imageFullDate}">
                     ${this._imageDate}
                 </div>
-                <div class="box-status ${this._doorStatusHidden}">
-                    <ha-icon @click="${(e) => { this.moreInfo(this._doorId); }}" class="${this._doorOn} ${this._doorHidden}" icon="${this._doorIcon}" title="${this._doorText}"></ha-icon>
-                    <ha-icon @click="${(e) => { this.moreInfo(this._doorBellId); }}" class="${this._doorBellOn} ${this._doorBellHidden}" icon="${this._doorBellIcon}" title="${this._doorBellText}"></ha-icon>
-                    <ha-icon @click="${(e) => { this.toggleLock(this._doorLockId); }}" class="${this._doorLockOn} ${this._doorLockHidden}" icon="${this._doorLockIcon}" title="${this._doorLockText}"></ha-icon>
-                    <ha-icon @click="${(e) => { this.moreInfo(this._door2Id); }}" class="${this._door2On} ${this._door2Hidden}" icon="${this._door2Icon}" title="${this._door2Text}"></ha-icon>
-                    <ha-icon @click="${(e) => { this.moreInfo(this._door2BellId); }}" class="${this._door2BellOn} ${this._door2BellHidden}" icon="${this._door2BellIcon}" title="${this._door2BellText}"></ha-icon>
-                    <ha-icon @click="${(e) => { this.toggleLock(this._door2LockId); }}" class="${this._door2LockOn} ${this._door2LockHidden}" icon="${this._door2LockIcon}" title="${this._door2LockText}"></ha-icon>
+                <div class="box-status ${this._d.doorStatusHidden}">
+                    <ha-icon @click="${(e) => { this.moreInfo(this._d.doorId); }}" class="${this._d.doorOn} ${this._d.doorHidden}" icon="${this._d.doorIcon}" title="${this._d.doorText}"></ha-icon>
+                    <ha-icon @click="${(e) => { this.moreInfo(this._d.doorBellId); }}" class="${this._d.doorBellOn} ${this._d.doorBellHidden}" icon="${this._d.doorBellIcon}" title="${this._d.doorBellText}"></ha-icon>
+                    <ha-icon @click="${(e) => { this.toggleLock(this._d.doorLockId); }}" class="${this._d.doorLockOn} ${this._d.doorLockHidden}" icon="${this._d.doorLockIcon}" title="${this._d.doorLockText}"></ha-icon>
+                    <ha-icon @click="${(e) => { this.moreInfo(this._d.door2Id); }}" class="${this._d.door2On} ${this._d.door2Hidden}" icon="${this._d.door2Icon}" title="${this._d.door2Text}"></ha-icon>
+                    <ha-icon @click="${(e) => { this.moreInfo(this._d.door2BellId); }}" class="${this._d.door2BellOn} ${this._d.door2BellHidden}" icon="${this._d.door2BellIcon}" title="${this._d.door2BellText}"></ha-icon>
+                    <ha-icon @click="${(e) => { this.toggleLock(this._d.door2LockId); }}" class="${this._d.door2LockOn} ${this._d.door2LockHidden}" icon="${this._d.door2LockIcon}" title="${this._d.door2LockText}"></ha-icon>
                 </div>
                 <div class="box-status ${this._topStatus?'hidden':''}">
                     ${this._cameraState}
@@ -297,10 +284,10 @@ class AarloGlance extends LitElement {
         `;
     }
 
-	throwError( err ) {
-		console.error( err )
-		throw new Error( err )
-	}
+    throwError( err ) {
+        console.error( err )
+        throw new Error( err )
+    }
 
     isGood( obj ) {
         return obj == null || obj === undefined ? false : true;
@@ -318,73 +305,96 @@ class AarloGlance extends LitElement {
         }
     }
 
+    resetDecorations() {
+        this._d = {
+
+            dateHidden: 'hidden',
+
+            playHidden: 'hidden',
+            playOn: 'not-used',
+            playText: 'not-used',
+            playIcon: 'mdi:camera',
+
+            snapshotHidden: 'hidden',
+            snapshotOn: 'not-used',
+            snapshotText: 'not-used',
+            snapshotIcon: 'mdi:camera',
+
+            batteryHidden: 'hidden',
+            batteryIcon:  'not-used',
+            batteryState: 'state-update',
+            batteryText:  'not-used',
+
+            signalHidden: 'hidden',
+            signalText: 'not-used',
+            signalIcon: 'mdi:wifi-strength-4',
+
+            motionHidden: 'hidden',
+            motionOn: 'not-used',
+            motionText: 'not-used',
+
+            soundHidden: 'hidden',
+            soundOn: 'not-used',
+            soundText: 'not-used',
+
+            capturedHidden: 'hidden',
+            capturedText: 'not-used',
+            capturedOn: '',
+            capturedIcon: 'mdi:file-video',
+
+            doorHidden: 'hidden',
+            doorOn: 'not-used',
+            doorText: 'not-used',
+            doorIcon: 'not-used',
+            door2Hidden: 'hidden',
+            door2On: 'not-used',
+            door2Text: 'not-used',
+            door2Icon: 'not-used',
+
+            doorLockHidden: 'hidden',
+            doorLockOn: 'not-used',
+            doorLockText: 'not-used',
+            doorLockIcon: 'not-used',
+            door2LockHidden: 'hidden',
+            door2LockOn: 'not-used',
+            door2LockText: 'not-used',
+            door2LockIcon: 'not-used',
+
+            doorBellHidden: 'hidden',
+            doorBellOn: 'not-used',
+            doorBellText: 'not-used',
+            doorBellIcon: 'not-used',
+            door2BellHidden: 'hidden',
+            door2BellOn: 'not-used',
+            door2BellText: 'not-used',
+            door2BellIcon: 'not-used',
+
+            doorStatusHidden: 'hidden',
+        }
+    }
+
     updateConfig() {
 
         // what are we showing?
         var show = this._config.show || [];
 
-        this._playHidden     = show.includes('play') ? '':'hidden';
-        this._snapshotHidden = show.includes('snapshot') ? '':'hidden';
-        this._batteryHidden  = show.includes('battery') || show.includes('battery_level') ? '':'hidden';
-        this._signalHidden   = show.includes('signal_strength') ? '':'hidden';
-        this._motionHidden   = show.includes('motion') ? '':'hidden';
-        this._soundHidden    = show.includes('sound') ? '':'hidden';
-        this._capturedHidden = show.includes('captured') || show.includes('captured_today') ? '':'hidden';
-        this._dateHidden     = show.includes('image_date') ? '':'hidden';
+        this._d.playHidden     = show.includes('play') ? '':'hidden';
+        this._d.snapshotHidden = show.includes('snapshot') ? '':'hidden';
+        this._d.batteryHidden  = show.includes('battery') || show.includes('battery_level') ? '':'hidden';
+        this._d.signalHidden   = show.includes('signal_strength') ? '':'hidden';
+        this._d.motionHidden   = show.includes('motion') ? '':'hidden';
+        this._d.soundHidden    = show.includes('sound') ? '':'hidden';
+        this._d.capturedHidden = show.includes('captured') || show.includes('captured_today') ? '':'hidden';
+        this._d.dateHidden     = show.includes('image_date') ? '':'hidden';
 
-        this._doorHidden      = this._doorId ? '':'hidden'
-        this._doorLockHidden  = this._doorLockId ? '':'hidden'
-        this._doorBellHidden  = this._doorBellId ? '':'hidden'
-        this._door2Hidden     = this._door2Id ? '':'hidden'
-        this._door2LockHidden = this._door2LockId ? '':'hidden'
-        this._door2BellHidden = this._door2BellId ? '':'hidden'
+        this._d.doorHidden      = this._d.doorId ? '':'hidden'
+        this._d.doorLockHidden  = this._d.doorLockId ? '':'hidden'
+        this._d.doorBellHidden  = this._d.doorBellId ? '':'hidden'
+        this._d.door2Hidden     = this._d.door2Id ? '':'hidden'
+        this._d.door2LockHidden = this._d.door2LockId ? '':'hidden'
+        this._d.door2BellHidden = this._d.door2BellId ? '':'hidden'
 
-        this._playOn   = 'not-used'
-        this._playText = 'not-used'
-        this._playIcon = 'mdi:camera'
-
-        this._snapshotOn   = 'not-used'
-        this._snapshotText = 'not-used'
-        this._snapshotIcon = 'mdi:camera'
-
-        // Set unused values.
-        this._batteryText  = 'not-used';
-        this._batteryIcon  = 'not-used';
-        this._batteryState = 'state-update';
-
-        this._signalText = 'not-used';
-        this._signalIcon = 'mdi:wifi-strength-4';
-
-        this._motionOn   = 'not-used';
-        this._motionText = 'not-used';
-
-        this._soundOn   = 'not-used'
-        this._soundText = 'not-used'
-
-        this._capturedText = 'not-used';
-        this._capturedOn   = ''
-        this._capturedIcon = 'mdi:file-video'
-
-        this._doorOn    = 'not-used'
-        this._doorText  = 'not-used'
-        this._doorIcon  = 'not-used'
-        this._door2On   = 'not-used'
-        this._door2Text = 'not-used'
-        this._door2Icon = 'not-used'
-
-        this._doorLockOn    = 'not-used'
-        this._doorLockText  = 'not-used'
-        this._doorLockIcon  = 'not-used'
-        this._door2LockOn   = 'not-used'
-        this._door2LockText = 'not-used'
-        this._door2LockIcon = 'not-used'
-
-        this._doorBellOn    = 'not-used'
-        this._doorBellText  = 'not-used'
-        this._doorBellIcon  = 'not-used'
-        this._door2BellOn   = 'not-used'
-        this._door2BellText = 'not-used'
-        this._door2BellIcon = 'not-used'
+        this._decorations = JSON.stringify( this._d )
     }
 
     updateState( oldValue ) {
@@ -421,108 +431,110 @@ class AarloGlance extends LitElement {
         this._cameraState = camera.state
 
         // FUNCTIONS
-        if( this._playHidden == '' ) {
-            this._playOn = 'state-on';
+        if( this._d.playHidden == '' ) {
+            this._d.playOn = 'state-on';
             if ( camera.state != 'streaming' ) {
-                this._playText = 'click to live-stream'
-                this._playIcon = 'mdi:play'
+                this._d.playText = 'click to live-stream'
+                this._d.playIcon = 'mdi:play'
             } else {
-                this._playText = 'click to stop stream'
-                this._playIcon = 'mdi:stop'
+                this._d.playText = 'click to stop stream'
+                this._d.playIcon = 'mdi:stop'
             }
         }
 
-        if( this._snapshotHidden == '' ) {
-            this._snapshotOn   = '';
-            this._snapshotText = 'click to update image'
-            this._snapshotIcon = 'mdi:camera'
+        if( this._d.snapshotHidden == '' ) {
+            this._d.snapshotOn   = '';
+            this._d.snapshotText = 'click to update image'
+            this._d.snapshotIcon = 'mdi:camera'
         }
 
         // SENSORS
-        if( this._batteryHidden == '' ) {
+        if( this._d.batteryHidden == '' ) {
             if ( camera.attributes.wired ) {
-                this._batteryText  = 'Plugged In';
-                this._batteryIcon  = 'power-plug';
-                this._batteryState = 'state-update';
+                this._d.batteryText  = 'Plugged In';
+                this._d.batteryIcon  = 'power-plug';
+                this._d.batteryState = 'state-update';
             } else {
-                var battery        = this.getState(this._batteryId,0);
+                var battery        = this.getState(this._d.batteryId,0);
                 var batteryPrefix  = camera.attributes.charging ? 'battery-charging' : 'battery'
-                this._batteryText  = 'Battery Strength: ' + battery.state +'%';
-                this._batteryIcon  = batteryPrefix + ( battery.state < 10 ? '-outline' :
+                this._d.batteryText  = 'Battery Strength: ' + battery.state +'%';
+                this._d.batteryIcon  = batteryPrefix + ( battery.state < 10 ? '-outline' :
                                                     ( battery.state > 90 ? '' : '-' + Math.round(battery.state/10) + '0' ) );
-                this._batteryState = battery.state < 25 ? 'state-warn' : ( battery.state < 15 ? 'state-error' : 'state-update' );
+                this._d.batteryState = battery.state < 25 ? 'state-warn' : ( battery.state < 15 ? 'state-error' : 'state-update' );
             }
         }
 
-        if( this._signalHidden == '' ) {
-            var signal       = this.getState(this._signalId,0);
-            this._signalText = 'Signal Strength: ' + signal.state;
-            this._signalIcon = signal.state == 0 ? 'mdi:wifi-outline' : 'mdi:wifi-strength-' + signal.state;
+        if( this._d.signalHidden == '' ) {
+            var signal       = this.getState(this._d.signalId,0);
+            this._d.signalText = 'Signal Strength: ' + signal.state;
+            this._d.signalIcon = signal.state == 0 ? 'mdi:wifi-outline' : 'mdi:wifi-strength-' + signal.state;
         }
 
-        if( this._motionHidden == '' ) {
-            this._motionOn   = this.getState(this._motionId,'off').state == 'on' ? 'state-on' : '';
-            this._motionText = 'Motion: ' + (this._motionOn != '' ? 'detected' : 'clear');
+        if( this._d.motionHidden == '' ) {
+            this._d.motionOn   = this.getState(this._d.motionId,'off').state == 'on' ? 'state-on' : '';
+            this._d.motionText = 'Motion: ' + (this._d.motionOn != '' ? 'detected' : 'clear');
         }
 
-        if( this._soundHidden == '' ) {
-            this._soundOn    = this.getState(this._soundId,'off').state == 'on' ? 'state-on' : '';
-            this._soundText  = 'Sound: ' + (this._soundOn != '' ? 'detected' : 'clear');
+        if( this._d.soundHidden == '' ) {
+            this._d.soundOn    = this.getState(this._d.soundId,'off').state == 'on' ? 'state-on' : '';
+            this._d.soundText  = 'Sound: ' + (this._d.soundOn != '' ? 'detected' : 'clear');
         }
 
-        if( this._capturedHidden == '' ) {
-            var captured       = this.getState(this._captureId,0).state;
-            var last           = this.getState(this._lastId,0).state;
-            this._capturedText = 'Captured: ' + ( captured == 0 ? 'nothing today' : captured + ' clips today, last at ' + last )
-            this._capturedIcon = this._video ? 'mdi:stop' : 'mdi:file-video'
-            this._capturedOn   = captured != 0 ? 'state-update' : ''
+        if( this._d.capturedHidden == '' ) {
+            var captured       = this.getState(this._d.captureId,0).state;
+            var last           = this.getState(this._d.lastId,0).state;
+            this._d.capturedText = 'Captured: ' + ( captured == 0 ? 'nothing today' : captured + ' clips today, last at ' + last )
+            this._d.capturedIcon = this._video ? 'mdi:stop' : 'mdi:file-video'
+            this._d.capturedOn   = captured != 0 ? 'state-update' : ''
         }
 
         // OPTIONAL DOORS
-        if( this._doorHidden == '' ) {
-            var doorState          = this.getState(this._doorId,'off');
-            this._doorOn           = doorState.state == 'on' ? 'state-on' : '';
-            this._doorText         = doorState.attributes.friendly_name + ': ' + (this._doorOn == '' ? 'closed' : 'open');
-            this._doorIcon         = this._doorOn == '' ? 'mdi:door' : 'mdi:door-open';
-            this._doorStatusHidden = '';
+        if( this._d.doorHidden == '' ) {
+            var doorState          = this.getState(this._d.doorId,'off');
+            this._d.doorOn           = doorState.state == 'on' ? 'state-on' : '';
+            this._d.doorText         = doorState.attributes.friendly_name + ': ' + (this._d.doorOn == '' ? 'closed' : 'open');
+            this._d.doorIcon         = this._d.doorOn == '' ? 'mdi:door' : 'mdi:door-open';
+            this._d.doorStatusHidden = '';
         }
-        if( this._door2Hidden == '' ) {
-            var door2State         = this.getState(this._door2Id,'off');
-            this._door2On          = door2State.state == 'on' ? 'state-on' : '';
-            this._door2Text        = door2State.attributes.friendly_name + ': ' + (this._door2On == '' ? 'closed' : 'open');
-            this._door2Icon        = this._door2On == '' ? 'mdi:door' : 'mdi:door-open';
-            this._doorStatusHidden = '';
-        }
-
-        if( this._doorLockHidden == '' ) {
-            var doorLockState      = this.getState(this._doorLockId,'locked');
-            this._doorLockOn       = doorLockState.state == 'locked' ? 'state-on' : 'state-warn';
-            this._doorLockText     = doorLockState.attributes.friendly_name + ': ' + (this._doorLockOn == 'state-on' ? 'locked (click to unlock)' : 'unlocked (click to lock)');
-            this._doorLockIcon     = this._doorLockOn == 'state-on' ? 'mdi:lock' : 'mdi:lock-open';
-            this._doorStatusHidden = '';
-        }
-        if( this._door2LockHidden == '' ) {
-            var door2LockState     = this.getState(this._door2LockId,'locked');
-            this._door2LockOn      = door2LockState.state == 'locked' ? 'state-on' : 'state-warn';
-            this._door2LockText    = door2LockState.attributes.friendly_name + ': ' + (this._door2LockOn == 'state-on' ? 'locked (click to unlock)' : 'unlocked (click to lock)');
-            this._door2LockIcon    = this._door2LockOn == 'state-on' ? 'mdi:lock' : 'mdi:lock-open';
-            this._doorStatusHidden = '';
+        if( this._d.door2Hidden == '' ) {
+            var door2State         = this.getState(this._d.door2Id,'off');
+            this._d.door2On          = door2State.state == 'on' ? 'state-on' : '';
+            this._d.door2Text        = door2State.attributes.friendly_name + ': ' + (this._d.door2On == '' ? 'closed' : 'open');
+            this._d.door2Icon        = this._d.door2On == '' ? 'mdi:door' : 'mdi:door-open';
+            this._d.doorStatusHidden = '';
         }
 
-        if( this._doorBellHidden == '' ) {
-            var doorBellState    = this.getState(this._doorBellId,'off');
-            this._doorBellOn       = doorBellState.state == 'on' ? 'state-on' : '';
-            this._doorBellText     = doorBellState.attributes.friendly_name + ': ' + (this._doorBellOn == 'state-on' ? 'ding ding!' : 'idle');
-            this._doorBellIcon     = 'mdi:doorbell-video';
-            this._doorStatusHidden = '';
+        if( this._d.doorLockHidden == '' ) {
+            var doorLockState      = this.getState(this._d.doorLockId,'locked');
+            this._d.doorLockOn       = doorLockState.state == 'locked' ? 'state-on' : 'state-warn';
+            this._d.doorLockText     = doorLockState.attributes.friendly_name + ': ' + (this._d.doorLockOn == 'state-on' ? 'locked (click to unlock)' : 'unlocked (click to lock)');
+            this._d.doorLockIcon     = this._d.doorLockOn == 'state-on' ? 'mdi:lock' : 'mdi:lock-open';
+            this._d.doorStatusHidden = '';
         }
-        if( this._door2BellHidden == '' ) {
-            var door2BellState    = this.getState(this._door2BellId,'off');
-            this._door2BellOn       = door2BellState.state == 'on' ? 'state-on' : '';
-            this._door2BellText     = door2BellState.attributes.friendly_name + ': ' + (this._door2BellOn == 'state-on' ? 'ding ding!' : 'idle');
-            this._door2BellIcon     = 'mdi:doorbell-video';
-            this._doorStatusHidden = '';
+        if( this._d.door2LockHidden == '' ) {
+            var door2LockState     = this.getState(this._d.door2LockId,'locked');
+            this._d.door2LockOn      = door2LockState.state == 'locked' ? 'state-on' : 'state-warn';
+            this._d.door2LockText    = door2LockState.attributes.friendly_name + ': ' + (this._d.door2LockOn == 'state-on' ? 'locked (click to unlock)' : 'unlocked (click to lock)');
+            this._d.door2LockIcon    = this._d.door2LockOn == 'state-on' ? 'mdi:lock' : 'mdi:lock-open';
+            this._d.doorStatusHidden = '';
         }
+
+        if( this._d.doorBellHidden == '' ) {
+            var doorBellState    = this.getState(this._d.doorBellId,'off');
+            this._d.doorBellOn       = doorBellState.state == 'on' ? 'state-on' : '';
+            this._d.doorBellText     = doorBellState.attributes.friendly_name + ': ' + (this._d.doorBellOn == 'state-on' ? 'ding ding!' : 'idle');
+            this._d.doorBellIcon     = 'mdi:doorbell-video';
+            this._d.doorStatusHidden = '';
+        }
+        if( this._d.door2BellHidden == '' ) {
+            var door2BellState    = this.getState(this._d.door2BellId,'off');
+            this._d.door2BellOn       = door2BellState.state == 'on' ? 'state-on' : '';
+            this._d.door2BellText     = door2BellState.attributes.friendly_name + ': ' + (this._d.door2BellOn == 'state-on' ? 'ding ding!' : 'idle');
+            this._d.door2BellIcon     = 'mdi:doorbell-video';
+            this._d.doorStatusHidden = '';
+        }
+
+        this._decorations = JSON.stringify( this._d )
     }
 
     updateSource() {
@@ -575,7 +587,7 @@ class AarloGlance extends LitElement {
             this._imageFullDate = camera.attributes.image_source ? camera.attributes.image_source : '';
             this._imageDate = ''
             if( this._imageFullDate.startsWith('capture/') ) { 
-                this._imageDate = this.getState(this._lastId,0).state;
+                this._imageDate = this.getState(this._d.lastId,0).state;
                 this._imageFullDate = 'automatically captured at ' + this._imageDate;
             } else if( this._imageFullDate.startsWith('snapshot/') ) { 
                 this._imageDate = this._imageFullDate.substr(9);
@@ -610,6 +622,10 @@ class AarloGlance extends LitElement {
                 case '_libraryBase':
                     this.updateSource();
                     break;
+
+                case '_p':
+                    console.log('anything')
+                    break;
             }
 
             // Start video if streaming is turning on.
@@ -636,7 +652,9 @@ class AarloGlance extends LitElement {
     }
 
     set hass( hass ) {
+        var old = this._hass
         this._hass = hass
+        this.updateState( old )
     }
 
     checkConfig() {
@@ -648,22 +666,22 @@ class AarloGlance extends LitElement {
         if ( !(this._cameraId in this._hass.states) ) {
             this.throwError( 'unknown camera' );
         }
-        if ( this._doorId && !(this._doorId in this._hass.states) ) {
+        if ( this._d.doorId && !(this._d.doorId in this._hass.states) ) {
             this.throwError( 'unknown door' )
         }
-        if ( this._doorBellId && !(this._doorBellId in this._hass.states) ) {
+        if ( this._d.doorBellId && !(this._d.doorBellId in this._hass.states) ) {
             this.throwError( 'unknown door bell' )
         }
-        if ( this._doorLockId && !(this._doorLockId in this._hass.states) ) {
+        if ( this._d.doorLockId && !(this._d.doorLockId in this._hass.states) ) {
             this.throwError( 'unknown door lock' )
         }
-        if ( this._door2Id && !(this._door2Id in this._hass.states) ) {
+        if ( this._d.door2Id && !(this._d.door2Id in this._hass.states) ) {
             this.throwError( 'unknown door (#2)' )
         }
-        if ( this._door2BellId && !(this._door2BellId in this._hass.states) ) {
+        if ( this._d.door2BellId && !(this._d.door2BellId in this._hass.states) ) {
             this.throwError( 'unknown door bell (#2)' )
         }
-        if ( this._door2LockId && !(this._door2LockId in this._hass.states) ) {
+        if ( this._d.door2LockId && !(this._d.door2LockId in this._hass.states) ) {
             this.throwError( 'unknown door lock (#2)' )
         }
     }
@@ -684,30 +702,31 @@ class AarloGlance extends LitElement {
             this.throwError( 'missing show components' );
         }
 
-        // save config
+        // save new config and reset decoration properties
         this._config = config;
+        this.resetDecorations()
 
         // camera and sensors
         this._cameraId  = 'camera.aarlo_' + camera;
-        this._motionId  = 'binary_sensor.aarlo_motion_' + camera;
-        this._soundId   = 'binary_sensor.aarlo_sound_' + camera;
-        this._batteryId = 'sensor.aarlo_battery_level_' + camera;
-        this._signalId  = 'sensor.aarlo_signal_strength_' + camera;
-        this._captureId = 'sensor.aarlo_captured_today_' + camera;
-        this._lastId    = 'sensor.aarlo_last_' + camera;
+        this._d.motionId  = 'binary_sensor.aarlo_motion_' + camera;
+        this._d.soundId   = 'binary_sensor.aarlo_sound_' + camera;
+        this._d.batteryId = 'sensor.aarlo_battery_level_' + camera;
+        this._d.signalId  = 'sensor.aarlo_signal_strength_' + camera;
+        this._d.captureId = 'sensor.aarlo_captured_today_' + camera;
+        this._d.lastId    = 'sensor.aarlo_last_' + camera;
 
         // on click
         this._imageClick = config.image_click ? config.image_click : false
 
         // door definition
-        this._doorId     = config.door ? config.door: null
-        this._doorBellId = config.door_bell ? config.door_bell : null
-        this._doorLockId = config.door_lock ? config.door_lock : null
+        this._d.doorId     = config.door ? config.door: null
+        this._d.doorBellId = config.door_bell ? config.door_bell : null
+        this._d.doorLockId = config.door_lock ? config.door_lock : null
 
         // door2 definition
-        this._door2Id     = config.door2 ? config.door2: null
-        this._door2BellId = config.door2_bell ? config.door2_bell : null
-        this._door2LockId = config.door2_lock ? config.door2_lock : null
+        this._d.door2Id     = config.door2 ? config.door2: null
+        this._d.door2BellId = config.door2_bell ? config.door2_bell : null
+        this._d.door2LockId = config.door2_lock ? config.door2_lock : null
 
         // ui configuration
         this._topTitle  = config.top_title ? config.top_title : false
