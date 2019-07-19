@@ -13,6 +13,7 @@ class AarloGlance extends LitElement {
 			// to catch property changes in an object...
 
 			// What media are showing.
+			// These are changed by user input on the GUI
 			_image: String,
 			_video: String,
 			_stream: String,
@@ -21,10 +22,12 @@ class AarloGlance extends LitElement {
 
             // Sensor/variable statuses
 			// Any information that appears on screen either directly or in hover-overs
+			// These are changed by hass state changes.
             _statuses: String,
 
 			// What things are showing?
 			// Set 'hidden' on items we don't want to see.
+			// These are changed by card configruation or media changes.
 			_visibility: String,
         }
     }
@@ -33,12 +36,8 @@ class AarloGlance extends LitElement {
         super();
 
         this._hass = null;
-
         this._config = null;
-        this._cameraName = 'unknown';
-        this._cameraState = 'unknown';
 
-        this.emptyLibrary();
         this.resetStatuses()
         this._statuses = JSON.stringify( this._s )
 
@@ -204,20 +203,20 @@ class AarloGlance extends LitElement {
         `;
 
         var state = html`
-            <div class="box box-top ${this._v.topStatus}">
+            <div class="box box-top ${this._v.topBar}">
                 <div class="box-title ${this._v.topTitle?'':'hidden'}">
-                    ${this._cameraName} 
+                    ${this._s.cameraName} 
                 </div>
                 <div class="box-status ${this._v.topDate?'':'hidden'} ${this._v.image_date}" title="${this._s.imageFullDate}">
                     ${this._s.imageDate}
                 </div>
                 <div class="box-status ${this._v.topStatus?'':'hidden'}">
-                    ${this._cameraState}
+                    ${this._s.cameraState}
                 </div>
             </div>
-            <div class="box box-bottom ${this._v.bottomStatus}">
+            <div class="box box-bottom ${this._v.bottomBar}">
                 <div class="box-title ${this._v.topTitle?'hidden':''}">
-                    ${this._cameraName} 
+                    ${this._s.cameraName} 
                 </div>
                 <div>
                     <ha-icon @click="${(e) => { this.moreInfo(this._s.motionId); }}" class="${this._s.motionOn} ${this._v.motion}" icon="mdi:run-fast" title="${this._s.motionText}"></ha-icon>
@@ -240,7 +239,7 @@ class AarloGlance extends LitElement {
                     <ha-icon @click="${(e) => { this.toggleLock(this._s.door2LockId); }}" class="${this._s.door2LockOn} ${this._v.door2Lock}" icon="${this._s.door2LockIcon}" title="${this._s.door2LockText}"></ha-icon>
                 </div>
                 <div class="box-status ${this._v.topStatus?'hidden':''}">
-                    ${this._cameraState}
+                    ${this._s.cameraState}
                 </div>
             </div>
             <div class="box box-bottom-small ${this._v.library}">
@@ -286,20 +285,6 @@ class AarloGlance extends LitElement {
         }
     }
 
-	resetMedia() {
-		this._m = {
-
-			image: null;
-
-			stream: null;
-
-			video: null;
-
-			library: null;
-			libraryBase: 0;
-		}
-	}
-
 	resetVisiblity() {
 		this._v = {
 
@@ -315,8 +300,8 @@ class AarloGlance extends LitElement {
             snapshot: 'hidden',
             libraryPrev: 'hidden',
             libraryNext: 'hidden',
-            topStatus: 'hidden',
-            bottomStatus: 'hidden',
+            topBar: 'hidden',
+            bottomBar: 'hidden',
             doorStatus: 'hidden',
 
 			// sensors
@@ -337,6 +322,9 @@ class AarloGlance extends LitElement {
 
     resetStatuses() {
         this._s = {
+
+			cameraName: 'unknown',
+			cameraState: 'unknown',
 
             playOn: 'not-used',
             playText: 'not-used',
@@ -384,6 +372,8 @@ class AarloGlance extends LitElement {
             door2BellText: 'not-used',
             door2BellIcon: 'not-used',
         }
+
+		this.emptyLibrary();
     }
 
     updateStatuses( oldValue ) {
@@ -398,26 +388,26 @@ class AarloGlance extends LitElement {
 
         // Initial setting? Just get an image.
         if ( !this.isGood( oldValue ) ) {
-            this._cameraName = this._config.name ? this._config.name : camera.attributes.friendly_name;
-            this._cameraState = camera.state
+            this._s.cameraName = this._config.name ? this._config.name : camera.attributes.friendly_name;
+            this._s.cameraState = camera.state
             this.updateCameraImageSrc()
         }
 
         // See if camera has stopped doing something useful. Get new image
         // if that's the case.
         if ( camera.state == 'idle' ) {
-            if ( this._cameraState == 'taking snapshot' ) {
+            if ( this._s.cameraState == 'taking snapshot' ) {
                 this.updateCameraImageSrc()
                 setTimeout( this.updateCameraImageSrc,5000 )
                 setTimeout( this.updateCameraImageSrc,10000 )
                 setTimeout( this.updateCameraImageSrc,15000 )
-            } else if ( this._cameraState != 'idle' ) {
+            } else if ( this._s.cameraState != 'idle' ) {
                 this.updateCameraImageSrc()
             }
         }
 
         // Save out current state for later.
-        this._cameraState = camera.state
+        this._s.cameraState = camera.state
 
         // FUNCTIONS
         if( this._v.play == '' ) {
@@ -444,8 +434,8 @@ class AarloGlance extends LitElement {
                 this._s.batteryIcon  = 'power-plug';
                 this._s.batteryState = 'state-update';
             } else {
-                var battery        = this.getState(this._s.batteryId,0);
-                var batteryPrefix  = camera.attributes.charging ? 'battery-charging' : 'battery'
+                var battery          = this.getState(this._s.batteryId,0);
+                var batteryPrefix    = camera.attributes.charging ? 'battery-charging' : 'battery'
                 this._s.batteryText  = 'Battery Strength: ' + battery.state +'%';
                 this._s.batteryIcon  = batteryPrefix + ( battery.state < 10 ? '-outline' :
                                                     ( battery.state > 90 ? '' : '-' + Math.round(battery.state/10) + '0' ) );
@@ -454,7 +444,7 @@ class AarloGlance extends LitElement {
         }
 
         if( this._v.signal == '' ) {
-            var signal       = this.getState(this._s.signalId,0);
+            var signal         = this.getState(this._s.signalId,0);
             this._s.signalText = 'Signal Strength: ' + signal.state;
             this._s.signalIcon = signal.state == 0 ? 'mdi:wifi-outline' : 'mdi:wifi-strength-' + signal.state;
         }
@@ -465,13 +455,13 @@ class AarloGlance extends LitElement {
         }
 
         if( this._v.sound == '' ) {
-            this._s.soundOn    = this.getState(this._s.soundId,'off').state == 'on' ? 'state-on' : '';
-            this._s.soundText  = 'Sound: ' + (this._s.soundOn != '' ? 'detected' : 'clear');
+            this._s.soundOn   = this.getState(this._s.soundId,'off').state == 'on' ? 'state-on' : '';
+            this._s.soundText = 'Sound: ' + (this._s.soundOn != '' ? 'detected' : 'clear');
         }
 
         if( this._v.captured == '' ) {
-            var captured       = this.getState(this._s.captureId,0).state;
-            var last           = this.getState(this._s.lastId,0).state;
+            var captured         = this.getState(this._s.captureId,0).state;
+            var last             = this.getState(this._s.lastId,0).state;
             this._s.capturedText = 'Captured: ' + ( captured == 0 ? 'nothing today' : captured + ' clips today, last at ' + last )
             this._s.capturedIcon = this._video ? 'mdi:stop' : 'mdi:file-video'
             this._s.capturedOn   = captured != 0 ? 'state-update' : ''
@@ -479,48 +469,42 @@ class AarloGlance extends LitElement {
 
         // OPTIONAL DOORS
         if( this._v.door == '' ) {
-            var doorState          = this.getState(this._s.doorId,'off');
-            this._s.doorOn           = doorState.state == 'on' ? 'state-on' : '';
-            this._s.doorText         = doorState.attributes.friendly_name + ': ' + (this._s.doorOn == '' ? 'closed' : 'open');
-            this._s.doorIcon         = this._s.doorOn == '' ? 'mdi:door' : 'mdi:door-open';
-            this._v.doorStatus = '';
+            var doorState    = this.getState(this._s.doorId,'off');
+            this._s.doorOn   = doorState.state == 'on' ? 'state-on' : '';
+            this._s.doorText = doorState.attributes.friendly_name + ': ' + (this._s.doorOn == '' ? 'closed' : 'open');
+            this._s.doorIcon = this._s.doorOn == '' ? 'mdi:door' : 'mdi:door-open';
         }
         if( this._v.door2 == '' ) {
-            var door2State         = this.getState(this._s.door2Id,'off');
-            this._s.door2On          = door2State.state == 'on' ? 'state-on' : '';
-            this._s.door2Text        = door2State.attributes.friendly_name + ': ' + (this._s.door2On == '' ? 'closed' : 'open');
-            this._s.door2Icon        = this._s.door2On == '' ? 'mdi:door' : 'mdi:door-open';
-            this._v.doorStatus = '';
+            var door2State    = this.getState(this._s.door2Id,'off');
+            this._s.door2On   = door2State.state == 'on' ? 'state-on' : '';
+            this._s.door2Text = door2State.attributes.friendly_name + ': ' + (this._s.door2On == '' ? 'closed' : 'open');
+            this._s.door2Icon = this._s.door2On == '' ? 'mdi:door' : 'mdi:door-open';
         }
 
         if( this._v.doorLock == '' ) {
-            var doorLockState      = this.getState(this._s.doorLockId,'locked');
-            this._s.doorLockOn       = doorLockState.state == 'locked' ? 'state-on' : 'state-warn';
-            this._s.doorLockText     = doorLockState.attributes.friendly_name + ': ' + (this._s.doorLockOn == 'state-on' ? 'locked (click to unlock)' : 'unlocked (click to lock)');
-            this._s.doorLockIcon     = this._s.doorLockOn == 'state-on' ? 'mdi:lock' : 'mdi:lock-open';
-            this._v.doorStatus = '';
+            var doorLockState    = this.getState(this._s.doorLockId,'locked');
+            this._s.doorLockOn   = doorLockState.state == 'locked' ? 'state-on' : 'state-warn';
+            this._s.doorLockText = doorLockState.attributes.friendly_name + ': ' + (this._s.doorLockOn == 'state-on' ? 'locked (click to unlock)' : 'unlocked (click to lock)');
+            this._s.doorLockIcon = this._s.doorLockOn == 'state-on' ? 'mdi:lock' : 'mdi:lock-open';
         }
         if( this._v.door2Lock == '' ) {
-            var door2LockState     = this.getState(this._s.door2LockId,'locked');
-            this._s.door2LockOn      = door2LockState.state == 'locked' ? 'state-on' : 'state-warn';
-            this._s.door2LockText    = door2LockState.attributes.friendly_name + ': ' + (this._s.door2LockOn == 'state-on' ? 'locked (click to unlock)' : 'unlocked (click to lock)');
-            this._s.door2LockIcon    = this._s.door2LockOn == 'state-on' ? 'mdi:lock' : 'mdi:lock-open';
-            this._v.doorStatus = '';
+            var door2LockState    = this.getState(this._s.door2LockId,'locked');
+            this._s.door2LockOn   = door2LockState.state == 'locked' ? 'state-on' : 'state-warn';
+            this._s.door2LockText = door2LockState.attributes.friendly_name + ': ' + (this._s.door2LockOn == 'state-on' ? 'locked (click to unlock)' : 'unlocked (click to lock)');
+            this._s.door2LockIcon = this._s.door2LockOn == 'state-on' ? 'mdi:lock' : 'mdi:lock-open';
         }
 
         if( this._v.doorBell == '' ) {
             var doorBellState    = this.getState(this._s.doorBellId,'off');
-            this._s.doorBellOn       = doorBellState.state == 'on' ? 'state-on' : '';
-            this._s.doorBellText     = doorBellState.attributes.friendly_name + ': ' + (this._s.doorBellOn == 'state-on' ? 'ding ding!' : 'idle');
-            this._s.doorBellIcon     = 'mdi:doorbell-video';
-            this._v.doorStatus = '';
+            this._s.doorBellOn   = doorBellState.state == 'on' ? 'state-on' : '';
+            this._s.doorBellText = doorBellState.attributes.friendly_name + ': ' + (this._s.doorBellOn == 'state-on' ? 'ding ding!' : 'idle');
+            this._s.doorBellIcon = 'mdi:doorbell-video';
         }
         if( this._v.door2Bell == '' ) {
             var door2BellState    = this.getState(this._s.door2BellId,'off');
-            this._s.door2BellOn       = door2BellState.state == 'on' ? 'state-on' : '';
-            this._s.door2BellText     = door2BellState.attributes.friendly_name + ': ' + (this._s.door2BellOn == 'state-on' ? 'ding ding!' : 'idle');
-            this._s.door2BellIcon     = 'mdi:doorbell-video';
-            this._v.doorStatus = '';
+            this._s.door2BellOn   = door2BellState.state == 'on' ? 'state-on' : '';
+            this._s.door2BellText = door2BellState.attributes.friendly_name + ': ' + (this._s.door2BellOn == 'state-on' ? 'ding ding!' : 'idle');
+            this._s.door2BellIcon = 'mdi:doorbell-video';
         }
 
 		this._statuses = JSON.stringify( this._s )
@@ -530,15 +514,15 @@ class AarloGlance extends LitElement {
     updateMedia() {
 
         // reset everything...
-        this._v.stream       = 'hidden';
-        this._v.video        = 'hidden';
-        this._v.library      = 'hidden';
-        this._v.libraryPrev  = 'hidden';
-        this._v.libraryNext  = 'hidden';
-        this._v.image        = 'hidden';
-        this._v.topStatus    = 'hidden';
-        this._v.bottomStatus = 'hidden';
-        this._v.brokeStatus  = 'hidden';
+        this._v.stream      = 'hidden';
+        this._v.video       = 'hidden';
+        this._v.library     = 'hidden';
+        this._v.libraryPrev = 'hidden';
+        this._v.libraryNext = 'hidden';
+        this._v.image       = 'hidden';
+        this._v.topBar      = 'hidden';
+        this._v.bottomBar   = 'hidden';
+        this._v.brokeStatus = 'hidden';
 
         if( this._stream ) {
             this._v.stream = '';
@@ -569,10 +553,10 @@ class AarloGlance extends LitElement {
         } else if ( this._image ) {
             const camera = this.getState(this._s.cameraId,'unknown')
 
-            this._v.image   = '';
-            this._v.brokeStatus   = 'hidden';
-            this._v.topStatus     = this._v.topTitle || this._v.topStatus ? '':'hidden';
-            this._v.bottomStatus  = '';
+            this._v.image       = '';
+            this._v.brokeStatus = 'hidden';
+            this._v.topBar      = this._v.topTitle || this._v.topStatus ? '':'hidden';
+            this._v.bottomBar   = '';
 
             // image title
             this._s.imageFullDate = camera.attributes.image_source ? camera.attributes.image_source : '';
@@ -587,9 +571,9 @@ class AarloGlance extends LitElement {
 
 
         } else {
-            this._v.brokeStatus   = ''
-            this._v.topStatus     = this._v.topTitle || this._v.topStatus ? '':'hidden';
-            this._v.bottomStatus  = '';
+            this._v.brokeStatus = ''
+            this._v.topBar      = this._v.topTitle || this._v.topStatus ? '':'hidden';
+            this._v.bottomBar   = '';
         }
 
 		this._statuses = JSON.stringify( this._s )
@@ -607,6 +591,15 @@ class AarloGlance extends LitElement {
 				case '_library':
 				case '_libraryOffset':
                     this.updateMedia();
+					console.log( 'media updated' )
+                    break;
+
+				case '_statuses':
+					console.log( 'statuses updated' )
+                    break;
+
+				case '_visibility':
+					console.log( 'visibility updated' )
                     break;
             }
 
@@ -699,9 +692,6 @@ class AarloGlance extends LitElement {
         this._s.captureId = 'sensor.aarlo_captured_today_' + camera;
         this._s.lastId    = 'sensor.aarlo_last_' + camera;
 
-        // on click
-        this._v.imageClick = config.image_click ? config.image_click : false
-
         // door definition
         this._s.doorId     = config.door ? config.door: null
         this._s.doorBellId = config.door_bell ? config.door_bell : null
@@ -712,13 +702,16 @@ class AarloGlance extends LitElement {
         this._s.door2BellId = config.door2_bell ? config.door2_bell : null
         this._s.door2LockId = config.door2_lock ? config.door2_lock : null
 
+        // what are we showing?
+        var show = this._config.show || [];
+
+        // on click
+        this._v.imageClick = config.image_click ? config.image_click : false
+
         // ui configuration
         this._v.topTitle  = config.top_title ? config.top_title : false
         this._v.topDate   = config.top_date ? config.top_date : false
         this._v.topStatus = config.top_status ? config.top_status : false
-
-        // what are we showing?
-        var show = this._config.show || [];
 
         this._v.play       = show.includes('play') ? '':'hidden';
         this._v.snapshot   = show.includes('snapshot') ? '':'hidden';
@@ -736,6 +729,9 @@ class AarloGlance extends LitElement {
         this._v.door2     = this._s.door2Id ? '':'hidden'
         this._v.door2Lock = this._s.door2LockId ? '':'hidden'
         this._v.door2Bell = this._s.door2BellId ? '':'hidden'
+        this._v.doorStatus = ( this._v.door == '' || this._v.doorLock == '' ||
+								this._v.doorBell == '' || this._v.door2 == '' ||
+								this._v.door2Lock == '' || this._v.door2Bell == '' ) ? '':'hidden';
 
 		// render changes
         this._statuses = JSON.stringify( this._s )
