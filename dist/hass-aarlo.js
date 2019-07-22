@@ -421,7 +421,7 @@ class AarloGlance extends LitElement {
 
         // SENSORS
         if( this._v.battery == '' ) {
-            if ( camera.attributes.wired ) {
+            if ( camera.attributes.wired_only ) {
                 this._s.batteryText  = 'Plugged In';
                 this._s.batteryIcon  = 'power-plug';
                 this._s.batteryState = 'state-update';
