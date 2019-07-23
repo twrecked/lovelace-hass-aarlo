@@ -9,26 +9,26 @@ class AarloGlance extends LitElement {
     static get properties() {
         return {
 
-			// XXX I wanted these in a Object types but litElement doesn't seem
-			// to catch property changes in an object...
+            // XXX I wanted these in a Object types but litElement doesn't seem
+            // to catch property changes in an object...
 
-			// What media are showing.
-			// These are changed by user input on the GUI
-			_image: String,
-			_video: String,
-			_stream: String,
-			_library: String,
-			_libraryOffset: String,
+            // What media are showing.
+            // These are changed by user input on the GUI
+            _image: String,
+            _video: String,
+            _stream: String,
+            _library: String,
+            _libraryOffset: String,
 
             // Sensor/variable statuses
-			// Any information that appears on screen either directly or in hover-overs
-			// These are changed by hass state changes.
+            // Any information that appears on screen either directly or in hover-overs
+            // These are changed by hass state changes.
             _statuses: String,
 
-			// What things are showing?
-			// Set 'hidden' on items we don't want to see.
-			// These are changed by card configruation or media changes.
-			_visibility: String,
+            // What things are showing?
+            // Set 'hidden' on items we don't want to see.
+            // These are changed by card configruation or media changes.
+            _visibility: String,
         }
     }
 
@@ -41,7 +41,7 @@ class AarloGlance extends LitElement {
         this.resetStatuses()
         this._statuses = JSON.stringify( this._s )
 
-		this.resetVisiblity();
+        this.resetVisiblity();
         this._visibility = JSON.stringify( this._v )
     }
 
@@ -277,17 +277,17 @@ class AarloGlance extends LitElement {
         }
     }
 
-	resetVisiblity() {
-		this._v = {
+    resetVisiblity() {
+        this._v = {
 
-			// media
+            // media
             image: 'hidden',
             stream: 'hidden',
             video: 'hidden',
             library: 'hidden',
             broke: 'hidden',
 
-			// decorations
+            // decorations
             play: 'hidden',
             snapshot: 'hidden',
             libraryPrev: 'hidden',
@@ -296,7 +296,7 @@ class AarloGlance extends LitElement {
             bottomBar: 'hidden',
             doorStatus: 'hidden',
 
-			// sensors
+            // sensors
             date: 'hidden',
             battery: 'hidden',
             signal: 'hidden',
@@ -309,14 +309,14 @@ class AarloGlance extends LitElement {
             door2Lock: 'hidden',
             doorBell: 'hidden',
             door2Bell: 'hidden',
-		}
-	}
+        }
+    }
 
     resetStatuses() {
         this._s = {
 
-			cameraName: 'unknown',
-			cameraState: 'unknown',
+            cameraName: 'unknown',
+            cameraState: 'unknown',
 
             playOn: 'not-used',
             playText: 'not-used',
@@ -365,7 +365,7 @@ class AarloGlance extends LitElement {
             door2BellIcon: 'not-used',
         }
 
-		this.emptyLibrary();
+        this.emptyLibrary();
     }
 
     updateStatuses( oldValue ) {
@@ -382,6 +382,7 @@ class AarloGlance extends LitElement {
         if ( !this.isGood( oldValue ) ) {
             this._s.cameraName = this._config.name ? this._config.name : camera.attributes.friendly_name;
             this._s.cameraState = camera.state
+            console.log( 'updating ' + this._s.cameraName + ': initial image' );
             this.updateCameraImageSrc()
         }
 
@@ -389,11 +390,13 @@ class AarloGlance extends LitElement {
         // if that's the case.
         if ( camera.state == 'idle' ) {
             if ( this._s.cameraState == 'taking snapshot' ) {
+                console.log( 'updating ' + this._s.cameraName + ':' + this._s.cameraState + '-->' + camera.state )
                 this.updateCameraImageSrc()
                 setTimeout( this.updateCameraImageSrc,5000 )
                 setTimeout( this.updateCameraImageSrc,10000 )
                 setTimeout( this.updateCameraImageSrc,15000 )
             } else if ( this._s.cameraState != 'idle' ) {
+                console.log( 'updating ' + this._s.cameraName + ':' + this._s.cameraState + '-->' + camera.state )
                 this.updateCameraImageSrc()
             }
         }
@@ -499,8 +502,8 @@ class AarloGlance extends LitElement {
             this._s.door2BellIcon = 'mdi:doorbell-video';
         }
 
-		this._statuses = JSON.stringify( this._s )
-		this._visibility = JSON.stringify( this._v )
+        this._statuses = JSON.stringify( this._s )
+        this._visibility = JSON.stringify( this._v )
     }
 
     updateMedia() {
@@ -518,7 +521,7 @@ class AarloGlance extends LitElement {
 
         if( this._stream ) {
             this._v.stream = '';
-			// Test for HLS and start video???
+            // Test for HLS and start video???
 
         } else if( this._video ) {
             this._v.video = '';
@@ -568,8 +571,8 @@ class AarloGlance extends LitElement {
             this._v.bottomBar   = '';
         }
 
-		this._statuses = JSON.stringify( this._s )
-		this._visibility = JSON.stringify( this._v )
+        this._statuses = JSON.stringify( this._s )
+        this._visibility = JSON.stringify( this._v )
     }
 
     updated(changedProperties) {
@@ -577,17 +580,21 @@ class AarloGlance extends LitElement {
 
             switch( propName ) {
 
-				case '_image':
-				case '_video':
-				case '_stream':
-				case '_library':
-				case '_libraryOffset':
+                case '_image':
+                case '_video':
+                case '_stream':
+                case '_library':
+                case '_libraryOffset':
                     this.updateMedia();
+                    break;
+
+                case '_v':
+                    console.log( 'v is updated' )
                     break;
             }
 
             // Start video if streaming is turning on.
-			// TODO - Fix this!!!
+            // TODO - Fix this!!!
             if ( propName == '_stream' && oldValue == null ) {
                 if ( this._stream ) {
                     var video = this.shadowRoot.getElementById( 'stream-' + this._s.cameraId )
@@ -713,10 +720,10 @@ class AarloGlance extends LitElement {
         this._v.door2Lock = this._s.door2LockId ? '':'hidden'
         this._v.door2Bell = this._s.door2BellId ? '':'hidden'
         this._v.doorStatus = ( this._v.door == '' || this._v.doorLock == '' ||
-								this._v.doorBell == '' || this._v.door2 == '' ||
-								this._v.door2Lock == '' || this._v.door2Bell == '' ) ? '':'hidden';
+                                this._v.doorBell == '' || this._v.door2 == '' ||
+                                this._v.door2Lock == '' || this._v.door2Bell == '' ) ? '':'hidden';
 
-		// render changes
+        // render changes
         this._statuses = JSON.stringify( this._s )
         this._visibility = JSON.stringify( this._v )
     }
