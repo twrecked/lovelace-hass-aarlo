@@ -378,25 +378,22 @@ class AarloGlance extends LitElement {
         // CAMERA
         const camera = this.getState(this._s.cameraId,'unknown')
 
-        // Initial setting? Just get an image.
+        // Initial setting? Get camera name.
         if ( !this.isGood( oldValue ) ) {
             this._s.cameraName = this._config.name ? this._config.name : camera.attributes.friendly_name;
-            this._s.cameraState = camera.state
-            console.log( 'updating ' + this._s.cameraName + ': initial image' );
-            this.updateCameraImageSrc()
         }
 
-        // See if camera has stopped doing something useful. Get new image
-        // if that's the case.
-        if ( camera.state == 'idle' ) {
+		// See if camera has changed. Update on the off chance something useful
+		// has happened.
+        if ( camera.state != this._s.cameraState ) {
             if ( this._s.cameraState == 'taking snapshot' ) {
-                console.log( 'updating ' + this._s.cameraName + ':' + this._s.cameraState + '-->' + camera.state )
+                console.log( 'updating1 ' + this._s.cameraName + ':' + this._s.cameraState + '-->' + camera.state )
                 this.updateCameraImageSrc()
                 setTimeout( this.updateCameraImageSrc,5000 )
                 setTimeout( this.updateCameraImageSrc,10000 )
                 setTimeout( this.updateCameraImageSrc,15000 )
-            } else if ( this._s.cameraState != 'idle' ) {
-                console.log( 'updating ' + this._s.cameraName + ':' + this._s.cameraState + '-->' + camera.state )
+            } else {
+                console.log( 'updating2 ' + this._s.cameraName + ':' + this._s.cameraState + '-->' + camera.state )
                 this.updateCameraImageSrc()
             }
         }
