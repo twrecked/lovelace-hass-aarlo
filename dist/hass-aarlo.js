@@ -318,6 +318,8 @@ class AarloGlance extends LitElement {
             cameraName: 'unknown',
             cameraState: 'unknown',
 
+            imageSource: 'unknown',
+
             playOn: 'not-used',
             playText: 'not-used',
             playIcon: 'mdi:camera',
@@ -383,8 +385,8 @@ class AarloGlance extends LitElement {
             this._s.cameraName = this._config.name ? this._config.name : camera.attributes.friendly_name;
         }
 
-		// See if camera has changed. Update on the off chance something useful
-		// has happened.
+        // See if camera has changed. Update on the off chance something useful
+        // has happened.
         if ( camera.state != this._s.cameraState ) {
             if ( this._s.cameraState == 'taking snapshot' ) {
                 console.log( 'updating1 ' + this._s.cameraName + ':' + this._s.cameraState + '-->' + camera.state )
@@ -400,6 +402,11 @@ class AarloGlance extends LitElement {
 
         // Save out current state for later.
         this._s.cameraState = camera.state
+
+        if ( this._s.imageSource != camera.attributes.image_source ) {
+            console.log( 'updating3 ' + this._s.cameraName + ':' + this._s.imageSource + '-->' + camera.attributes.image_source )
+            this._s.imageSource = camera.attributes.image_source
+        }
 
         // FUNCTIONS
         if( this._v.play == '' ) {
