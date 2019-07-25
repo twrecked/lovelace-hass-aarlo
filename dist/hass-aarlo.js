@@ -259,20 +259,17 @@ class AarloGlance extends LitElement {
         `;
     }
 
-    throwError( err ) {
-        console.error( err );
-        throw new Error( err )
-    }
-
-    isGood( obj ) {
-        return !(obj == null || obj === undefined);
+    throwError( error ) {
+        console.error( error );
+        throw new Error( error )
     }
 
     getState(_id, default_value = '') {
-        return this.isGood(this._hass) && _id in this._hass.states ?
+        return this._hass !== null && _id in this._hass.states ?
             this._hass.states[_id] : {
-                'state': default_value, 'attributes': {
-                    'friendly_name': 'unknown',
+                state: default_value,
+                attributes: {
+                    friendly_name: 'unknown',
                     wired_only: false,
                     image_source: "unknown",
                     charging: false
@@ -383,7 +380,7 @@ class AarloGlance extends LitElement {
     updateStatuses( oldValue ) {
 
         // nothing?
-        if ( !this.isGood( this._hass ) ) {
+        if ( this._hass === null ) {
             return;
         }
 
@@ -391,7 +388,7 @@ class AarloGlance extends LitElement {
         const camera = this.getState(this._s.cameraId,'unknown');
 
         // Initial setting? Get camera name.
-        if ( !this.isGood( oldValue ) ) {
+        if ( oldValue === null ) {
             this._s.cameraName = this._config.name ? this._config.name : camera.attributes.friendly_name;
         }
 
@@ -639,7 +636,7 @@ class AarloGlance extends LitElement {
 
     checkConfig() {
 
-        if ( !this.isGood(this._hass) ) {
+        if ( this._hass === null ) {
             return;
         }
 
@@ -668,14 +665,14 @@ class AarloGlance extends LitElement {
 
     setConfig(config) {
 
-        var camera = undefined;
+        var camera = null;
         if( config.entity ) {
             camera = config.entity.replace( 'camera.aarlo_','' );
         }
         if( config.camera ) {
             camera = config.camera;
         }
-        if( !this.isGood(camera) ) {
+        if( camera === null ) {
             this.throwError( 'missing a camera definition' );
         }
         if( !config.show ) {
