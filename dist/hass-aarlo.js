@@ -46,6 +46,7 @@ class AarloGlance extends LitElement {
 
         this.resetVisiblity();
         this._visibility = JSON.stringify( this._v )
+
     }
 
     static get outerStyleTemplate() {
@@ -168,18 +169,16 @@ class AarloGlance extends LitElement {
                 <video class="${this._v.stream} video-16x9"
                     id="stream-${this._s.cameraId}"
                     poster="${this._streamPoster}"
-                    autoplay playsinline controls
-                    onended="${(e) => { this.stopStream(this._s.cameraId); }}"
-                    on-tap="${(e) => { this.stopStream(this._s.cameraId); }}"
+                    @ended="${(e) => { this.stopStream(this._s.cameraId); }}"
                     @click="${(e) => { this.stopStream(this._s.cameraId); }}">
                         Your browser does not support the video tag.
                 </video>
                 <video class="${this._v.video} video-16x9"
                     src="${this._video}" type="${this._videoType}"
                     poster="${this._videoPoster}"
-                    autoplay playsinline controls
-                    onended="${(e) => { this.stopVideo(this._s.cameraId); }}"
-                    on-tap="${(e) => { this.stopVideo(this._s.cameraId); }}"
+                    id="video-${this._s.cameraId}"
+                    autoplay playsinline 
+                    @ended="${(e) => { this.stopVideo(this._s.cameraId); }}"
                     @click="${(e) => { this.stopVideo(this._s.cameraId); }}">
                         Your browser does not support the video tag.
                 </video>
@@ -259,20 +258,17 @@ class AarloGlance extends LitElement {
         `;
     }
 
-    throwError( err ) {
-        console.error( err );
-        throw new Error( err )
-    }
-
-    isGood( obj ) {
-        return !(obj == null || obj === undefined);
+    throwError( error ) {
+        console.error( error );
+        throw new Error( error )
     }
 
     getState(_id, default_value = '') {
-        return this.isGood(this._hass) && _id in this._hass.states ?
+        return this._hass !== null && _id in this._hass.states ?
             this._hass.states[_id] : {
-                'state': default_value, 'attributes': {
-                    'friendly_name': 'unknown',
+                state: default_value,
+                attributes: {
+                    friendly_name: 'unknown',
                     wired_only: false,
                     image_source: "unknown",
                     charging: false
@@ -320,6 +316,7 @@ class AarloGlance extends LitElement {
             doorBell: 'hidden',
             door2Bell: 'hidden',
         }
+
     }
 
     resetStatuses() {
@@ -383,7 +380,7 @@ class AarloGlance extends LitElement {
     updateStatuses( oldValue ) {
 
         // nothing?
-        if ( !this.isGood( this._hass ) ) {
+        if ( this._hass === null ) {
             return;
         }
 
@@ -391,7 +388,7 @@ class AarloGlance extends LitElement {
         const camera = this.getState(this._s.cameraId,'unknown');
 
         // Initial setting? Get camera name.
-        if ( !this.isGood( oldValue ) ) {
+        if ( oldValue === null ) {
             this._s.cameraName = this._config.name ? this._config.name : camera.attributes.friendly_name;
         }
 
@@ -607,8 +604,22 @@ class AarloGlance extends LitElement {
                     break;
             }
 
+            // Enable controls on desktop. 
+            // TODO - make this smarter!!!
+            if ( propName === '_video' && oldValue == null ) {
+                const video = this.shadowRoot.getElementById('video-' + this._s.cameraId);
+                var md = new MobileDetect(window.navigator.userAgent);
+                if ( md.mobile() ) {
+                    console.log( "it's mobile" )
+                    video.removeAttribute('controls')
+                } else {
+                    console.log( "it's not mobile" )
+                    video.setAttribute('controls', 'controls');
+                }
+            }
+
             // Start video if streaming is turning on.
-            // TODO - Fix this!!!
+            // TODO - Tidy this up!!!
             if ( propName === '_stream' && oldValue == null ) {
                 if ( this._stream ) {
                     const video = this.shadowRoot.getElementById('stream-' + this._s.cameraId);
@@ -639,7 +650,7 @@ class AarloGlance extends LitElement {
 
     checkConfig() {
 
-        if ( !this.isGood(this._hass) ) {
+        if ( this._hass === null ) {
             return;
         }
 
@@ -668,14 +679,14 @@ class AarloGlance extends LitElement {
 
     setConfig(config) {
 
-        var camera = undefined;
+        var camera = null;
         if( config.entity ) {
             camera = config.entity.replace( 'camera.aarlo_','' );
         }
         if( config.camera ) {
             camera = config.camera;
         }
-        if( !this.isGood(camera) ) {
+        if( camera === null ) {
             this.throwError( 'missing a camera definition' );
         }
         if( !config.show ) {
@@ -908,7 +919,12 @@ class AarloGlance extends LitElement {
 var s = document.createElement("script");
 s.src = 'https://cdn.jsdelivr.net/npm/hls.js@latest'
 s.onload = function(e) {
-    customElements.define('aarlo-glance', AarloGlance);
+    var s2 = document.createElement("script");
+    s2.src = 'https://cdn.jsdelivr.net/npm/mobile-detect@1.4.3/mobile-detect.min.js'
+    s2.onload = function(e) {
+        customElements.define('aarlo-glance', AarloGlance);
+    }
+    document.head.appendChild(s2);
 };
 document.head.appendChild(s);
 
