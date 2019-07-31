@@ -295,7 +295,7 @@ class AarloGlance extends LitElement {
                     <ha-icon @click="${(e) => { this.pauseVideo(this._s.cameraId); }}" class="${this._v.videoPause}" icon="mdi:pause" title="Click to pause"></ha-icon>
                 </div>
                 <div class='slidecontainer'>
-                    <input type="range" id="video-seek-${this._s.cameraId}" value="0" class='slider'>
+                    <input type="range" id="video-seek-${this._s.cameraId}" value="0" min="0" max="100" class="slider ${this._v.videoSeek}">
                 </div>
                 <div >
                     <ha-icon @click="${(e) => { this.stopVideo(this._s.cameraId); }}" class="${this._v.videoFull}" icon="mdi:fullscreen" title="Click to go full screen"></ha-icon>
@@ -372,6 +372,7 @@ class AarloGlance extends LitElement {
             videoPlay: 'hidden',
             videoStop: 'hidden',
             videoPause: 'hidden',
+            videoSeek: 'hidden',
             videoFull: 'hidden',
             videoFullExit: 'hidden',
         }
@@ -592,6 +593,14 @@ class AarloGlance extends LitElement {
 
         if( this._stream ) {
             this._v.stream = '';
+
+            this._v.video = '';
+            this._v.videoControls = '';
+            this._v.videoPlay = 'hidden';
+            this._v.videoStop = '';
+            this._v.videoPause = 'hidden';
+            this._v.videoSeek = 'hidden';
+            this._v.videoFull = '';
             // Test for HLS and start video???
 
         } else if( this._video ) {
@@ -600,6 +609,7 @@ class AarloGlance extends LitElement {
             this._v.videoPlay = 'hidden';
             this._v.videoStop = '';
             this._v.videoPause = '';
+            this._v.videoSeek = '';
             this._v.videoFull = '';
 
             let video = this.shadowRoot.getElementById('video-' + this._s.cameraId);
@@ -853,9 +863,16 @@ class AarloGlance extends LitElement {
     }
 
     stopVideo( id ) {
-        const video = this.shadowRoot.getElementById('video-' + this._s.cameraId);
-        video.pause();
-        this._video = null
+        if ( this._image ) {
+            const video = this.shadowRoot.getElementById('video-' + this._s.cameraId);
+            video.pause();
+            this._video = null
+        }
+        if ( this._stream ) {
+            const stream = this.shadowRoot.getElementById('stream-' + this._s.cameraId);
+            stream.pause();
+            this.stopStream( id );
+        }
     }
 
     pauseVideo( id ) {
