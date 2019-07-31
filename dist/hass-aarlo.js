@@ -26,12 +26,14 @@ class AarloGlance extends LitElement {
             // Sensor/variable statuses
             // Any information that appears on screen either directly or in hover-overs
             // These are changed by hass state changes.
-            _statuses: String,
+            // _statuses: String,
 
             // What things are showing?
             // Set 'hidden' on items we don't want to see.
             // These are changed by card configruation or media changes.
-            _visibility: String,
+            // _visibility: String,
+
+            _change: Number,
         }
     }
 
@@ -40,6 +42,7 @@ class AarloGlance extends LitElement {
 
         this._hass = null;
         this._config = null;
+        this._change = 0;
 
         this.resetStatuses();
         this._statuses = JSON.stringify( this._s );
@@ -155,6 +158,37 @@ class AarloGlance extends LitElement {
                     background: grey url("/static/images/image-broken.svg") center/36px
                     no-repeat;
                 }
+                .slidecontainer {
+                  width: 70%;
+                 text-align: center;
+                }
+                .slider {
+                  -webkit-appearance: none;
+                  width: 100%;
+                  height: 10px;
+                  background: #d3d3d3;
+                  outline: none;
+                  opacity: 0.7;
+                  -webkit-transition: .2s;
+                  transition: opacity .2s;
+                }
+                .slider:hover {
+                  opacity: 1;
+                }
+                .slider::-webkit-slider-thumb {
+                  -webkit-appearance: none;
+                  appearance: none;
+                  width: 10px;
+                  height: 10px;
+                  background: #4CAF50;
+                  cursor: pointer;
+                }
+                .slider::-moz-range-thumb {
+                  width: 10px;
+                  height: 10px;
+                  background: #4CAF50;
+                  cursor: pointer;
+                }
             </style>
         `;
     }
@@ -254,6 +288,20 @@ class AarloGlance extends LitElement {
                     <ha-icon @click="${(e) => { this.setLibraryBase(this._libraryOffset + 9); }}" class="${this._v.libraryNext} state-on" icon="mdi:chevron-right" title="next"></ha-icon>
                 </div>
             </div>
+            <div class="box box-bottom ${this._v.videoControls}">
+                <div >
+                    <ha-icon @click="${(e) => { this.stopVideo(this._s.cameraId); }}" class="${this._v.videoStop}" icon="mdi:stop" title="Click to stop"></ha-icon>
+                    <ha-icon @click="${(e) => { this.playVideo(this._s.cameraId); }}" class="${this._v.videoPlay}" icon="mdi:play" title="Click to play"></ha-icon>
+                    <ha-icon @click="${(e) => { this.pauseVideo(this._s.cameraId); }}" class="${this._v.videoPause}" icon="mdi:pause" title="Click to pause"></ha-icon>
+                </div>
+                <div class='slidecontainer'>
+                    <input type="range" id="video-seek-${this._s.cameraId}" value="0" class='slider'>
+                </div>
+                <div >
+                    <ha-icon @click="${(e) => { this.stopVideo(this._s.cameraId); }}" class="${this._v.videoFull}" icon="mdi:fullscreen" title="Click to go full screen"></ha-icon>
+                    <ha-icon @click="${(e) => { this.stopVideo(this._s.cameraId); }}" class="${this._v.videoFullExit}" icon="mdi:fullscreen-exit" title="Click to exit screen"></ha-icon>
+                </div>
+            </div>
             </ha-card>
         `;
     }
@@ -261,6 +309,10 @@ class AarloGlance extends LitElement {
     throwError( error ) {
         console.error( error );
         throw new Error( error )
+    }
+
+    changed() {
+        this._change++
     }
 
     getState(_id, default_value = '') {
@@ -301,6 +353,7 @@ class AarloGlance extends LitElement {
             topBar: 'hidden',
             bottomBar: 'hidden',
             doorStatus: 'hidden',
+            videoControls: 'hidden',
 
             // sensors
             date: 'hidden',
@@ -315,8 +368,13 @@ class AarloGlance extends LitElement {
             door2Lock: 'hidden',
             doorBell: 'hidden',
             door2Bell: 'hidden',
-        }
 
+            videoPlay: 'hidden',
+            videoStop: 'hidden',
+            videoPause: 'hidden',
+            videoFull: 'hidden',
+            videoFullExit: 'hidden',
+        }
     }
 
     resetStatuses() {
@@ -513,8 +571,9 @@ class AarloGlance extends LitElement {
             this._s.door2BellIcon = 'mdi:doorbell-video';
         }
 
-        this._statuses = JSON.stringify( this._s );
-        this._visibility = JSON.stringify( this._v )
+        this.changed();
+        // this._statuses = JSON.stringify( this._s );
+        // this._visibility = JSON.stringify( this._v )
     }
 
     updateMedia() {
@@ -529,6 +588,7 @@ class AarloGlance extends LitElement {
         this._v.topBar      = 'hidden';
         this._v.bottomBar   = 'hidden';
         this._v.brokeStatus = 'hidden';
+        this._v.videoControls = 'hidden';
 
         if( this._stream ) {
             this._v.stream = '';
@@ -536,6 +596,19 @@ class AarloGlance extends LitElement {
 
         } else if( this._video ) {
             this._v.video = '';
+            this._v.videoControls = '';
+            this._v.videoPlay = 'hidden';
+            this._v.videoStop = '';
+            this._v.videoPause = '';
+            this._v.videoFull = '';
+
+            let video = this.shadowRoot.getElementById('video-' + this._s.cameraId);
+            let seekBar = this.shadowRoot.getElementById('video-seek-' + this._s.cameraId);
+            seekBar.value = 0;
+            video.addEventListener("timeupdate", function() {
+                seekBar.value = (100 / video.duration) * video.currentTime;
+            });
+
 
         } else if ( this._library ) {
 
@@ -582,8 +655,9 @@ class AarloGlance extends LitElement {
             this._v.bottomBar   = '';
         }
 
-        this._statuses = JSON.stringify( this._s );
-        this._visibility = JSON.stringify( this._v )
+        this.changed();
+        // this._statuses = JSON.stringify( this._s );
+        // this._visibility = JSON.stringify( this._v )
     }
 
     updated(changedProperties) {
@@ -614,7 +688,7 @@ class AarloGlance extends LitElement {
                     video.removeAttribute('controls')
                 } else {
                     console.log( "it's not mobile" )
-                    video.setAttribute('controls', 'controls');
+                    //video.setAttribute('controls', 'controls');
                 }
             }
 
@@ -749,8 +823,9 @@ class AarloGlance extends LitElement {
                                 this._v.door2Lock === '' || this._v.door2Bell === '' ) ? '':'hidden';
 
         // render changes
-        this._statuses = JSON.stringify( this._s );
-        this._visibility = JSON.stringify( this._v )
+        this.changed();
+        // this._statuses = JSON.stringify( this._s );
+        // this._visibility = JSON.stringify( this._v )
     }
 
     moreInfo( id ) {
@@ -778,7 +853,25 @@ class AarloGlance extends LitElement {
     }
 
     stopVideo( id ) {
+        const video = this.shadowRoot.getElementById('video-' + this._s.cameraId);
+        video.pause();
         this._video = null
+    }
+
+    pauseVideo( id ) {
+        const video = this.shadowRoot.getElementById('video-' + this._s.cameraId);
+        video.pause();
+        this._v.videoPlay = '';
+        this._v.videoPause = 'hidden'
+        this.changed()
+    }
+
+    playVideo( id ) {
+        const video = this.shadowRoot.getElementById('video-' + this._s.cameraId);
+        video.play();
+        this._v.videoPlay = 'hidden';
+        this._v.videoPause = ''
+        this.changed()
     }
 
     async showVideo( id ) {
