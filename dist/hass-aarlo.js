@@ -190,9 +190,9 @@ class AarloGlance extends LitElement {
                 <video class="${this._v.stream} video-16x9"
                     id="stream-${this._s.cameraId}"
                     poster="${this._streamPoster}"
-                    @ended="${(e) => { this.stopStreamN(); }}"
-                    @mouseover="${(e) => { this.mouseOverVideoN(); }}"
-                    @click="${(e) => { this.clickVideoN(); }}">
+                    @ended="${(e) => { this.stopStream(); }}"
+                    @mouseover="${(e) => { this.mouseOverVideo(); }}"
+                    @click="${(e) => { this.clickVideo(); }}">
                         Your browser does not support the video tag.
                 </video>
                 <video class="${this._v.video} video-16x9"
@@ -200,14 +200,14 @@ class AarloGlance extends LitElement {
                     poster="${this._videoPoster}"
                     src="${this._video}" type="${this._videoType}"
                     autoplay playsinline 
-                    @ended="${(e) => { this.stopVideoN(); }}"
-                    @mouseover="${(e) => { this.mouseOverVideoN(); }}"
-                    @click="${(e) => { this.clickVideoN(); }}">
+                    @ended="${(e) => { this.stopVideo(); }}"
+                    @mouseover="${(e) => { this.mouseOverVideo(); }}"
+                    @click="${(e) => { this.clickVideo(); }}">
                         Your browser does not support the video tag.
                 </video>
                 <img class="${this._v.image} img-16x9"
                     id="image-${this._s.cameraId}"
-                    @click="${e => { this.clickImageN(); }}"
+                    @click="${e => { this.clickImage(); }}"
                     src="${this._image}"
                     title="${this._s.imageFullDate}">
                 </img>
@@ -251,7 +251,7 @@ class AarloGlance extends LitElement {
                     <ha-icon @click="${(e) => { this.moreInfo(this._s.motionId); }}" class="${this._s.motionOn} ${this._v.motion}" icon="mdi:run-fast" title="${this._s.motionText}"></ha-icon>
                     <ha-icon @click="${(e) => { this.moreInfo(this._s.soundId); }}" class="${this._s.soundOn} ${this._v.sound}" icon="mdi:ear-hearing" title="${this._s.soundText}"></ha-icon>
                     <ha-icon @click="${(e) => { this.showLibrary(0); }}" class="${this._s.capturedOn} ${this._v.captured}" icon="${this._s.capturedIcon}" title="${this._s.capturedText}"></ha-icon>
-                    <ha-icon @click="${(e) => { this.showOrStopStreamN(); }}" class="${this._s.playOn} ${this._v.play}" icon="${this._s.playIcon}" title="${this._s.playText}"></ha-icon>
+                    <ha-icon @click="${(e) => { this.showOrStopStream(); }}" class="${this._s.playOn} ${this._v.play}" icon="${this._s.playIcon}" title="${this._s.playText}"></ha-icon>
                     <ha-icon @click="${(e) => { this.wsUpdateSnapshot(); }}" class="${this._s.snapshotOn} ${this._v.snapshot}" icon="${this._s.snapshotIcon}" title="${this._s.snapshotText}"></ha-icon>
                     <ha-icon @click="${(e) => { this.moreInfo(this._s.batteryId); }}" class="${this._s.batteryState} ${this._v.battery}" icon="mdi:${this._s.batteryIcon}" title="${this._s.batteryText}"></ha-icon>
                     <ha-icon @click="${(e) => { this.moreInfo(this._s.signalId); }}" class="state-update ${this._v.signal}" icon="${this._s.signalIcon}" title="${this._s.signalText}"></ha-icon>
@@ -284,7 +284,7 @@ class AarloGlance extends LitElement {
             </div>
             <div class="box box-bottom ${this._v.videoControls}">
                 <div >
-                    <ha-icon @click="${(e) => { this.controlStopVideoOrStreamN(); }}" class="${this._v.videoStop}" icon="mdi:stop" title="Click to stop"></ha-icon>
+                    <ha-icon @click="${(e) => { this.controlStopVideoOrStream(); }}" class="${this._v.videoStop}" icon="mdi:stop" title="Click to stop"></ha-icon>
                     <ha-icon @click="${(e) => { this.controlPlayVideo(); }}" class="${this._v.videoPlay}" icon="mdi:play" title="Click to play"></ha-icon>
                     <ha-icon @click="${(e) => { this.controlPauseVideo(); }}" class="${this._v.videoPause}" icon="mdi:pause" title="Click to pause"></ha-icon>
                 </div>
@@ -449,7 +449,7 @@ class AarloGlance extends LitElement {
             if ( this._s.cameraState === 'taking snapshot' ) {
                 console.log( 'updating1 ' + this._s.cameraName + ':' + this._s.cameraState + '-->' + camera.state );
                 this.wsUpdateCameraImageSrc();
-                this.updateCameraImageSourceLater(5)
+                this.updateCameraImageSourceLater(5);
                 this.updateCameraImageSourceLater(10)
             } else {
                 console.log( 'updating2 ' + this._s.cameraName + ':' + this._s.cameraState + '-->' + camera.state );
@@ -888,7 +888,7 @@ class AarloGlance extends LitElement {
         }
     }
 
-    async playVideoN() {
+    async playVideo() {
         const video = await this.wsLoadLibrary(1);
         if ( video ) {
             this._video       = video[0].url;
@@ -901,7 +901,7 @@ class AarloGlance extends LitElement {
         }
     }
 
-    stopVideoN() {
+    stopVideo() {
         if ( this._video ) {
             const video = this.shadowRoot.getElementById('video-' + this._s.cameraId);
             video.pause();
@@ -909,7 +909,7 @@ class AarloGlance extends LitElement {
         }
     }
 
-    async playStreamN() {
+    async playStream() {
         const stream = await this.wsStartStream();
         if (stream) {
             this._stream = stream.url;
@@ -920,7 +920,7 @@ class AarloGlance extends LitElement {
         }
     }
 
-    async stopStreamN() {
+    async stopStream() {
         if (this._stream) {
             const stream = this.shadowRoot.getElementById('stream-' + this._s.cameraId);
             stream.pause();
@@ -934,12 +934,12 @@ class AarloGlance extends LitElement {
         }
     }
 
-    showOrStopStreamN() {
+    showOrStopStream() {
         const camera = this.getState(this._s.cameraId,'unknown');
         if ( camera.state === 'streaming' ) {
-            this.stopStreamN()
+            this.stopStream()
         } else {
-            this.playStreamN()
+            this.playStream()
         }
     }
 
@@ -965,19 +965,19 @@ class AarloGlance extends LitElement {
     }
 
     stopLibrary() {
-        this.stopVideoN();
+        this.stopVideo();
         this._library = null
     }
 
-    clickImageN() {
+    clickImage() {
         if ( this._v.imageClick === 'play' ) {
-            this.playStreamN()
+            this.playStream()
         } else {
-            this.playVideoN()
+            this.playVideo()
         }
     }
 
-    clickVideoN() {
+    clickVideo() {
         if (this._v.videoControls === 'hidden') {
             this.showVideoControls(2)
         } else {
@@ -985,13 +985,13 @@ class AarloGlance extends LitElement {
         }
     }
 
-    mouseOverVideoN() {
+    mouseOverVideo() {
         this.showVideoControls(2)
     }
 
-    controlStopVideoOrStreamN() {
-        this.stopVideoN();
-        this.stopStreamN();
+    controlStopVideoOrStream() {
+        this.stopVideo();
+        this.stopStream();
     }
 
     controlPauseVideo(  ) {
