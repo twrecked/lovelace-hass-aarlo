@@ -5,9 +5,18 @@ const LitElement = Object.getPrototypeOf(
 const html = LitElement.prototype.html;
 
 class AarloGlance extends LitElement {
+    // To quieten down JetBrains...
     created_at_pretty;
     states;
     image_click;
+    door_bell;
+    door_lock;
+    door2_bell;
+    door2_lock;
+    top_title;
+    top_date;
+    top_status;
+    videos;
 
     static get properties() {
         return {
@@ -190,43 +199,81 @@ class AarloGlance extends LitElement {
                 <video class="${this._v.stream} video-16x9"
                     id="stream-${this._s.cameraId}"
                     poster="${this._streamPoster}"
-                    @ended="${(e) => { this.stopStream(); }}"
-                    @mouseover="${(e) => { this.mouseOverVideo(); }}"
-                    @click="${(e) => { this.clickVideo(); }}">
+                    @ended="${() => { this.stopStream(); }}"
+                    @mouseover="${() => { this.mouseOverVideo(); }}"
+                    @click="${() => { this.clickVideo(); }}">
                         Your browser does not support the video tag.
                 </video>
                 <video class="${this._v.video} video-16x9"
-                    id="video-${this._s.cameraId}"
-                    poster="${this._videoPoster}"
-                    src="${this._video}" type="${this._videoType}"
                     autoplay playsinline 
-                    @ended="${(e) => { this.stopVideo(); }}"
-                    @mouseover="${(e) => { this.mouseOverVideo(); }}"
-                    @click="${(e) => { this.clickVideo(); }}">
+                    id="video-${this._s.cameraId}"
+                    src="${this._video}"
+                    type="${this._videoType}"
+                    poster="${this._videoPoster}"
+                    @ended="${() => { this.stopVideo(); }}"
+                    @mouseover="${() => { this.mouseOverVideo(); }}"
+                    @click="${() => { this.clickVideo(); }}">
                         Your browser does not support the video tag.
                 </video>
                 <img class="${this._v.image} img-16x9"
                     id="image-${this._s.cameraId}"
-                    @click="${e => { this.clickImage(); }}"
                     src="${this._image}"
-                    title="${this._s.imageFullDate}">
+                    alt="${this._s.imageFullDate}"
+                    title="${this._s.imageFullDate}"
+                    @click="${() => { this.clickImage(); }}">
                 </img>
                 <div class="${this._v.library} img-16x9" >
                     <div class="lrow">
                         <div class="lcolumn">
-                            <img class="${this._s.libraryItem[0].hidden} library-16x9" @click="${(e) => { this.showLibraryVideo(0); }}" src="${this._s.libraryItem[0].thumbnail}" title="${this._s.libraryItem[0].captured_at}"/>
-                            <img class="${this._s.libraryItem[3].hidden} library-16x9" @click="${(e) => { this.showLibraryVideo(3); }}" src="${this._s.libraryItem[3].thumbnail}" title="${this._s.libraryItem[3].captured_at}"/>
-                            <img class="${this._s.libraryItem[6].hidden} library-16x9" @click="${(e) => { this.showLibraryVideo(6); }}" src="${this._s.libraryItem[6].thumbnail}" title="${this._s.libraryItem[6].captured_at}"/>
+                            <img class="${this._s.libraryItem[0].hidden} library-16x9" 
+                                src="${this._s.libraryItem[0].thumbnail}"
+                                alt="${this._s.libraryItem[0].captured_at}"
+                                title="${this._s.libraryItem[0].captured_at}"
+                                @click="${() => { this.showLibraryVideo(0); }}"/>
+                            <img class="${this._s.libraryItem[3].hidden} library-16x9"
+                                src="${this._s.libraryItem[3].thumbnail}"
+                                alt="${this._s.libraryItem[3].captured_at}"
+                                title="${this._s.libraryItem[3].captured_at}"
+                                @click="${() => { this.showLibraryVideo(3); }}"/>
+                            <img class="${this._s.libraryItem[6].hidden} library-16x9"
+                                src="${this._s.libraryItem[6].thumbnail}"
+                                alt="${this._s.libraryItem[6].captured_at}"
+                                title="${this._s.libraryItem[6].captured_at}"
+                                @click="${() => { this.showLibraryVideo(6); }}"/>
                         </div>
                         <div class="lcolumn">
-                            <img class="${this._s.libraryItem[1].hidden} library-16x9" @click="${(e) => { this.showLibraryVideo(1); }}" src="${this._s.libraryItem[1].thumbnail}" title="${this._s.libraryItem[1].captured_at}"/>
-                            <img class="${this._s.libraryItem[4].hidden} library-16x9" @click="${(e) => { this.showLibraryVideo(4); }}" src="${this._s.libraryItem[4].thumbnail}" title="${this._s.libraryItem[4].captured_at}"/>
-                            <img class="${this._s.libraryItem[7].hidden} library-16x9" @click="${(e) => { this.showLibraryVideo(7); }}" src="${this._s.libraryItem[7].thumbnail}" title="${this._s.libraryItem[7].captured_at}"/>
+                            <img class="${this._s.libraryItem[1].hidden} library-16x9"
+                                src="${this._s.libraryItem[1].thumbnail}"
+                                alt="${this._s.libraryItem[1].captured_at}"
+                                title="${this._s.libraryItem[1].captured_at}"
+                                @click="${() => { this.showLibraryVideo(1); }}"/>
+                            <img class="${this._s.libraryItem[4].hidden} library-16x9"
+                                src="${this._s.libraryItem[4].thumbnail}"
+                                alt="${this._s.libraryItem[4].captured_at}"
+                                title="${this._s.libraryItem[4].captured_at}"
+                                @click="${() => { this.showLibraryVideo(4); }}"/>
+                            <img class="${this._s.libraryItem[7].hidden} library-16x9"
+                                src="${this._s.libraryItem[7].thumbnail}"
+                                alt="${this._s.libraryItem[7].captured_at}"
+                                title="${this._s.libraryItem[7].captured_at}"
+                                @click="${() => { this.showLibraryVideo(7); }}"/>
                         </div>
                         <div class="lcolumn">
-                            <img class="${this._s.libraryItem[2].hidden} library-16x9" @click="${(e) => { this.showLibraryVideo(2); }}" src="${this._s.libraryItem[2].thumbnail}" title="${this._s.libraryItem[2].captured_at}"/>
-                            <img class="${this._s.libraryItem[5].hidden} library-16x9" @click="${(e) => { this.showLibraryVideo(5); }}" src="${this._s.libraryItem[5].thumbnail}" title="${this._s.libraryItem[5].captured_at}"/>
-                            <img class="${this._s.libraryItem[8].hidden} library-16x9" @click="${(e) => { this.showLibraryVideo(8); }}" src="${this._s.libraryItem[8].thumbnail}" title="${this._s.libraryItem[8].captured_at}"/>
+                            <img class="${this._s.libraryItem[2].hidden} library-16x9"
+                                src="${this._s.libraryItem[2].thumbnail}"
+                                alt="${this._s.libraryItem[2].captured_at}"
+                                title="${this._s.libraryItem[2].captured_at}"/>
+                                @click="${() => { this.showLibraryVideo(2); }}"
+                            <img class="${this._s.libraryItem[5].hidden} library-16x9"
+                                src="${this._s.libraryItem[5].thumbnail}"
+                                alt="${this._s.libraryItem[5].captured_at}"
+                                title="${this._s.libraryItem[5].captured_at}"/>
+                                @click="${() => { this.showLibraryVideo(5); }}"
+                            <img class="${this._s.libraryItem[8].hidden} library-16x9"
+                                src="${this._s.libraryItem[8].thumbnail}"
+                                alt="${this._s.libraryItem[8].captured_at}"
+                                title="${this._s.libraryItem[8].captured_at}"
+                                @click="${() => { this.showLibraryVideo(8); }}"/>
                         </div>
                     </div>
                 </div>
@@ -248,24 +295,24 @@ class AarloGlance extends LitElement {
                     ${this._s.cameraName} 
                 </div>
                 <div>
-                    <ha-icon @click="${(e) => { this.moreInfo(this._s.motionId); }}" class="${this._s.motionOn} ${this._v.motion}" icon="mdi:run-fast" title="${this._s.motionText}"></ha-icon>
-                    <ha-icon @click="${(e) => { this.moreInfo(this._s.soundId); }}" class="${this._s.soundOn} ${this._v.sound}" icon="mdi:ear-hearing" title="${this._s.soundText}"></ha-icon>
-                    <ha-icon @click="${(e) => { this.showLibrary(0); }}" class="${this._s.capturedOn} ${this._v.captured}" icon="${this._s.capturedIcon}" title="${this._s.capturedText}"></ha-icon>
-                    <ha-icon @click="${(e) => { this.showOrStopStream(); }}" class="${this._s.playOn} ${this._v.play}" icon="${this._s.playIcon}" title="${this._s.playText}"></ha-icon>
-                    <ha-icon @click="${(e) => { this.wsUpdateSnapshot(); }}" class="${this._s.snapshotOn} ${this._v.snapshot}" icon="${this._s.snapshotIcon}" title="${this._s.snapshotText}"></ha-icon>
-                    <ha-icon @click="${(e) => { this.moreInfo(this._s.batteryId); }}" class="${this._s.batteryState} ${this._v.battery}" icon="mdi:${this._s.batteryIcon}" title="${this._s.batteryText}"></ha-icon>
-                    <ha-icon @click="${(e) => { this.moreInfo(this._s.signalId); }}" class="state-update ${this._v.signal}" icon="${this._s.signalIcon}" title="${this._s.signalText}"></ha-icon>
+                    <ha-icon @click="${() => { this.moreInfo(this._s.motionId); }}" class="${this._s.motionOn} ${this._v.motion}" icon="mdi:run-fast" title="${this._s.motionText}"></ha-icon>
+                    <ha-icon @click="${() => { this.moreInfo(this._s.soundId); }}" class="${this._s.soundOn} ${this._v.sound}" icon="mdi:ear-hearing" title="${this._s.soundText}"></ha-icon>
+                    <ha-icon @click="${() => { this.showLibrary(0); }}" class="${this._s.capturedOn} ${this._v.captured}" icon="${this._s.capturedIcon}" title="${this._s.capturedText}"></ha-icon>
+                    <ha-icon @click="${() => { this.showOrStopStream(); }}" class="${this._s.playOn} ${this._v.play}" icon="${this._s.playIcon}" title="${this._s.playText}"></ha-icon>
+                    <ha-icon @click="${() => { this.wsUpdateSnapshot(); }}" class="${this._s.snapshotOn} ${this._v.snapshot}" icon="${this._s.snapshotIcon}" title="${this._s.snapshotText}"></ha-icon>
+                    <ha-icon @click="${() => { this.moreInfo(this._s.batteryId); }}" class="${this._s.batteryState} ${this._v.battery}" icon="mdi:${this._s.batteryIcon}" title="${this._s.batteryText}"></ha-icon>
+                    <ha-icon @click="${() => { this.moreInfo(this._s.signalId); }}" class="state-update ${this._v.signal}" icon="${this._s.signalIcon}" title="${this._s.signalText}"></ha-icon>
                 </div>
                 <div class="box-title ${this._v.topDate?'hidden':''} ${this._v.image_date}" title="${this._s.imageFullDate}">
                     ${this._s.imageDate}
                 </div>
                 <div class="box-status ${this._v.doorStatus}">
-                    <ha-icon @click="${(e) => { this.moreInfo(this._s.doorId); }}" class="${this._s.doorOn} ${this._v.door}" icon="${this._s.doorIcon}" title="${this._s.doorText}"></ha-icon>
-                    <ha-icon @click="${(e) => { this.moreInfo(this._s.doorBellId); }}" class="${this._s.doorBellOn} ${this._v.doorBell}" icon="${this._s.doorBellIcon}" title="${this._s.doorBellText}"></ha-icon>
-                    <ha-icon @click="${(e) => { this.toggleLock(this._s.doorLockId); }}" class="${this._s.doorLockOn} ${this._v.doorLock}" icon="${this._s.doorLockIcon}" title="${this._s.doorLockText}"></ha-icon>
-                    <ha-icon @click="${(e) => { this.moreInfo(this._s.door2Id); }}" class="${this._s.door2On} ${this._v.door2}" icon="${this._s.door2Icon}" title="${this._s.door2Text}"></ha-icon>
-                    <ha-icon @click="${(e) => { this.moreInfo(this._s.door2BellId); }}" class="${this._s.door2BellOn} ${this._v.door2Bell}" icon="${this._s.door2BellIcon}" title="${this._s.door2BellText}"></ha-icon>
-                    <ha-icon @click="${(e) => { this.toggleLock(this._s.door2LockId); }}" class="${this._s.door2LockOn} ${this._v.door2Lock}" icon="${this._s.door2LockIcon}" title="${this._s.door2LockText}"></ha-icon>
+                    <ha-icon @click="${() => { this.moreInfo(this._s.doorId); }}" class="${this._s.doorOn} ${this._v.door}" icon="${this._s.doorIcon}" title="${this._s.doorText}"></ha-icon>
+                    <ha-icon @click="${() => { this.moreInfo(this._s.doorBellId); }}" class="${this._s.doorBellOn} ${this._v.doorBell}" icon="${this._s.doorBellIcon}" title="${this._s.doorBellText}"></ha-icon>
+                    <ha-icon @click="${() => { this.toggleLock(this._s.doorLockId); }}" class="${this._s.doorLockOn} ${this._v.doorLock}" icon="${this._s.doorLockIcon}" title="${this._s.doorLockText}"></ha-icon>
+                    <ha-icon @click="${() => { this.moreInfo(this._s.door2Id); }}" class="${this._s.door2On} ${this._v.door2}" icon="${this._s.door2Icon}" title="${this._s.door2Text}"></ha-icon>
+                    <ha-icon @click="${() => { this.moreInfo(this._s.door2BellId); }}" class="${this._s.door2BellOn} ${this._v.door2Bell}" icon="${this._s.door2BellIcon}" title="${this._s.door2BellText}"></ha-icon>
+                    <ha-icon @click="${() => { this.toggleLock(this._s.door2LockId); }}" class="${this._s.door2LockOn} ${this._v.door2Lock}" icon="${this._s.door2LockIcon}" title="${this._s.door2LockText}"></ha-icon>
                 </div>
                 <div class="box-status ${this._v.topStatus?'hidden':''}">
                     ${this._s.cameraState}
@@ -273,26 +320,26 @@ class AarloGlance extends LitElement {
             </div>
             <div class="box box-bottom-small ${this._v.library}">
                 <div >
-                    <ha-icon @click="${(e) => { this.setLibraryBase(this._libraryOffset - 9); }}" class="${this._v.libraryPrev} state-on" icon="mdi:chevron-left" title="previous"></ha-icon>
+                    <ha-icon @click="${() => { this.setLibraryBase(this._libraryOffset - 9); }}" class="${this._v.libraryPrev} state-on" icon="mdi:chevron-left" title="previous"></ha-icon>
                 </div>
                 <div >
-                    <ha-icon @click="${(e) => { this.stopLibrary(); }}" class="state-on" icon="mdi:close" title="close library"></ha-icon>
+                    <ha-icon @click="${() => { this.stopLibrary(); }}" class="state-on" icon="mdi:close" title="close library"></ha-icon>
                 </div>
                 <div >
-                    <ha-icon @click="${(e) => { this.setLibraryBase(this._libraryOffset + 9); }}" class="${this._v.libraryNext} state-on" icon="mdi:chevron-right" title="next"></ha-icon>
+                    <ha-icon @click="${() => { this.setLibraryBase(this._libraryOffset + 9); }}" class="${this._v.libraryNext} state-on" icon="mdi:chevron-right" title="next"></ha-icon>
                 </div>
             </div>
             <div class="box box-bottom ${this._v.videoControls}">
                 <div >
-                    <ha-icon @click="${(e) => { this.controlStopVideoOrStream(); }}" class="${this._v.videoStop}" icon="mdi:stop" title="Click to stop"></ha-icon>
-                    <ha-icon @click="${(e) => { this.controlPlayVideo(); }}" class="${this._v.videoPlay}" icon="mdi:play" title="Click to play"></ha-icon>
-                    <ha-icon @click="${(e) => { this.controlPauseVideo(); }}" class="${this._v.videoPause}" icon="mdi:pause" title="Click to pause"></ha-icon>
+                    <ha-icon @click="${() => { this.controlStopVideoOrStream(); }}" class="${this._v.videoStop}" icon="mdi:stop" title="Click to stop"></ha-icon>
+                    <ha-icon @click="${() => { this.controlPlayVideo(); }}" class="${this._v.videoPlay}" icon="mdi:play" title="Click to play"></ha-icon>
+                    <ha-icon @click="${() => { this.controlPauseVideo(); }}" class="${this._v.videoPause}" icon="mdi:pause" title="Click to pause"></ha-icon>
                 </div>
                 <div class='slidecontainer'>
                     <input type="range" id="video-seek-${this._s.cameraId}" value="0" min="1" max="100" class="slider ${this._v.videoSeek}">
                 </div>
                 <div >
-                    <ha-icon @click="${(e) => { this.controlFullScreen(); }}" class="${this._v.videoFull}" icon="mdi:fullscreen" title="Click to go full screen"></ha-icon>
+                    <ha-icon @click="${() => { this.controlFullScreen(); }}" class="${this._v.videoFull}" icon="mdi:fullscreen" title="Click to go full screen"></ha-icon>
                 </div>
             </div>
             </ha-card>
@@ -611,8 +658,8 @@ class AarloGlance extends LitElement {
             const last = Math.min(this._libraryOffset + 9, this._library.length);
             for( i = 0, j = this._libraryOffset; j < last; i++,j++ ) {
                 let captured_text = this._library[j].created_at_pretty;
-                if ( this._library[j].object && this._library[j].object !== '' ) {
-                    captured_text += ' (' + this._library[j].object.toLowerCase() + ')'
+                if ( this._library[j].trigger && this._library[j].trigger !== '' ) {
+                    captured_text += ' (' + this._library[j].trigger.toLowerCase() + ')'
                 }
                 this._s.libraryItem[i] = ( { 'hidden':'',
                                     'thumbnail':this._library[j].thumbnail,
@@ -998,7 +1045,7 @@ class AarloGlance extends LitElement {
         const video = this.shadowRoot.getElementById('video-' + this._s.cameraId);
         video.pause();
         this._v.videoPlay = '';
-        this._v.videoPause = 'hidden'
+        this._v.videoPause = 'hidden';
         this.changed()
     }
 
@@ -1006,7 +1053,7 @@ class AarloGlance extends LitElement {
         const video = this.shadowRoot.getElementById('video-' + this._s.cameraId);
         video.play();
         this._v.videoPlay = 'hidden';
-        this._v.videoPause = ''
+        this._v.videoPause = '';
         this.changed()
     }
 
@@ -1043,7 +1090,7 @@ class AarloGlance extends LitElement {
             video.currentTime = video.duration * (seekBar.value / 100);
         });
         seekBar.addEventListener("mousedown", () => {
-            this.showVideoControls(0)
+            this.showVideoControls(0);
             video.pause();
         });
         seekBar.addEventListener("mouseup", () => {
@@ -1056,7 +1103,7 @@ class AarloGlance extends LitElement {
   
     showVideoControls(seconds = 0) {
         this._v.videoControls = '';
-        this.hideVideoControlsCancel()
+        this.hideVideoControlsCancel();
         if (seconds !== 0) {
             this.hideVideoControlsLater(seconds);
         }
@@ -1064,13 +1111,13 @@ class AarloGlance extends LitElement {
     }
 
     hideVideoControls() {
-        this.hideVideoControlsCancel()
+        this.hideVideoControlsCancel();
         this._v.videoControls = 'hidden';
         this.changed()
     }
 
     hideVideoControlsLater(seconds = 2) {
-        this.hideVideoControlsCancel()
+        this.hideVideoControlsCancel();
         this._s.controlTimeout = setTimeout(() => {
             this._s.controlTimeout = null;
             this.hideVideoControls()
