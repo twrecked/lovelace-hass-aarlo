@@ -23,16 +23,7 @@ class AarloGlance extends LitElement {
             _library: String,
             _libraryOffset: String,
 
-            // Sensor/variable statuses
-            // Any information that appears on screen either directly or in hover-overs
-            // These are changed by hass state changes.
-            // _statuses: String,
-
-            // What things are showing?
-            // Set 'hidden' on items we don't want to see.
-            // These are changed by card configruation or media changes.
-            // _visibility: String,
-
+            // Any time a render is needed we bump this number.
             _change: Number,
         }
     }
@@ -45,11 +36,7 @@ class AarloGlance extends LitElement {
         this._change = 0;
 
         this.resetStatuses();
-        this._statuses = JSON.stringify( this._s );
-
         this.resetVisiblity();
-        this._visibility = JSON.stringify( this._v )
-
     }
 
     static get outerStyleTemplate() {
@@ -203,36 +190,43 @@ class AarloGlance extends LitElement {
                 <video class="${this._v.stream} video-16x9"
                     id="stream-${this._s.cameraId}"
                     poster="${this._streamPoster}"
-                    @ended="${(e) => { this.stopStream(this._s.cameraId); }}"
-                    @click="${(e) => { this.stopStream(this._s.cameraId); }}">
+                    @ended="${(e) => { this.stopStreamN(); }}"
+                    @mouseover="${(e) => { this.mouseOverVideoN(); }}"
+                    @click="${(e) => { this.clickVideoN(); }}">
                         Your browser does not support the video tag.
                 </video>
                 <video class="${this._v.video} video-16x9"
-                    src="${this._video}" type="${this._videoType}"
-                    poster="${this._videoPoster}"
                     id="video-${this._s.cameraId}"
+                    poster="${this._videoPoster}"
+                    src="${this._video}" type="${this._videoType}"
                     autoplay playsinline 
-                    @ended="${(e) => { this.stopVideo(this._s.cameraId); }}"
-                    @click="${(e) => { this.stopVideo(this._s.cameraId); }}">
+                    @ended="${(e) => { this.stopVideoN(); }}"
+                    @mouseover="${(e) => { this.mouseOverVideoN(); }}"
+                    @click="${(e) => { this.clickVideoN(); }}">
                         Your browser does not support the video tag.
                 </video>
-                <img class="${this._v.image} img-16x9" id="aarlo-image" @click="${e => { this.showVideoOrStream(this._s.cameraId); }}" src="${this._image}" title="${this._s.imageFullDate}"></img>
+                <img class="${this._v.image} img-16x9"
+                    id="image-${this._s.cameraId}"
+                    @click="${e => { this.clickImageN(); }}"
+                    src="${this._image}"
+                    title="${this._s.imageFullDate}">
+                </img>
                 <div class="${this._v.library} img-16x9" >
                     <div class="lrow">
                         <div class="lcolumn">
-                            <img class="${this._s.libraryItem[0].hidden} library-16x9" @click="${(e) => { this.showLibraryVideo(this._s.cameraId,0); }}" src="${this._s.libraryItem[0].thumbnail}" title="${this._s.libraryItem[0].captured_at}"/>
-                            <img class="${this._s.libraryItem[3].hidden} library-16x9" @click="${(e) => { this.showLibraryVideo(this._s.cameraId,3); }}" src="${this._s.libraryItem[3].thumbnail}" title="${this._s.libraryItem[3].captured_at}"/>
-                            <img class="${this._s.libraryItem[6].hidden} library-16x9" @click="${(e) => { this.showLibraryVideo(this._s.cameraId,6); }}" src="${this._s.libraryItem[6].thumbnail}" title="${this._s.libraryItem[6].captured_at}"/>
+                            <img class="${this._s.libraryItem[0].hidden} library-16x9" @click="${(e) => { this.showLibraryVideo(0); }}" src="${this._s.libraryItem[0].thumbnail}" title="${this._s.libraryItem[0].captured_at}"/>
+                            <img class="${this._s.libraryItem[3].hidden} library-16x9" @click="${(e) => { this.showLibraryVideo(3); }}" src="${this._s.libraryItem[3].thumbnail}" title="${this._s.libraryItem[3].captured_at}"/>
+                            <img class="${this._s.libraryItem[6].hidden} library-16x9" @click="${(e) => { this.showLibraryVideo(6); }}" src="${this._s.libraryItem[6].thumbnail}" title="${this._s.libraryItem[6].captured_at}"/>
                         </div>
                         <div class="lcolumn">
-                            <img class="${this._s.libraryItem[1].hidden} library-16x9" @click="${(e) => { this.showLibraryVideo(this._s.cameraId,1); }}" src="${this._s.libraryItem[1].thumbnail}" title="${this._s.libraryItem[1].captured_at}"/>
-                            <img class="${this._s.libraryItem[4].hidden} library-16x9" @click="${(e) => { this.showLibraryVideo(this._s.cameraId,4); }}" src="${this._s.libraryItem[4].thumbnail}" title="${this._s.libraryItem[4].captured_at}"/>
-                            <img class="${this._s.libraryItem[7].hidden} library-16x9" @click="${(e) => { this.showLibraryVideo(this._s.cameraId,7); }}" src="${this._s.libraryItem[7].thumbnail}" title="${this._s.libraryItem[7].captured_at}"/>
+                            <img class="${this._s.libraryItem[1].hidden} library-16x9" @click="${(e) => { this.showLibraryVideo(1); }}" src="${this._s.libraryItem[1].thumbnail}" title="${this._s.libraryItem[1].captured_at}"/>
+                            <img class="${this._s.libraryItem[4].hidden} library-16x9" @click="${(e) => { this.showLibraryVideo(4); }}" src="${this._s.libraryItem[4].thumbnail}" title="${this._s.libraryItem[4].captured_at}"/>
+                            <img class="${this._s.libraryItem[7].hidden} library-16x9" @click="${(e) => { this.showLibraryVideo(7); }}" src="${this._s.libraryItem[7].thumbnail}" title="${this._s.libraryItem[7].captured_at}"/>
                         </div>
                         <div class="lcolumn">
-                            <img class="${this._s.libraryItem[2].hidden} library-16x9" @click="${(e) => { this.showLibraryVideo(this._s.cameraId,2); }}" src="${this._s.libraryItem[2].thumbnail}" title="${this._s.libraryItem[2].captured_at}"/>
-                            <img class="${this._s.libraryItem[5].hidden} library-16x9" @click="${(e) => { this.showLibraryVideo(this._s.cameraId,5); }}" src="${this._s.libraryItem[5].thumbnail}" title="${this._s.libraryItem[5].captured_at}"/>
-                            <img class="${this._s.libraryItem[8].hidden} library-16x9" @click="${(e) => { this.showLibraryVideo(this._s.cameraId,8); }}" src="${this._s.libraryItem[8].thumbnail}" title="${this._s.libraryItem[8].captured_at}"/>
+                            <img class="${this._s.libraryItem[2].hidden} library-16x9" @click="${(e) => { this.showLibraryVideo(2); }}" src="${this._s.libraryItem[2].thumbnail}" title="${this._s.libraryItem[2].captured_at}"/>
+                            <img class="${this._s.libraryItem[5].hidden} library-16x9" @click="${(e) => { this.showLibraryVideo(5); }}" src="${this._s.libraryItem[5].thumbnail}" title="${this._s.libraryItem[5].captured_at}"/>
+                            <img class="${this._s.libraryItem[8].hidden} library-16x9" @click="${(e) => { this.showLibraryVideo(8); }}" src="${this._s.libraryItem[8].thumbnail}" title="${this._s.libraryItem[8].captured_at}"/>
                         </div>
                     </div>
                 </div>
@@ -256,9 +250,9 @@ class AarloGlance extends LitElement {
                 <div>
                     <ha-icon @click="${(e) => { this.moreInfo(this._s.motionId); }}" class="${this._s.motionOn} ${this._v.motion}" icon="mdi:run-fast" title="${this._s.motionText}"></ha-icon>
                     <ha-icon @click="${(e) => { this.moreInfo(this._s.soundId); }}" class="${this._s.soundOn} ${this._v.sound}" icon="mdi:ear-hearing" title="${this._s.soundText}"></ha-icon>
-                    <ha-icon @click="${(e) => { this.showLibrary(this._s.cameraId,0); }}" class="${this._s.capturedOn} ${this._v.captured}" icon="${this._s.capturedIcon}" title="${this._s.capturedText}"></ha-icon>
-                    <ha-icon @click="${(e) => { this.showOrStopStream(this._s.cameraId); }}" class="${this._s.playOn} ${this._v.play}" icon="${this._s.playIcon}" title="${this._s.playText}"></ha-icon>
-                    <ha-icon @click="${(e) => { this.updateSnapshot(this._s.cameraId); }}" class="${this._s.snapshotOn} ${this._v.snapshot}" icon="${this._s.snapshotIcon}" title="${this._s.snapshotText}"></ha-icon>
+                    <ha-icon @click="${(e) => { this.showLibrary(0); }}" class="${this._s.capturedOn} ${this._v.captured}" icon="${this._s.capturedIcon}" title="${this._s.capturedText}"></ha-icon>
+                    <ha-icon @click="${(e) => { this.showOrStopStreamN(); }}" class="${this._s.playOn} ${this._v.play}" icon="${this._s.playIcon}" title="${this._s.playText}"></ha-icon>
+                    <ha-icon @click="${(e) => { this.wsUpdateSnapshot(); }}" class="${this._s.snapshotOn} ${this._v.snapshot}" icon="${this._s.snapshotIcon}" title="${this._s.snapshotText}"></ha-icon>
                     <ha-icon @click="${(e) => { this.moreInfo(this._s.batteryId); }}" class="${this._s.batteryState} ${this._v.battery}" icon="mdi:${this._s.batteryIcon}" title="${this._s.batteryText}"></ha-icon>
                     <ha-icon @click="${(e) => { this.moreInfo(this._s.signalId); }}" class="state-update ${this._v.signal}" icon="${this._s.signalIcon}" title="${this._s.signalText}"></ha-icon>
                 </div>
@@ -290,16 +284,16 @@ class AarloGlance extends LitElement {
             </div>
             <div class="box box-bottom ${this._v.videoControls}">
                 <div >
-                    <ha-icon @click="${(e) => { this.stopVideo(this._s.cameraId); }}" class="${this._v.videoStop}" icon="mdi:stop" title="Click to stop"></ha-icon>
-                    <ha-icon @click="${(e) => { this.playVideo(this._s.cameraId); }}" class="${this._v.videoPlay}" icon="mdi:play" title="Click to play"></ha-icon>
-                    <ha-icon @click="${(e) => { this.pauseVideo(this._s.cameraId); }}" class="${this._v.videoPause}" icon="mdi:pause" title="Click to pause"></ha-icon>
+                    <ha-icon @click="${(e) => { this.controlStopVideoOrStreamN(); }}" class="${this._v.videoStop}" icon="mdi:stop" title="Click to stop"></ha-icon>
+                    <ha-icon @click="${(e) => { this.controlPlayVideo(); }}" class="${this._v.videoPlay}" icon="mdi:play" title="Click to play"></ha-icon>
+                    <ha-icon @click="${(e) => { this.controlPauseVideo(); }}" class="${this._v.videoPause}" icon="mdi:pause" title="Click to pause"></ha-icon>
                 </div>
                 <div class='slidecontainer'>
                     <input type="range" id="video-seek-${this._s.cameraId}" value="0" min="0" max="100" class="slider ${this._v.videoSeek}">
                 </div>
                 <div >
-                    <ha-icon @click="${(e) => { this.stopVideo(this._s.cameraId); }}" class="${this._v.videoFull}" icon="mdi:fullscreen" title="Click to go full screen"></ha-icon>
-                    <ha-icon @click="${(e) => { this.stopVideo(this._s.cameraId); }}" class="${this._v.videoFullExit}" icon="mdi:fullscreen-exit" title="Click to exit screen"></ha-icon>
+                    <ha-icon @click="${(e) => { this.controlStopVideoOrStreamN(); }}" class="${this._v.videoFull}" icon="mdi:fullscreen" title="Click to go full screen"></ha-icon>
+                    <ha-icon @click="${(e) => { this.controlStopVideoOrStreamN(); }}" class="${this._v.videoFullExit}" icon="mdi:fullscreen-exit" title="Click to exit screen"></ha-icon>
                 </div>
             </div>
             </ha-card>
@@ -456,13 +450,12 @@ class AarloGlance extends LitElement {
         if ( camera.state !== this._s.cameraState ) {
             if ( this._s.cameraState === 'taking snapshot' ) {
                 console.log( 'updating1 ' + this._s.cameraName + ':' + this._s.cameraState + '-->' + camera.state );
-                this.updateCameraImageSrc();
-                setTimeout( this.updateCameraImageSrc,5000 );
-                setTimeout( this.updateCameraImageSrc,10000 );
-                setTimeout( this.updateCameraImageSrc,15000 );
+                this.wsUpdateCameraImageSrc();
+                this.updateCameraImageSourceLater(5)
+                this.updateCameraImageSourceLater(10)
             } else {
                 console.log( 'updating2 ' + this._s.cameraName + ':' + this._s.cameraState + '-->' + camera.state );
-                this.updateCameraImageSrc()
+                this.wsUpdateCameraImageSrc()
             }
         }
 
@@ -509,7 +502,7 @@ class AarloGlance extends LitElement {
         }
 
         if( this._v.signal === '' ) {
-            var signal         = this.getState(this._s.signalId,0);
+            const signal = this.getState(this._s.signalId, 0);
             this._s.signalText = 'Signal Strength: ' + signal.state;
             this._s.signalIcon = signal.state === 0 ? 'mdi:wifi-outline' : 'mdi:wifi-strength-' + signal.state;
         }
@@ -573,8 +566,6 @@ class AarloGlance extends LitElement {
         }
 
         this.changed();
-        // this._statuses = JSON.stringify( this._s );
-        // this._visibility = JSON.stringify( this._v )
     }
 
     updateMedia() {
@@ -595,17 +586,16 @@ class AarloGlance extends LitElement {
             this._v.stream = '';
 
             this._v.video = '';
-            this._v.videoControls = '';
             this._v.videoPlay = 'hidden';
             this._v.videoStop = '';
             this._v.videoPause = 'hidden';
             this._v.videoSeek = 'hidden';
             this._v.videoFull = '';
+            this.showVideoControls(2);
             // Test for HLS and start video???
 
         } else if( this._video ) {
             this._v.video = '';
-            this._v.videoControls = '';
             this._v.videoPlay = 'hidden';
             this._v.videoStop = '';
             this._v.videoPause = '';
@@ -618,7 +608,7 @@ class AarloGlance extends LitElement {
             video.addEventListener("timeupdate", function() {
                 seekBar.value = (100 / video.duration) * video.currentTime;
             });
-
+            this.showVideoControls(2);
 
         } else if ( this._library ) {
 
@@ -666,8 +656,6 @@ class AarloGlance extends LitElement {
         }
 
         this.changed();
-        // this._statuses = JSON.stringify( this._s );
-        // this._visibility = JSON.stringify( this._v )
     }
 
     updated(changedProperties) {
@@ -690,17 +678,17 @@ class AarloGlance extends LitElement {
 
             // Enable controls on desktop. 
             // TODO - make this smarter!!!
-            if ( propName === '_video' && oldValue == null ) {
-                const video = this.shadowRoot.getElementById('video-' + this._s.cameraId);
-                var md = new MobileDetect(window.navigator.userAgent);
-                if ( md.mobile() ) {
-                    console.log( "it's mobile" )
-                    video.removeAttribute('controls')
-                } else {
-                    console.log( "it's not mobile" )
-                    //video.setAttribute('controls', 'controls');
-                }
-            }
+            // if ( propName === '_video' && oldValue == null ) {
+            //     const video = this.shadowRoot.getElementById('video-' + this._s.cameraId);
+            //     var md = new MobileDetect(window.navigator.userAgent);
+            //     if ( md.mobile() ) {
+            //         console.log( "it's mobile" )
+            //         video.removeAttribute('controls')
+            //     } else {
+            //         console.log( "it's not mobile" )
+            //         //video.setAttribute('controls', 'controls');
+            //     }
+            // }
 
             // Start video if streaming is turning on.
             // TODO - Tidy this up!!!
@@ -727,7 +715,7 @@ class AarloGlance extends LitElement {
     }
 
     set hass( hass ) {
-        var old = this._hass;
+        const old = this._hass;
         this._hass = hass;
         this.updateStatuses( old )
     }
@@ -763,7 +751,7 @@ class AarloGlance extends LitElement {
 
     setConfig(config) {
 
-        var camera = null;
+        let camera = null;
         if( config.entity ) {
             camera = config.entity.replace( 'camera.aarlo_','' );
         }
@@ -802,7 +790,7 @@ class AarloGlance extends LitElement {
         this._s.door2LockId = config.door2_lock ? config.door2_lock : null;
 
         // what are we showing?
-        var show = this._config.show || [];
+        const show = this._config.show || [];
 
         // on click
         this._v.imageClick = config.image_click ? config.image_click : false;
@@ -834,8 +822,10 @@ class AarloGlance extends LitElement {
 
         // render changes
         this.changed();
-        // this._statuses = JSON.stringify( this._s );
-        // this._visibility = JSON.stringify( this._v )
+    }
+
+    getCardSize() {
+        return 3;
     }
 
     moreInfo( id ) {
@@ -849,7 +839,7 @@ class AarloGlance extends LitElement {
         return event;
     }
 
-    async readLibrary( id,at_most ) {
+    async wsLoadLibrary(at_most ) {
         try {
             const library = await this._hass.callWS({
                 type: "aarlo_library",
@@ -862,37 +852,54 @@ class AarloGlance extends LitElement {
         }
     }
 
-    stopVideo( id ) {
-        if ( this._image ) {
-            const video = this.shadowRoot.getElementById('video-' + this._s.cameraId);
-            video.pause();
-            this._video = null
-        }
-        if ( this._stream ) {
-            const stream = this.shadowRoot.getElementById('stream-' + this._s.cameraId);
-            stream.pause();
-            this.stopStream( id );
+    async wsStartStream() {
+        try {
+            return await this._hass.callWS({
+                type: "camera/stream",
+                entity_id: this._s.cameraId,
+            })
+        } catch (err) {
+            return null
         }
     }
 
-    pauseVideo( id ) {
-        const video = this.shadowRoot.getElementById('video-' + this._s.cameraId);
-        video.pause();
-        this._v.videoPlay = '';
-        this._v.videoPause = 'hidden'
-        this.changed()
+    async wsStopStream() {
+        try {
+            return await this._hass.callWS({
+                type: "aarlo_stop_activity",
+                entity_id: this._s.cameraId,
+            })
+        } catch (err) {
+            return null
+        }
     }
 
-    playVideo( id ) {
-        const video = this.shadowRoot.getElementById('video-' + this._s.cameraId);
-        video.play();
-        this._v.videoPlay = 'hidden';
-        this._v.videoPause = ''
-        this.changed()
+    async wsUpdateSnapshot() {
+        try {
+            const {content_type: contentType, content} = await this._hass.callWS({
+                type: "aarlo_snapshot_image",
+                entity_id: this._s.cameraId,
+            });
+            this._image = `data:${contentType};base64, ${content}`;
+        } catch (err) {
+            this._image = null
+        }
     }
 
-    async showVideo( id ) {
-        var video = await this.readLibrary( id,1 );
+    async wsUpdateCameraImageSrc() {
+        try {
+            const {content_type: contentType, content} = await this._hass.callWS({
+                type: "camera_thumbnail",
+                entity_id: this._s.cameraId,
+            });
+            this._image = `data:${contentType};base64, ${content}`;
+        } catch (err) {
+            this._image = null
+        }
+    }
+
+    async playVideoN() {
+        const video = await this.wsLoadLibrary(1);
         if ( video ) {
             this._video       = video[0].url;
             this._videoPoster = video[0].thumbnail;
@@ -904,74 +911,57 @@ class AarloGlance extends LitElement {
         }
     }
 
-    async readStream( id,at_most ) {
-        try {
-            const stream = await this._hass.callWS({
-                type: "camera/stream",
-                entity_id: this._s.cameraId,
-            });
-            return stream
-        } catch (err) {
-            return null
+    stopVideoN() {
+        if ( this._video ) {
+            const video = this.shadowRoot.getElementById('video-' + this._s.cameraId);
+            video.pause();
+            this._video = null
         }
     }
 
-    async stopStream( id ) {
-        try {
-            const stopped = await this._hass.callWS({
-                type: "aarlo_stop_activity",
-                entity_id: this._s.cameraId,
-            });
-        } catch (err) { }
+    async playStreamN() {
+        const stream = await this.wsStartStream();
+        if (stream) {
+            this._stream = stream.url;
+            this._streamPoster = this._image;
+        } else {
+            this._stream = null;
+            this._streamPoster = null;
+        }
+    }
 
-        this._stream = null;
-        if ( this._hls ) {
+    async stopStreamN() {
+        if (this._stream) {
+            const stream = this.shadowRoot.getElementById('stream-' + this._s.cameraId);
+            stream.pause();
+            await this.wsStopStream();
+            this._stream = null;
+        }
+        if (this._hls) {
             this._hls.stopLoad();
             this._hls.destroy();
             this._hls = null
         }
     }
 
-    async showStream( id ) {
-        var stream = await this.readStream( id,1 );
-        if ( stream ) {
-            this._stream       = stream.url;
-            this._streamPoster = this._image;
-            this._streamType   = 'application/x-mpegURL'
-        } else {
-            this._stream       = null;
-            this._streamPoster = null;
-            this._streamType   = null
-        }
-    }
-
-    async showOrStopStream( id ) {
+    showOrStopStreamN() {
         const camera = this.getState(this._s.cameraId,'unknown');
         if ( camera.state === 'streaming' ) {
-            this.stopStream( id )
+            this.stopStreamN()
         } else {
-            this.showStream( id )
+            this.playStreamN()
         }
     }
 
-    async showVideoOrStream( id ) {
-        // on click
-        if ( this._v.imageClick && this._v.imageClick === 'play' ) {
-            this.showStream(id)
-        } else {
-            this.showVideo(id)
-        }
-    }
-
-    async showLibrary( id,base ) {
+    async showLibrary(base) {
         this._video = null;
-        this._library = await this.readLibrary( id,99 );
+        this._library = await this.wsLoadLibrary(99);
         this._libraryOffset = base
     }
 
-    async showLibraryVideo( id,index ) {
+    showLibraryVideo(index) {
         index += this._libraryOffset;
-        if ( this._library && index < this._library.length ) {
+        if (this._library && index < this._library.length) {
             this._video = this._library[index].url;
             this._videoPoster = this._library[index].thumbnail;
         } else {
@@ -980,37 +970,54 @@ class AarloGlance extends LitElement {
         }
     }
 
-    setLibraryBase( base ) {
+    setLibraryBase(base) {
         this._libraryOffset = base
     }
 
-    stopLibrary( ) {
-        this._video = null;
+    stopLibrary() {
+        this.stopVideoN();
         this._library = null
     }
 
-    async updateSnapshot( id ) {
-        try {
-            const { content_type: contentType, content } = await this._hass.callWS({
-                type: "aarlo_snapshot_image",
-                entity_id: this._s.cameraId,
-            });
-            this._image = `data:${contentType};base64, ${content}`;
-        } catch (err) {
-            this._image = null
+    clickImageN() {
+        if ( this._v.imageClick === 'play' ) {
+            this.playStreamN()
+        } else {
+            this.playVideoN()
         }
     }
 
-    async updateCameraImageSrc() {
-        try {
-            const { content_type: contentType, content } = await this._hass.callWS({
-                type: "camera_thumbnail",
-                entity_id: this._s.cameraId,
-            });
-            this._image = `data:${contentType};base64, ${content}`;
-        } catch (err) {
-            this._image = null
+    clickVideoN() {
+        if (this._v.videoControls === 'hidden') {
+            this.showVideoControls(2)
+        } else {
+            this.hideVideoControls();
         }
+    }
+
+    mouseOverVideoN() {
+        this.showVideoControls(2)
+    }
+
+    controlStopVideoOrStreamN() {
+        this.stopVideoN();
+        this.stopStreamN();
+    }
+
+    controlPauseVideo(  ) {
+        const video = this.shadowRoot.getElementById('video-' + this._s.cameraId);
+        video.pause();
+        this._v.videoPlay = '';
+        this._v.videoPause = 'hidden'
+        this.changed()
+    }
+
+    controlPlayVideo( ) {
+        const video = this.shadowRoot.getElementById('video-' + this._s.cameraId);
+        video.play();
+        this._v.videoPlay = 'hidden';
+        this._v.videoPause = ''
+        this.changed()
     }
 
     toggleLock( id ) {
@@ -1021,19 +1028,46 @@ class AarloGlance extends LitElement {
         }
     }
 
-    getCardSize() {
-        return 3;
+    showVideoControls(seconds = 0) {
+        this._v.videoControls = '';
+        if (seconds !== 0) {
+            this.hideVideoControlsLater(seconds);
+        }
+        this.changed()
     }
+
+    hideVideoControls() {
+        if ( this._s.controlTimeout !== null ) {
+            clearTimeout( this._s.controlTimeout );
+            this._s.controlTimeout = null
+        }
+        this._v.videoControls = 'hidden';
+        this.changed()
+    }
+
+    hideVideoControlsLater(seconds = 2) {
+        this._s.controlTimeout = setTimeout(() => {
+            this._s.controlTimeout = null;
+            this.hideVideoControls()
+        }, seconds * 1000);
+    }
+
+    updateCameraImageSourceLater(seconds = 2) {
+        setTimeout(() => {
+            this.wsUpdateCameraImageSrc()
+        }, seconds * 1000);
+    }
+
 }
 
-var s = document.createElement("script");
-s.src = 'https://cdn.jsdelivr.net/npm/hls.js@latest'
-s.onload = function(e) {
-    var s2 = document.createElement("script");
-    s2.src = 'https://cdn.jsdelivr.net/npm/mobile-detect@1.4.3/mobile-detect.min.js'
-    s2.onload = function(e) {
+const s = document.createElement("script");
+s.src = 'https://cdn.jsdelivr.net/npm/hls.js@latest';
+s.onload = function() {
+    const s2 = document.createElement("script");
+    s2.src = 'https://cdn.jsdelivr.net/npm/mobile-detect@1.4.3/mobile-detect.min.js';
+    s2.onload = function() {
         customElements.define('aarlo-glance', AarloGlance);
-    }
+    };
     document.head.appendChild(s2);
 };
 document.head.appendChild(s);
