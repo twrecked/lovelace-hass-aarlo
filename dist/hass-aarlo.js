@@ -1011,7 +1011,8 @@ class AarloGlance extends LitElement {
     }
 
     controlFullScreen() {
-        const video = this.shadowRoot.getElementById('video-' + this._s.cameraId);
+        const prefix = this._stream ? 'stream-' : 'video-';
+        const video = this.shadowRoot.getElementById( prefix + this._s.cameraId);
         if (video.requestFullscreen) {
             video.requestFullscreen();
         } else if (video.mozRequestFullScreen) {
