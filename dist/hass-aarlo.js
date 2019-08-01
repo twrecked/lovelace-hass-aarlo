@@ -289,11 +289,10 @@ class AarloGlance extends LitElement {
                     <ha-icon @click="${(e) => { this.controlPauseVideo(); }}" class="${this._v.videoPause}" icon="mdi:pause" title="Click to pause"></ha-icon>
                 </div>
                 <div class='slidecontainer'>
-                    <input type="range" id="video-seek-${this._s.cameraId}" value="0" min="0" max="100" class="slider ${this._v.videoSeek}">
+                    <input type="range" id="video-seek-${this._s.cameraId}" value="0" min="1" max="100" class="slider ${this._v.videoSeek}">
                 </div>
                 <div >
-                    <ha-icon @click="${(e) => { this.controlStopVideoOrStreamN(); }}" class="${this._v.videoFull}" icon="mdi:fullscreen" title="Click to go full screen"></ha-icon>
-                    <ha-icon @click="${(e) => { this.controlStopVideoOrStreamN(); }}" class="${this._v.videoFullExit}" icon="mdi:fullscreen-exit" title="Click to exit screen"></ha-icon>
+                    <ha-icon @click="${(e) => { this.controlFullScreen(); }}" class="${this._v.videoFull}" icon="mdi:fullscreen" title="Click to go full screen"></ha-icon>
                 </div>
             </div>
             </ha-card>
@@ -368,7 +367,6 @@ class AarloGlance extends LitElement {
             videoPause: 'hidden',
             videoSeek: 'hidden',
             videoFull: 'hidden',
-            videoFullExit: 'hidden',
         }
     }
 
@@ -584,8 +582,6 @@ class AarloGlance extends LitElement {
 
         if( this._stream ) {
             this._v.stream = '';
-
-            this._v.video = '';
             this._v.videoPlay = 'hidden';
             this._v.videoStop = '';
             this._v.videoPause = 'hidden';
@@ -601,13 +597,7 @@ class AarloGlance extends LitElement {
             this._v.videoPause = '';
             this._v.videoSeek = '';
             this._v.videoFull = '';
-
-            let video = this.shadowRoot.getElementById('video-' + this._s.cameraId);
-            let seekBar = this.shadowRoot.getElementById('video-seek-' + this._s.cameraId);
-            seekBar.value = 0;
-            video.addEventListener("timeupdate", function() {
-                seekBar.value = (100 / video.duration) * video.currentTime;
-            });
+            this.setUpSeekBar();
             this.showVideoControls(2);
 
         } else if ( this._library ) {
@@ -1020,6 +1010,17 @@ class AarloGlance extends LitElement {
         this.changed()
     }
 
+    controlFullScreen() {
+        const video = this.shadowRoot.getElementById('video-' + this._s.cameraId);
+        if (video.requestFullscreen) {
+            video.requestFullscreen();
+        } else if (video.mozRequestFullScreen) {
+            video.mozRequestFullScreen(); // Firefox
+        } else if (video.webkitRequestFullscreen) {
+            video.webkitRequestFullscreen(); // Chrome and Safari
+        }
+    }
+
     toggleLock( id ) {
         if ( this.getState(id,'locked').state === 'locked' ) {
             this._hass.callService( 'lock','unlock', { entity_id:id } )
@@ -1028,8 +1029,33 @@ class AarloGlance extends LitElement {
         }
     }
 
+    setUpSeekBar() {
+
+        let video = this.shadowRoot.getElementById('video-' + this._s.cameraId);
+        let seekBar = this.shadowRoot.getElementById('video-seek-' + this._s.cameraId);
+
+        video.addEventListener("timeupdate", function() {
+            seekBar.value = (100 / video.duration) * video.currentTime;
+        });
+
+        seekBar.addEventListener("change", function() {
+            video.currentTime = video.duration * (seekBar.value / 100);
+        });
+        seekBar.addEventListener("mousedown", () => {
+            this.showVideoControls(0)
+            video.pause();
+        });
+        seekBar.addEventListener("mouseup", () => {
+            video.play();
+            this.hideVideoControlsLater()
+        });
+        this.showVideoControls(2);
+
+    }
+  
     showVideoControls(seconds = 0) {
         this._v.videoControls = '';
+        this.hideVideoControlsCancel()
         if (seconds !== 0) {
             this.hideVideoControlsLater(seconds);
         }
@@ -1037,19 +1063,24 @@ class AarloGlance extends LitElement {
     }
 
     hideVideoControls() {
-        if ( this._s.controlTimeout !== null ) {
-            clearTimeout( this._s.controlTimeout );
-            this._s.controlTimeout = null
-        }
+        this.hideVideoControlsCancel()
         this._v.videoControls = 'hidden';
         this.changed()
     }
 
     hideVideoControlsLater(seconds = 2) {
+        this.hideVideoControlsCancel()
         this._s.controlTimeout = setTimeout(() => {
             this._s.controlTimeout = null;
             this.hideVideoControls()
         }, seconds * 1000);
+    }
+
+    hideVideoControlsCancel() {
+        if ( this._s.controlTimeout !== null ) {
+            clearTimeout( this._s.controlTimeout );
+            this._s.controlTimeout = null
+        }
     }
 
     updateCameraImageSourceLater(seconds = 2) {
