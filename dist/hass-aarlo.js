@@ -43,6 +43,7 @@ class AarloGlance extends LitElement {
         this._hass = null;
         this._config = null;
         this._change = 0;
+        this._hls = null;
 
         this.resetStatuses();
         this.resetVisiblity();
@@ -635,7 +636,26 @@ class AarloGlance extends LitElement {
             this._v.videoSeek = 'hidden';
             this._v.videoFull = '';
             this.showVideoControls(2);
-            // Test for HLS and start video???
+
+            // Start HLS to handle video streaming.
+            if (this._hls === null) {
+                const video = this.shadowRoot.getElementById('stream-' + this._s.cameraId);
+                if (Hls.isSupported()) {
+                    this._hls = new Hls();
+                    this._hls.attachMedia(video);
+                    this._hls.on(Hls.Events.MEDIA_ATTACHED, () => {
+                        this._hls.loadSource(this._stream);
+                        this._hls.on(Hls.Events.MANIFEST_PARSED, () => {
+                            video.play();
+                        });
+                    })
+                } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+                    video.src = this._stream;
+                    video.addEventListener('loadedmetadata', function () {
+                        video.play();
+                    });
+                }
+            }
 
         } else if( this._video ) {
             this._v.video = '';
@@ -708,45 +728,9 @@ class AarloGlance extends LitElement {
                     this.updateMedia();
                     break;
 
-                case '_v':
-                    console.log( 'v is updated' );
+                case '_change':
+                    console.log( 'change is updated' );
                     break;
-            }
-
-            // Enable controls on desktop. 
-            // TODO - make this smarter!!!
-            // if ( propName === '_video' && oldValue == null ) {
-            //     const video = this.shadowRoot.getElementById('video-' + this._s.cameraId);
-            //     var md = new MobileDetect(window.navigator.userAgent);
-            //     if ( md.mobile() ) {
-            //         console.log( "it's mobile" )
-            //         video.removeAttribute('controls')
-            //     } else {
-            //         console.log( "it's not mobile" )
-            //         //video.setAttribute('controls', 'controls');
-            //     }
-            // }
-
-            // Start video if streaming is turning on.
-            // TODO - Tidy this up!!!
-            if ( propName === '_stream' && oldValue == null ) {
-                if ( this._stream ) {
-                    const video = this.shadowRoot.getElementById('stream-' + this._s.cameraId);
-                    if ( Hls.isSupported() ) {
-                        this._hls = new Hls();
-                        this._hls.loadSource( this._stream );
-                        this._hls.attachMedia(video);
-                        this._hls.on(Hls.Events.MANIFEST_PARSED,function() {
-                            video.play();
-                        });
-                    }
-                    else if ( video.canPlayType('application/vnd.apple.mpegurl') ) {
-                        video.src = this._stream;
-                        video.addEventListener('loadedmetadata',function() {
-                            video.play();
-                        });
-                    }
-                }
             }
         });
     }
