@@ -1,7 +1,6 @@
-
 const LitElement = Object.getPrototypeOf(
-        customElements.get("ha-panel-lovelace")
-    );
+		customElements.get("ha-panel-lovelace")
+	);
 const html = LitElement.prototype.html;
 
 class AarloGlance extends LitElement {
@@ -39,14 +38,17 @@ class AarloGlance extends LitElement {
 
     constructor() {
         super();
-
+        
+        this._splayer = null;
+        this._vplayer = null;
         this._hass = null;
         this._config = null;
         this._change = 0;
         this._hls = null;
-
+       
         this.resetStatuses();
         this.resetVisiblity();
+        this.loadPlyrSprites();
     }
 
     static get outerStyleTemplate() {
@@ -113,6 +115,34 @@ class AarloGlance extends LitElement {
     static get innerStyleTemplate() {
         return html`
             <style>
+                .plyr--video {
+                    position: absolute !important;
+                    top: 0  !important;
+                }
+                .plyr__control--overlaid {
+                    background: rgba(204,204,204,.8) !important;
+                }
+                .plyr--full-ui input[type=range] {
+                    color: #ccc !important;
+                }
+
+                .plyr__control--overlaid {
+                    background: rgba(204,204,204, .8) !important;
+                }
+
+                .plyr--video .plyr__control.plyr__tab-focus,
+                .plyr--video .plyr__control:hover,
+                .plyr--video .plyr__control[aria-expanded=true] {
+                    background: #ccc !important;
+                }
+
+                .plyr__control.plyr__tab-focus {
+                    box-shadow: 0 0 0 5px rgba(204,204,204, .5) !important;
+                }
+
+                .plyr__menu__container .plyr__control[role=menuitemradio][aria-checked=true]::before {
+                    background: #ccc !important;
+                }
                 div.base-16x9 {
                     width: 100%;
                     overflow: hidden;
@@ -129,12 +159,12 @@ class AarloGlance extends LitElement {
                     cursor: pointer;
                 }
                 .video-16x9 {
-                    position: absolute;
-                    top: 50%;
-                    left: 50%;
+                    position: relative;
+                    top: 0;
+                    left: 0;
                     width: 100%;
                     height: auto;
-                    transform: translate(-50%, -50%);
+                   
                 }
                 .library-16x9 {
                     cursor: pointer;
@@ -190,29 +220,26 @@ class AarloGlance extends LitElement {
         `;
     }
 
-    render() {
-
-        return html`
+    render() {  
+        return html`           
             ${AarloGlance.outerStyleTemplate}
             <ha-card>
             ${AarloGlance.innerStyleTemplate}
+            <link rel="stylesheet" href="https://unpkg.com/plyr@3/dist/plyr.css">
             <div id="aarlo-wrapper" class="base-16x9">
                 <video class="${this._v.stream} video-16x9"
+                    controls crossorigin playsinline
                     id="stream-${this._s.cameraId}"
                     poster="${this._streamPoster}"
-                    @ended="${() => { this.stopStream(); }}"
-                    @mouseover="${() => { this.mouseOverVideo(); }}"
-                    @click="${() => { this.clickVideo(); }}">
+                    @click="${() => { this.clickVideo(); }}">          
                         Your browser does not support the video tag.
                 </video>
                 <video class="${this._v.video} video-16x9"
-                    autoplay playsinline 
+                    controls crossorigin playsinline
                     id="video-${this._s.cameraId}"
                     src="${this._video}"
                     type="${this._videoType}"
                     poster="${this._videoPoster}"
-                    @ended="${() => { this.stopVideo(); }}"
-                    @mouseover="${() => { this.mouseOverVideo(); }}"
                     @click="${() => { this.clickVideo(); }}">
                         Your browser does not support the video tag.
                 </video>
@@ -247,34 +274,42 @@ class AarloGlance extends LitElement {
                                 src="${this._s.libraryItem[1].thumbnail}"
                                 alt="${this._s.libraryItem[1].captured_at}"
                                 title="${this._s.libraryItem[1].captured_at}"
-                                @click="${() => { this.showLibraryVideo(1); }}"/>
+                                @click="${() => { this.showLibraryVideo(1); }}
+                                "/>
                             <img class="${this._s.libraryItem[4].hidden} library-16x9"
                                 src="${this._s.libraryItem[4].thumbnail}"
                                 alt="${this._s.libraryItem[4].captured_at}"
                                 title="${this._s.libraryItem[4].captured_at}"
-                                @click="${() => { this.showLibraryVideo(4); }}"/>
+                                @click="${() => { this.showLibraryVideo(4); }}"
+                                />
                             <img class="${this._s.libraryItem[7].hidden} library-16x9"
                                 src="${this._s.libraryItem[7].thumbnail}"
                                 alt="${this._s.libraryItem[7].captured_at}"
                                 title="${this._s.libraryItem[7].captured_at}"
-                                @click="${() => { this.showLibraryVideo(7); }}"/>
+                                @click="${() => { this.showLibraryVideo(7); }}"
+                                />
                         </div>
                         <div class="lcolumn">
                             <img class="${this._s.libraryItem[2].hidden} library-16x9"
                                 src="${this._s.libraryItem[2].thumbnail}"
                                 alt="${this._s.libraryItem[2].captured_at}"
-                                title="${this._s.libraryItem[2].captured_at}"/>
+                                title="${this._s.libraryItem[2].captured_at}"
                                 @click="${() => { this.showLibraryVideo(2); }}"
+                                />
+                              
                             <img class="${this._s.libraryItem[5].hidden} library-16x9"
                                 src="${this._s.libraryItem[5].thumbnail}"
                                 alt="${this._s.libraryItem[5].captured_at}"
-                                title="${this._s.libraryItem[5].captured_at}"/>
+                                title="${this._s.libraryItem[5].captured_at}"
                                 @click="${() => { this.showLibraryVideo(5); }}"
+                                />
+                               
                             <img class="${this._s.libraryItem[8].hidden} library-16x9"
                                 src="${this._s.libraryItem[8].thumbnail}"
                                 alt="${this._s.libraryItem[8].captured_at}"
                                 title="${this._s.libraryItem[8].captured_at}"
-                                @click="${() => { this.showLibraryVideo(8); }}"/>
+                                @click="${() => { this.showLibraryVideo(8); }}"
+                                />
                         </div>
                     </div>
                 </div>
@@ -614,6 +649,27 @@ class AarloGlance extends LitElement {
         this.changed();
     }
 
+    loadPlyrSprites() {   
+
+        if (!this.plyrSpritesLoaded) {
+
+            var d = this.shadowRoot;
+            var p = "https://raw.githubusercontent.com/sampotts/plyr/master/dist/plyr.svg";
+
+            var a=new XMLHttpRequest(), b=d.body;
+            a.open("GET",p,!0);
+            a.send();
+            a.onload=function(){
+                var c=document.createElement("div");
+                c.style.display="none";
+                c.innerHTML=a.responseText;
+                d.appendChild(c);
+                this.plyrSpritesLoaded = true;
+            };
+        }
+      
+    }
+
     updateMedia() {
 
         // reset everything...
@@ -635,14 +691,31 @@ class AarloGlance extends LitElement {
             this._v.videoPause = 'hidden';
             this._v.videoSeek = 'hidden';
             this._v.videoFull = '';
-            this.showVideoControls(2);
+         //   this.showVideoControls(2);
 
             // Start HLS to handle video streaming.
             if (this._hls === null) {
-                const video = this.shadowRoot.getElementById('stream-' + this._s.cameraId);
+                
+                const video = this.shadowRoot.getElementById('stream-' + this._s.cameraId);                      
+            
+                if (this._splayer==null) {
+                    this._splayer = new Plyr(video, { autoplay: true, loadSprite: false, controls: ['play-large', 'play', 'mute', 'volume', 'fullscreen'] });
+            
+                    var that = this; 
+                    
+                    this._splayer.on('pause', event => {
+                        const instance = event.detail.plyr;                        
+                        instance.stop();
+                        that.stopStream();
+                        that.stopVideo();                
+                    });
+                }
+
                 if (Hls.isSupported()) {
+
                     this._hls = new Hls();
-                    this._hls.attachMedia(video);
+                    this._hls.attachMedia(video);  
+
                     this._hls.on(Hls.Events.MEDIA_ATTACHED, () => {
                         this._hls.loadSource(this._stream);
                         this._hls.on(Hls.Events.MANIFEST_PARSED, () => {
@@ -664,8 +737,23 @@ class AarloGlance extends LitElement {
             this._v.videoPause = '';
             this._v.videoSeek = '';
             this._v.videoFull = '';
-            this.setUpSeekBar();
-            this.showVideoControls(2);
+          //  this.setUpSeekBar();
+           // this.showVideoControls(2);
+
+                const video = this.shadowRoot.getElementById('video-' + this._s.cameraId);                      
+
+		   if (this._vplayer==null) {
+			   this._vplayer = new Plyr(video, { autoplay: true, loadSprite: false, controls: ['play-large', 'play', 'progress', 'current-time', 'mute', 'volume', 'fullscreen'] });
+	   
+			   var that = this; 
+			   
+			   this._vplayer.on('pause', event => {
+				   const instance = event.detail.plyr;                        
+				   instance.stop();
+				   that.stopStream();
+				   that.stopVideo();                
+			   });
+		   }
 
         } else if ( this._library ) {
 
@@ -942,9 +1030,10 @@ class AarloGlance extends LitElement {
 
     async playStream() {
         const stream = await this.wsStartStream();
+
         if (stream) {
-            this._stream = stream.url;
-            this._streamPoster = this._image;
+            this._stream = stream.url;  
+
         } else {
             this._stream = null;
             this._streamPoster = null;
@@ -1002,22 +1091,25 @@ class AarloGlance extends LitElement {
 
     clickImage() {
         if ( this._v.imageClick === 'play' ) {
-            this.playStream()
+
+            this._streamPoster = this._image; 
+             this.playStream()
         } else {
             this.playVideo()
         }
     }
 
     clickVideo() {
+        
         if (this._v.videoControls === 'hidden') {
-            this.showVideoControls(2)
+          //  this.showVideoControls(2)
         } else {
-            this.hideVideoControls();
+         //   this.hideVideoControls();
         }
     }
 
     mouseOverVideo() {
-        this.showVideoControls(2)
+     //   this.showVideoControls(2)
     }
 
     controlStopVideoOrStream() {
@@ -1074,17 +1166,17 @@ class AarloGlance extends LitElement {
             video.currentTime = video.duration * (seekBar.value / 100);
         });
         seekBar.addEventListener("mousedown", () => {
-            this.showVideoControls(0);
+          //  this.showVideoControls(0);
             video.pause();
         });
         seekBar.addEventListener("mouseup", () => {
             video.play();
-            this.hideVideoControlsLater()
+          //  this.hideVideoControlsLater()
         });
-        this.showVideoControls(2);
+       //  this.showVideoControls(2);
 
     }
-  
+
     showVideoControls(seconds = 0) {
         this._v.videoControls = '';
         this.hideVideoControlsCancel();
@@ -1126,12 +1218,16 @@ class AarloGlance extends LitElement {
 const s = document.createElement("script");
 s.src = 'https://cdn.jsdelivr.net/npm/hls.js@latest';
 s.onload = function() {
-    const s2 = document.createElement("script");
-    s2.src = 'https://cdn.jsdelivr.net/npm/mobile-detect@1.4.3/mobile-detect.min.js';
-    s2.onload = function() {
-        customElements.define('aarlo-glance', AarloGlance);
-    };
-    document.head.appendChild(s2);
+
+const plyrScript = document.createElement("script");
+plyrScript.src = 'https://unpkg.com/plyr@3';
+document.head.appendChild(plyrScript);
+
+const s2 = document.createElement("script");
+s2.src = 'https://cdn.jsdelivr.net/npm/mobile-detect@1.4.3/mobile-detect.min.js';
+s2.onload = function() {
+    customElements.define('aarlo-glance', AarloGlance);
+};
+document.head.appendChild(s2);
 };
 document.head.appendChild(s);
-
