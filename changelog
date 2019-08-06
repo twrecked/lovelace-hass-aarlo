@@ -1,3 +1,4 @@
+0.0.8: Custom controls for video component
 0.0.7: Distinguish between mobile/desktop for video controls.
 0.0.6: Tidy up battery and wired statuses.
 0.0.5: Speed up by reducing calls to render
