@@ -108,3 +108,4 @@ venv.bak/
 .*.sw?
 *.rej
 *.orig
+*.diff
