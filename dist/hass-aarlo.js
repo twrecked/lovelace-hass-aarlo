@@ -5,17 +5,17 @@ const html = LitElement.prototype.html;
 
 class AarloGlance extends LitElement {
     // To quieten down JetBrains...
-    created_at_pretty;
-    states;
-    image_click;
-    door_bell;
-    door_lock;
-    door2_bell;
-    door2_lock;
-    top_title;
-    top_date;
-    top_status;
-    videos;
+    // created_at_pretty;
+    // states;
+    // image_click;
+    // door_bell;
+    // door_lock;
+    // door2_bell;
+    // door2_lock;
+    // top_title;
+    // top_date;
+    // top_status;
+    // videos;
 
     static get properties() {
         return {
