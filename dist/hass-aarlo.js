@@ -274,42 +274,34 @@ class AarloGlance extends LitElement {
                                 src="${this._s.libraryItem[1].thumbnail}"
                                 alt="${this._s.libraryItem[1].captured_at}"
                                 title="${this._s.libraryItem[1].captured_at}"
-                                @click="${() => { this.showLibraryVideo(1); }}
-                                "/>
+                                @click="${() => { this.showLibraryVideo(1); }}"/>
                             <img class="${this._s.libraryItem[4].hidden} library-16x9"
                                 src="${this._s.libraryItem[4].thumbnail}"
                                 alt="${this._s.libraryItem[4].captured_at}"
                                 title="${this._s.libraryItem[4].captured_at}"
-                                @click="${() => { this.showLibraryVideo(4); }}"
-                                />
+                                @click="${() => { this.showLibraryVideo(4); }}"/>
                             <img class="${this._s.libraryItem[7].hidden} library-16x9"
                                 src="${this._s.libraryItem[7].thumbnail}"
                                 alt="${this._s.libraryItem[7].captured_at}"
                                 title="${this._s.libraryItem[7].captured_at}"
-                                @click="${() => { this.showLibraryVideo(7); }}"
-                                />
+                                @click="${() => { this.showLibraryVideo(7); }}"/>
                         </div>
                         <div class="lcolumn">
                             <img class="${this._s.libraryItem[2].hidden} library-16x9"
                                 src="${this._s.libraryItem[2].thumbnail}"
                                 alt="${this._s.libraryItem[2].captured_at}"
                                 title="${this._s.libraryItem[2].captured_at}"
-                                @click="${() => { this.showLibraryVideo(2); }}"
-                                />
-                              
+                                @click="${() => { this.showLibraryVideo(2); }}"/>
                             <img class="${this._s.libraryItem[5].hidden} library-16x9"
                                 src="${this._s.libraryItem[5].thumbnail}"
                                 alt="${this._s.libraryItem[5].captured_at}"
                                 title="${this._s.libraryItem[5].captured_at}"
-                                @click="${() => { this.showLibraryVideo(5); }}"
-                                />
-                               
+                                @click="${() => { this.showLibraryVideo(5); }}"/>
                             <img class="${this._s.libraryItem[8].hidden} library-16x9"
                                 src="${this._s.libraryItem[8].thumbnail}"
                                 alt="${this._s.libraryItem[8].captured_at}"
                                 title="${this._s.libraryItem[8].captured_at}"
-                                @click="${() => { this.showLibraryVideo(8); }}"
-                                />
+                                @click="${() => { this.showLibraryVideo(8); }}"/>
                         </div>
                     </div>
                 </div>
@@ -707,7 +699,6 @@ class AarloGlance extends LitElement {
                         const instance = event.detail.plyr;                        
                         instance.stop();
                         that.stopStream();
-                        that.stopVideo();                
                     });
                 }
 
@@ -737,23 +728,28 @@ class AarloGlance extends LitElement {
             this._v.videoPause = '';
             this._v.videoSeek = '';
             this._v.videoFull = '';
-          //  this.setUpSeekBar();
-           // this.showVideoControls(2);
+            //  this.setUpSeekBar();
+            // this.showVideoControls(2);
 
-                const video = this.shadowRoot.getElementById('video-' + this._s.cameraId);                      
+            if ( this._splayer !== null ){
+                this._splayer.destroy();
+                this._splayer = null
+            }
+            const video = this.shadowRoot.getElementById('video-' + this._s.cameraId);                      
 
-		   if (this._vplayer==null) {
-			   this._vplayer = new Plyr(video, { autoplay: true, loadSprite: false, controls: ['play-large', 'play', 'progress', 'current-time', 'mute', 'volume', 'fullscreen'] });
-	   
-			   var that = this; 
-			   
-			   this._vplayer.on('pause', event => {
-				   const instance = event.detail.plyr;                        
-				   instance.stop();
-				   that.stopStream();
-				   that.stopVideo();                
-			   });
-		   }
+            if (this._vplayer==null) {
+                this._vplayer = new Plyr(video, { autoplay: true, clickToPlay: false, loadSprite: false, controls: ['play-large', 'play', 'progress', 'current-time', 'mute', 'volume', 'fullscreen'] });
+
+                var that = this; 
+
+                this._vplayer.on('ended', event => {
+                    const instance = event.detail.plyr;                        
+                    instance.stop();
+                    that.stopVideo();                
+                });
+            } else {
+                this._vplayer.play()
+            }
 
         } else if ( this._library ) {
 
@@ -1023,7 +1019,7 @@ class AarloGlance extends LitElement {
     stopVideo() {
         if ( this._video ) {
             const video = this.shadowRoot.getElementById('video-' + this._s.cameraId);
-            video.pause();
+            //video.pause();
             this._video = null
         }
     }
@@ -1101,6 +1097,9 @@ class AarloGlance extends LitElement {
 
     clickVideo() {
         
+        if ( this._video ) {
+            this.stopVideo()
+        }
         if (this._v.videoControls === 'hidden') {
           //  this.showVideoControls(2)
         } else {
@@ -1219,15 +1218,12 @@ const s = document.createElement("script");
 s.src = 'https://cdn.jsdelivr.net/npm/hls.js@latest';
 s.onload = function() {
 
-const plyrScript = document.createElement("script");
-plyrScript.src = 'https://unpkg.com/plyr@3';
-document.head.appendChild(plyrScript);
-
-const s2 = document.createElement("script");
-s2.src = 'https://cdn.jsdelivr.net/npm/mobile-detect@1.4.3/mobile-detect.min.js';
-s2.onload = function() {
-    customElements.define('aarlo-glance', AarloGlance);
-};
-document.head.appendChild(s2);
+    const plyrScript = document.createElement("script");
+    plyrScript.src = 'https://unpkg.com/plyr@3';
+    plyrScript.onload = function() {
+        customElements.define('aarlo-glance', AarloGlance);
+    };
+    document.head.appendChild(plyrScript);
 };
 document.head.appendChild(s);
+
