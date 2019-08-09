@@ -263,13 +263,13 @@ class AarloGlance extends LitElement {
                             <img class="${this._s.libraryItem[2].hidden} library-16x9"
                                 src="${this._s.libraryItem[2].thumbnail}"
                                 alt="${this._s.libraryItem[2].captured_at}"
-                                title="${this._s.libraryItem[2].captured_at}"/>
-                                @click="${() => { this.showLibraryVideo(2); }}"
+                                title="${this._s.libraryItem[2].captured_at}"
+                                @click="${() => { this.showLibraryVideo(2); }}"/>
                             <img class="${this._s.libraryItem[5].hidden} library-16x9"
                                 src="${this._s.libraryItem[5].thumbnail}"
                                 alt="${this._s.libraryItem[5].captured_at}"
-                                title="${this._s.libraryItem[5].captured_at}"/>
-                                @click="${() => { this.showLibraryVideo(5); }}"
+                                title="${this._s.libraryItem[5].captured_at}"
+                                @click="${() => { this.showLibraryVideo(5); }}"/>
                             <img class="${this._s.libraryItem[8].hidden} library-16x9"
                                 src="${this._s.libraryItem[8].thumbnail}"
                                 alt="${this._s.libraryItem[8].captured_at}"
