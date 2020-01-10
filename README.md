@@ -61,6 +61,9 @@ binary_sensor:
 
 
 ### Example
+
+The following is my front door camera configuration. Please remember rename the `aarlo_` components.
+
 ```yaml
 type: 'custom:aarlo-glance'
 entity: camera.aarlo_front_door_camera
