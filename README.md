@@ -49,7 +49,21 @@ resources:
 | door2_lock | string | entity_id |  |  |
 | door2_bell | string | entity_id |  |  |
 
+### Notes
+To get the `show` items (except `snapshot`, which needs nothing) to work correctly you need to enable the corresponding `binary_sensor` or `sensor`. For example, to get motion notifications working you need the following binary sensor enabled:
+
+```yaml
+binary_sensor:
+  - platform: aarlo
+    monitored_conditions:
+    - motion
+```
+
+
 ### Example
+
+The following is my front door camera configuration. Please remember rename the `aarlo_` components.
+
 ```yaml
 type: 'custom:aarlo-glance'
 entity: camera.aarlo_front_door_camera
