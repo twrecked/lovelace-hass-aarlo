@@ -1,4 +1,4 @@
-0.0.10: Quiet down logs
+0.0.12: Quiet down logs
 0.0.9: Removed javascript fields.
 0.0.8: Custom controls for video component
 0.0.7: Distinguish between mobile/desktop for video controls.
