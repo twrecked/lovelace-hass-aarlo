@@ -48,6 +48,7 @@ resources:
 | door2 | string | entity_id |  | Useful if the camera is pointed at a door. |
 | door2_lock | string | entity_id |  |  |
 | door2_bell | string | entity_id |  |  |
+| light | string | entity_id |  | Control a light near the camera. |
 
 ### Notes
 To get the `show` items (except `snapshot`, which needs nothing) to work correctly you need to enable the corresponding `binary_sensor` or `sensor`. For example, to get motion notifications working you need the following binary sensor enabled:
@@ -86,6 +87,7 @@ door_bell: binary_switch.aarlo_ding_front_door_bell
 door2: binary_switch.front_door
 door2_lock: lock.front_door_lock
 door2_bell: binary_switch.aarlo_ding_front_door_bell
+light: light.aarlo_front_light
 ```
 
 You don't need to reboot to see the GUI changes, a reload is sufficient. And if all goes will see a card that looks like this:
