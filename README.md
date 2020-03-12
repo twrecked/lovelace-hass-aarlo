@@ -8,10 +8,13 @@ It provides:
 * Access to the camera library recordings.
 * Live streaming.
 * Support for doorbell and door opening notifications.
+* Support for toggling lights during streaming.
 
 ## HACS Installtion
 [![hacs_badge](https://img.shields.io/badge/HACS-Default-orange.svg?style=for-the-badge)](https://github.com/custom-components/hacs)
 Aarlo is part of the default HACS store. If you're not interested in development branches this is the easiest way to install. HACS will tell you what to add to your UI configuration.
+
+The card type is `aarlo-glance.js`.
 
 ## Manual Installtion
 
@@ -28,6 +31,8 @@ resources:
   - type: module
     url: /local/aarlo-glance.js
 ```
+
+The card type is `aarlo-glance.js`.
 
 ## Custom Lovelace Card Configuration
 
