@@ -66,6 +66,7 @@ binary_sensor:
     - motion
 ```
 
+To get the `show` items to work correctly do not rename any of the devices. The names of of the devices the lovelace card looks for are currently hardcoded.
 
 ### Example
 
