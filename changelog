@@ -1,3 +1,5 @@
+0.1.0: added custom component naming
+       tidied the README
 0.0.17: use request snapshot
 0.0.16: better image update
 0.0.15: Remove camera_thumbnail

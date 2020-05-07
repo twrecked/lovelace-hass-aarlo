@@ -1,8 +1,20 @@
 # lovelace-hass-arlo
 
-Lovelace card designed specifically for the [AArlo Integration](https://github.com/twrecked/hass-aarlo).
+## Table of Contents
+- [Introduction](#introduction)
+- [Installation](#installation)
+- [Configuration](#configuration)
+- [Further Documentation](#further-documentation)
+- [How it looks](#how-it-looks)
 
-## Features
+
+<a name="introduction"></a>
+## Introduction
+Lovelace card designed specifically for the [AArlo
+Integration](https://github.com/twrecked/hass-aarlo).
+
+<a name="introduction-features"></a>
+#### Features
 It provides:
 * Motion and sound notifications.
 * Access to the camera library recordings.
@@ -10,13 +22,37 @@ It provides:
 * Support for doorbell and door opening notifications.
 * Support for toggling lights during streaming.
 
-## HACS Installtion
+<a name="introduction-notes"></a>
+#### Notes
+This document assumes you are familiar with Home Assistant setup and configuration.
+
+<a name="introduction-thanks"></a>
+#### Thanks
+Many thanks to:
+* [Button Card](https://github.com/kuuji/button-card/blob/master/button-card.js)
+  for a working lovelace card I could understand
+* [JetBrains](https://www.jetbrains.com/?from=hass-aarlo) for the excellent
+  **PyCharm IDE** and providing me with an open source license to speed up the
+  project development.
+
+  [![JetBrains](/images/jetbrains.svg)](https://www.jetbrains.com/?from=hass-aarlo)
+
+
+<a name="installation"></a>
+## Installation
+
+<a name="installation-hacs"></a>
+#### HACS
 [![hacs_badge](https://img.shields.io/badge/HACS-Default-orange.svg?style=for-the-badge)](https://github.com/custom-components/hacs)
-Aarlo is part of the default HACS store. If you're not interested in development branches this is the easiest way to install. HACS will tell you what to add to your UI configuration.
+
+Aarlo is part of the default HACS store. If you're not interested in development
+branches this is the easiest way to install. HACS will tell you what to add to
+your UI configuration.
 
 The card type is `aarlo-glance.js`.
 
-## Manual Installtion
+<a name="installation-from-script"></a>
+#### From Script
 
 ```sh
 install /config
@@ -34,30 +70,45 @@ resources:
 
 The card type is `aarlo-glance.js`.
 
-## Custom Lovelace Card Configuration
 
-| Name | Type | Default | Supported options | Description |
-|-------------|-------------|--------------|---------------------------------------------------------------------------------------|-----------------------------------------|
-| type | string | **required** | `custom:aarlo-glance` |  |
-| entity | string | **required** | camera entity_id |  |
-| name | string |  | Display Name |  |
-| show | string list | **required** | [motion, sound, snapshot, battery_level, signal_strength, captured_today, image_date] | all items are optional but you must provide at least 1 |
-| hide | string list | | [title, status, date ] | Hide this information from the card. |
-| top_title | boolean | false |  | Show the title at the top of the card |
-| top_status | boolean | false |  | Show the status at the top of the card |
-| top_date | boolean | false |  | Show the date at the top of the card |
-| image_click | string |  | ['play'] | Action to perform when image is clicked. Remove attribute to play last recorded video when image is clicked. |
-| door | string | entity_id |  | Useful if the camera is pointed at a door. |
-| door_lock | string | entity_id |  |  |
-| door_bell | string | entity_id |  |  |
-| door2 | string | entity_id |  | Useful if the camera is pointed at a door. |
-| door2_lock | string | entity_id |  |  |
-| door2_bell | string | entity_id |  |  |
-| light | string | entity_id |  | Control a light near the camera. |
-| light_left | boolean | false |  | Place light control on left of card |
+<a name="configuration"></a>
+## Configuration
 
-### Notes
-To get the `show` items (except `snapshot`, which needs nothing) to work correctly you need to enable the corresponding `binary_sensor` or `sensor`. For example, to get motion notifications working you need the following binary sensor enabled:
+The card supports the following configuration items:
+
+| Name          | Type          | Default        | Supported options                                                                       | Description                                                                                                  |
+| ------------- | ------------- | -------------- | --------------------------------------------------------------------------------------- | -----------------------------------------                                                                    |
+| type          | string        | **required**   | `custom:aarlo-glance`                                                                   |                                                                                                              |
+| entity        | string        | **required**   | camera entity_id                                                                        |                                                                                                              |
+| name          | string        |                | Display Name                                                                            |                                                                                                              |
+| show          | string list   | **required**   | [motion, sound, snapshot, battery_level, signal_strength, captured_today, image_date]   | all items are optional but you must provide at least 1                                                       |
+| hide          | string list   |                | [title, status, date ]                                                                  | Hide this information from the card.                                                                         |
+| top_title     | boolean       | false          |                                                                                         | Show the title at the top of the card                                                                        |
+| top_status    | boolean       | false          |                                                                                         | Show the status at the top of the card                                                                       |
+| top_date      | boolean       | false          |                                                                                         | Show the date at the top of the card                                                                         |
+| image_click   | string        |                | ['play']                                                                                | Action to perform when image is clicked. Remove attribute to play last recorded video when image is clicked. |
+| door          | string        | entity_id      |                                                                                         | Useful if the camera is pointed at a door.                                                                   |
+| door_lock     | string        | entity_id      |                                                                                         |                                                                                                              |
+| door_bell     | string        | entity_id      |                                                                                         |                                                                                                              |
+| door2         | string        | entity_id      |                                                                                         | Useful if the camera is pointed at a door.                                                                   |
+| door2_lock    | string        | entity_id      |                                                                                         |                                                                                                              |
+| door2_bell    | string        | entity_id      |                                                                                         |                                                                                                              |
+| light         | string        | entity_id      |                                                                                         | Control a light near the camera.                                                                             |
+| light_left    | boolean       | false          |                                                                                         | Place light control on left of card                                                                          |
+| camera_id     | string        |                |                                                                                         | Override the calculated camera device name                                                                   |
+| motion_id     | string        |                |                                                                                         | Override the calculated motion device name                                                                   |
+| sound_id      | string        |                |                                                                                         | Override the calculated sound device name                                                                    |
+| battery_id    | string        |                |                                                                                         | Override the calculated battery device name                                                                  |
+| signal_id     | string        |                |                                                                                         | Override the calculated signal device name                                                                   |
+| capture_id    | string        |                |                                                                                         | Override the calculated captured today device name                                                           |
+| last_id       | string        |                |                                                                                         | Override the calculated last captured device name                                                            |
+
+
+#### Notes
+To get the `show` items (except `snapshot`, which needs nothing) to work
+correctly you need to enable the corresponding `binary_sensor` or `sensor`. For
+example, to get motion notifications working you need the following binary
+sensor enabled:
 
 ```yaml
 binary_sensor:
@@ -66,11 +117,14 @@ binary_sensor:
     - motion
 ```
 
-To get the `show` items to work correctly do not rename any of the devices. The names of of the devices the lovelace card looks for are currently hardcoded.
+If you rename any of the `aarlo` devices you will need to provide the full
+device name to get motion, sound, battery, signal, capture or last capture
+notifications to work. See the corresponding `*_id` configuration item.
 
-### Example
 
-The following is my front door camera configuration. Please remember rename the `aarlo_` components.
+#### Example
+
+The following is my front door camera configuration.
 
 ```yaml
 type: 'custom:aarlo-glance'
@@ -97,21 +151,32 @@ door2_bell: binary_switch.aarlo_ding_front_door_bell
 light: light.aarlo_front_light
 ```
 
-You don't need to reboot to see the GUI changes, a reload is sufficient. And if all goes will see a card that looks like this:
+You don't need to reboot to see the GUI changes, a reload is sufficient. And if
+all goes will see a card that looks like this:
 
+
+<a name="how-it-looks"></a>
+## How it looks
 ![Aarlo Glance](https://github.com/twrecked/hass-aarlo/blob/master/images/aarlo-glance-02.png)
 
-Reading from left to right you have the camera name, motion detection indicator, captured clip indicator, battery levels, signal level and current state. If you click the image the last captured clip will play, if you click the last captured icon you will be show the video library thumbnails - see below. Clicking the camera icon (not shown) will take a snapshot and replace the current thumbnail. (See supported features for list of camera statuses)
+Reading from left to right you have the camera name, motion detection indicator,
+captured clip indicator, battery levels, signal level and current state. If you
+click the image the last captured clip will play, if you click the last captured
+icon you will be show the video library thumbnails - see below. Clicking the
+camera icon (not shown) will take a snapshot and replace the current thumbnail.
+(See supported features for list of camera statuses)
 
-Clicking on the last captured clip will display thumbnail mode. Clicking on a thumbnail starts the appropiate video.  You can currently only see the last 99 videos. If you move your mouse over a thumbnail it will show you time of capture and, if you have a Smart subscription, a reason for the capture. **>** takes you to the next page, **<** to the previous and **X** closes the window.
+Clicking on the last captured clip will display thumbnail mode. Clicking on a
+thumbnail starts the appropiate video.  You can currently only see the last 99
+videos. If you move your mouse over a thumbnail it will show you time of capture
+and, if you have a Smart subscription, a reason for the capture. **>** takes you
+to the next page, **<** to the previous and **X** closes the window.
 
 ![Aarlo Thumbnails](https://github.com/twrecked/hass-aarlo/blob/master/images/thumbnails.png)
 
-## Documentation
-See [hass-aarlo](https://github.com/twrecked/hass-aarlo/blob/master/README.md) for general Aarlo documentation.
 
-## Thanks
-Many thanks to:
-* [Button Card](https://github.com/kuuji/button-card/blob/master/button-card.js) for a working lovelace card I could understand
-* [![JetBrains](/images/jetbrains.svg)](https://www.jetbrains.com/?from=hass-aarlo) for the excellent **PyCharm IDE** and providing me with an open source license to speed up the project development.
+<a name="further-documentation"></a>
+##  Further Documentation
+See [hass-aarlo](https://github.com/twrecked/hass-aarlo/blob/master/README.md)
+for general Aarlo documentation.
 
