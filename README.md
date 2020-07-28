@@ -76,39 +76,49 @@ The card type is `aarlo-glance.js`.
 
 The card supports the following configuration items:
 
-| Name          | Type          | Default        | Supported options                                                                       | Description                                                                                                  |
-| ------------- | ------------- | -------------- | --------------------------------------------------------------------------------------- | -----------------------------------------                                                                    |
-| type          | string        | **required**   | `custom:aarlo-glance`                                                                   |                                                                                                              |
-| entity        | string        | **required**   | camera entity_id                                                                        |                                                                                                              |
-| name          | string        |                | Display Name                                                                            |                                                                                                              |
-| show          | string list   | **required**   | [motion, sound, snapshot, battery_level, signal_strength, captured_today, image_date]   | all items are optional but you must provide at least 1                                                       |
-| hide          | string list   |                | [title, status, date ]                                                                  | Hide this information from the card.                                                                         |
-| top_title     | boolean       | false          |                                                                                         | Show the title at the top of the card                                                                        |
-| top_status    | boolean       | false          |                                                                                         | Show the status at the top of the card                                                                       |
-| top_date      | boolean       | false          |                                                                                         | Show the date at the top of the card                                                                         |
-| image_click   | string        |                | ['play']                                                                                | Action to perform when image is clicked. Remove attribute to play last recorded video when image is clicked. |
-| door          | string        | entity_id      |                                                                                         | Useful if the camera is pointed at a door.                                                                   |
-| door_lock     | string        | entity_id      |                                                                                         |                                                                                                              |
-| door_bell     | string        | entity_id      |                                                                                         |                                                                                                              |
-| door2         | string        | entity_id      |                                                                                         | Useful if the camera is pointed at a door.                                                                   |
-| door2_lock    | string        | entity_id      |                                                                                         |                                                                                                              |
-| door2_bell    | string        | entity_id      |                                                                                         |                                                                                                              |
-| light         | string        | entity_id      |                                                                                         | Control a light near the camera.                                                                             |
-| light_left    | boolean       | false          |                                                                                         | Place light control on left of card                                                                          |
-| camera_id     | string        |                |                                                                                         | Override the calculated camera device name                                                                   |
-| motion_id     | string        |                |                                                                                         | Override the calculated motion device name                                                                   |
-| sound_id      | string        |                |                                                                                         | Override the calculated sound device name                                                                    |
-| battery_id    | string        |                |                                                                                         | Override the calculated battery device name                                                                  |
-| signal_id     | string        |                |                                                                                         | Override the calculated signal device name                                                                   |
-| capture_id    | string        |                |                                                                                         | Override the calculated captured today device name                                                           |
-| last_id       | string        |                |                                                                                         | Override the calculated last captured device name                                                            |
+| Name          | Type          | Default        | Supported options                                                                             | Description                                                                                                  |
+| ------------- | ------------- | -------------- | ---------------------------------------------------------------------------------------       | -----------------------------------------                                                                    |
+| type          | string        | **required**   | `custom:aarlo-glance`                                                                         |                                                                                                              |
+| entity        | string        | **required**   | camera entity_id                                                                              |                                                                                                              |
+| name          | string        |                | Display Name                                                                                  |                                                                                                              |
+| show          | string list   | **required**   | [motion, sound, snapshot, battery_level, signal_strength, captured_today, image_date, on_off] | all items are optional but you must provide at least 1                                                       |
+| hide          | string list   |                | [title, status, date ]                                                                        | Hide this information from the card.                                                                         |
+| top_title     | boolean       | false          |                                                                                               | Show the title at the top of the card                                                                        |
+| top_status    | boolean       | false          |                                                                                               | Show the status at the top of the card                                                                       |
+| top_date      | boolean       | false          |                                                                                               | Show the date at the top of the card                                                                         |
+| image_click   | string        |                | ['play']                                                                                      | Action to perform when image is clicked. Remove attribute to play last recorded video when image is clicked. |
+| door          | string        | entity_id      |                                                                                               | Useful if the camera is pointed at a door.                                                                   |
+| door_lock     | string        | entity_id      |                                                                                               |                                                                                                              |
+| door_bell     | string        | entity_id      |                                                                                               |                                                                                                              |
+| door2         | string        | entity_id      |                                                                                               | Useful if the camera is pointed at a door.                                                                   |
+| door2_lock    | string        | entity_id      |                                                                                               |                                                                                                              |
+| door2_bell    | string        | entity_id      |                                                                                               |                                                                                                              |
+| light         | string        | entity_id      |                                                                                               | Control a light near the camera.                                                                             |
+| light_left    | boolean       | false          |                                                                                               | Place light control on left of card                                                                          |
+| camera_id     | string        |                |                                                                                               | Override the calculated camera device name                                                                   |
+| motion_id     | string        |                |                                                                                               | Override the calculated motion device name                                                                   |
+| sound_id      | string        |                |                                                                                               | Override the calculated sound device name                                                                    |
+| battery_id    | string        |                |                                                                                               | Override the calculated battery device name                                                                  |
+| signal_id     | string        |                |                                                                                               | Override the calculated signal device name                                                                   |
+| capture_id    | string        |                |                                                                                               | Override the calculated captured today device name                                                           |
+| last_id       | string        |                |                                                                                               | Override the calculated last captured device name                                                            |
 
+### `show` options
+* `motion`: an icon that indicates when motion is detected
+* `sound`: an icon that indicates when sound is detected
+* `battery_level`: an icon that shows current battery level
+* `signal_strength`: an icon that shows wifi signal strength
+* `snapshot`: an icon that takes a snapshot when pressed
+* `captured_today`: an icon with descriptive text showing how many recordings
+  have been captured today.
+* `image_date`: an icon with descriptive text showing when the last image was
+  taken
+* `on_off`: a switch allowing the camera to be turned off and on
 
 #### Notes
-To get the `show` items (except `snapshot`, which needs nothing) to work
-correctly you need to enable the corresponding `binary_sensor` or `sensor`. For
-example, to get motion notifications working you need the following binary
-sensor enabled:
+To get the first four `show` items to work correctly you need to enable the
+corresponding `binary_sensor` or `sensor`. For example, to get motion
+notifications working you need the following binary sensor enabled:
 
 ```yaml
 binary_sensor:
