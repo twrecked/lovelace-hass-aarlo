@@ -103,12 +103,22 @@ The card supports the following configuration items:
 | capture_id    | string        |                |                                                                                               | Override the calculated captured today device name                                                           |
 | last_id       | string        |                |                                                                                               | Override the calculated last captured device name                                                            |
 
+### `show` options
+* `motion`: an icon that indicates when motion is detected
+* `sound`: an icon that indicates when sound is detected
+* `battery_level`: an icon that shows current battery level
+* `signal_strength`: an icon that shows wifi signal strength
+* `snapshot`: an icon that takes a snapshot when pressed
+* `captured_today`: an icon with descriptive text showing how many recordings
+  have been captured today.
+* `image_date`: an icon with descriptive text showing when the last image was
+  taken
+* `on_off`: a switch allowing the camera to be turned off and on
 
 #### Notes
-To get the `show` items (except `snapshot`, which needs nothing) to work
-correctly you need to enable the corresponding `binary_sensor` or `sensor`. For
-example, to get motion notifications working you need the following binary
-sensor enabled:
+To get the first four `show` items to work correctly you need to enable the
+corresponding `binary_sensor` or `sensor`. For example, to get motion
+notifications working you need the following binary sensor enabled:
 
 ```yaml
 binary_sensor:
