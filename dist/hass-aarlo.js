@@ -876,9 +876,10 @@ class AarloGlance extends LitElement {
 
     setConfig(config) {
 
+        // find camera
         let camera = null;
         if( config.entity ) {
-            camera = config.entity.replace( 'camera.aarlo_','' );
+            camera = config.entity.replace( 'camera.','' );
         }
         if( config.camera ) {
             camera = config.camera;
@@ -890,19 +891,29 @@ class AarloGlance extends LitElement {
             this.throwError( 'missing show components' );
         }
 
+        // see if aarlo prefix, remove from custom names if not present
+        let prefix = "";
+        if ( camera.startsWith( 'aarlo_','' ) ) {
+            camera = camera.replace( 'aarlo_','' )
+            prefix = "aarlo_"
+        }
+        if( config.prefix ) {
+            prefix = config.prefix;
+        }
+
         // save new config and reset decoration properties
         this._config = config;
         this.checkConfig();
         this.resetStatuses();
 
         // camera and sensors
-        this._s.cameraId  = config.camera_id ? config.camera_id : 'camera.aarlo_' + camera;
-        this._s.motionId  = config.motion_id ? config.motion_id : 'binary_sensor.aarlo_motion_' + camera;
-        this._s.soundId   = config.sound_id ? config.sound_id : 'binary_sensor.aarlo_sound_' + camera;
-        this._s.batteryId = config.battery_id ? config.battery_id : 'sensor.aarlo_battery_level_' + camera;
-        this._s.signalId  = config.signal_id ? config.signal_id : 'sensor.aarlo_signal_strength_' + camera;
-        this._s.captureId = config.capture_id ? config.capture_id : 'sensor.aarlo_captured_today_' + camera;
-        this._s.lastId    = config.last_id ? config.last_id : 'sensor.aarlo_last_' + camera;
+        this._s.cameraId  = config.camera_id ? config.camera_id : 'camera.' + prefix + camera;
+        this._s.motionId  = config.motion_id ? config.motion_id : 'binary_sensor.' + prefix + 'motion_' + camera;
+        this._s.soundId   = config.sound_id ? config.sound_id : 'binary_sensor.' + prefix + 'sound_' + camera;
+        this._s.batteryId = config.battery_id ? config.battery_id : 'sensor.' + prefix + 'battery_level_' + camera;
+        this._s.signalId  = config.signal_id ? config.signal_id : 'sensor.' + prefix + 'signal_strength_' + camera;
+        this._s.captureId = config.capture_id ? config.capture_id : 'sensor.' + prefix + 'captured_today_' + camera;
+        this._s.lastId    = config.last_id ? config.last_id : 'sensor.' + prefix + 'last_' + camera;
 
         // door definition
         this._s.doorId     = config.door ? config.door: null;
