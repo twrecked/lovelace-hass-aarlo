@@ -109,6 +109,9 @@ You only need one of these. `entity` is the full camera entity id - for
 example, `camera.aarlo_front_door` while `camera` is just the name portion -
 for example, `aarlo_front_door`.
 
+### Naming
+If you don't change entity names you don't need to worry about this.
+
 The code tries to be smart about mapping cameras to device names and as long as
 you follow certain rules the card can automatically generate device names.
 
@@ -119,12 +122,12 @@ Given the entity id `camera.front_door`, you get a `prefix` of "" and a
 `camera_name` of "front_door".
 
 The device names are calculated as:
-* motion device; 'binary_sensor.' + prefix + 'motion_' + camera_name
-* sound device; 'binary_sensor.' + prefix + 'sound_' + camera_name;
-* battery device; 'sensor.' + prefix + 'battery_level_' + camera_name;
-* signal_device; 'sensor.' + prefix + 'signal_strength_' + camera_name;
-* capture_today_device; 'sensor.' + prefix + 'captured_today_' + camera_name;
-* last_capture_device; 'sensor.' + prefix + 'last_' + camera_name;
+* motion device = `binary_sensor.${prefix}motion_${camera_name}`
+* sound device = `binary_sensor.${prefix}sound_${camera_name}`
+* battery device = `sensor.${prefix}battery_level_${camera_name}`
+* signal_device = `sensor.${prefix}signal_strength_${camera_name}`
+* capture_today_device = `sensor.${prefix}captured_today_${camera_name}`
+* last_capture_device = `sensor.${prefix}last_${camera_name}`
 
 If you rename any of the `aarlo` using a different scheme you will need to
 provide the full device name to get motion, sound, battery, signal, capture or
