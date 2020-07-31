@@ -738,6 +738,11 @@ class AarloGlance extends LitElement {
                         };
                     }, true);
                     this._dash.initialize(video, this._stream, true);
+                    // this._dash.updateSettings({
+                        // 'debug': {
+                            // 'logLevel': dashjs.Debug.LOG_LEVEL_DEBUG
+                        // }
+                    // });
                 }
             } else {
                 // Start HLS to handle video streaming.
@@ -1279,7 +1284,7 @@ const s = document.createElement("script");
 s.src = 'https://cdn.jsdelivr.net/npm/hls.js@latest';
 s.onload = function() {
     const s2 = document.createElement("script");
-    s2.src = 'https://cdn.dashjs.org/latest/dash.all.min.js';
+    s2.src = 'http://cdn.dashjs.org/v3.1.1/dash.all.min.js';
     s2.onload = function() {
         customElements.define('aarlo-glance', AarloGlance);
         // const s3 = document.createElement("script");
