@@ -1284,7 +1284,7 @@ const s = document.createElement("script");
 s.src = 'https://cdn.jsdelivr.net/npm/hls.js@latest';
 s.onload = function() {
     const s2 = document.createElement("script");
-    s2.src = 'http://cdn.dashjs.org/v3.1.1/dash.all.min.js';
+    s2.src = 'https://cdn.dashjs.org/v3.1.1/dash.all.min.js';
     s2.onload = function() {
         customElements.define('aarlo-glance', AarloGlance);
         // const s3 = document.createElement("script");
