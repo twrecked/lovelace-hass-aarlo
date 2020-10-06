@@ -58,15 +58,23 @@ branches this is the easiest way to install.
 8. now install the module in Home Assistant choosing the Configuration Menu
 10. choose Lovelace Dashboards
 11. choose resources
-12..choose + to add and then :
+12. choose + to add a new resource
+
+```
 Url
 /hacsfiles/lovelace-hass-aarlo/hass-aarlo.js 
+
 Resource Type:
 JavaScript Module
+```
+
 13. edit your dashboard as usual, when adding the aarlo-glance card you will need to choose a manual card type (bottom of the gui list) and then insert the configuration
 code to match your camera, 
-  here is a working config for a camera known to Arlo as "kitchen" - note  the quotes
-  type: 'custom:aarlo-glance'
+
+Here is a working config for a camera known to Arlo as 'kitchen' and to HA as camera.aarlo_kitchen
+  
+  
+  ```type: 'custom:aarlo-glance'
   entity: camera.aarlo_kitchen
   name: A camera in my Kitchen
   show:
@@ -81,6 +89,7 @@ code to match your camera,
   top_status: false
   top_date: false
   image_click: play
+  ```
 
 
 <a name="installation-from-script"></a>
