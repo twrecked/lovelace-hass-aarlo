@@ -1,3 +1,4 @@
+0.1.5: experimental square aspect ratio support
 0.1.4: used fixed version of dash
 0.1.3: better name parsing
        added camera on/off support
