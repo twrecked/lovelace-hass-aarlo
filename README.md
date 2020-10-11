@@ -46,51 +46,7 @@ Many thanks to:
 [![hacs_badge](https://img.shields.io/badge/HACS-Default-orange.svg?style=for-the-badge)](https://github.com/custom-components/hacs)
 
 Aarlo is part of the default HACS store. If you're not interested in development
-branches this is the easiest way to install. 
-
-1. install "HACS" as per their documentation
-2. let the install complete - takes at least an hour - see HACS documentation
-3. choose "HACS" from the side bar
-4. select "frontend"
-5. click + and search for Hass Arlo
-6. choose "install this repository in hacs"
-7. choose "install"
-8. now install the module in Home Assistant choosing the Configuration Menu
-10. choose Lovelace Dashboards
-11. choose resources
-12. choose + to add a new resource
-
-```
-Url
-/hacsfiles/lovelace-hass-aarlo/hass-aarlo.js 
-
-Resource Type:
-JavaScript Module
-```
-
-13. edit your dashboard as usual, when adding the aarlo-glance card you will need to choose a manual card type (bottom of the gui list) and then insert the configuration
-code to match your camera, 
-
-Here is a working config for a camera known to Arlo as 'kitchen' and to HA as camera.aarlo_kitchen
-  
-  
-  ```type: 'custom:aarlo-glance'
-  entity: camera.aarlo_kitchen
-  name: A camera in my Kitchen
-  show:
-    - motion
-    - sound
-    - snapshot
-    - battery_level
-    - signal_strength
-    - captured_today
-    - image_date
-  top_title: false
-  top_status: false
-  top_date: false
-  image_click: play
-  ```
-
+branches this is the easiest way to install.  See [hass-aarlo-hacs](https://github.com/twrecked/hacsinstall.md) for some hints on installing and setup using HACS and the home assistant interface.
 
 <a name="installation-from-script"></a>
 #### From Script
