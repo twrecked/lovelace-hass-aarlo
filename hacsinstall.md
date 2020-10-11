@@ -4,8 +4,8 @@
 
 These notes are provided to help with a HACS install if you use the GUI rather than edit yaml. 
 
-1. Install "HACS" as per their documentation (it installs like most Configuration>Integrations)
-2. Let the HACS addon download its initial data - this takes at least an hour to fetch data due to rate limiting - see HACS documentation
+1. Install "HACS" as per their documentation [![hacs_badge](https://img.shields.io/badge/HACS-Default-orange.svg?style=for-the-badge)](https://github.com/custom-components/hacs)
+2. Let the HACS addon download its data - this takes at least an hour to fetch data initial due to rate limiting - see HACS documentation
 3. Choose HACS from the Sidebar
 4. For installation of this card select the HACS ```Frontend``` option
 5. Click + and search for "Lovelace Hass Arlo"
