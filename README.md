@@ -46,7 +46,7 @@ Many thanks to:
 [![hacs_badge](https://img.shields.io/badge/HACS-Default-orange.svg?style=for-the-badge)](https://github.com/custom-components/hacs)
 
 Aarlo is part of the default HACS store. If you're not interested in development
-branches this is the easiest way to install.  See [hass-aarlo-hacs](https://github.com/twrecked/hacsinstall.md) for some hints on installing and setup using HACS and the home assistant interface.
+branches this is the easiest way to install.  See [hass-aarlo-hacs](hacsinstall.md) for some hints on installing and setup using HACS and the home assistant interface.
 
 <a name="installation-from-script"></a>
 #### From Script
