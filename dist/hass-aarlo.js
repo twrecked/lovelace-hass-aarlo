@@ -835,7 +835,7 @@ class AarloGlance extends LitElement {
             this._s.imageFullDate = camera.attributes.image_source ? camera.attributes.image_source : '';
             this._s.imageDate = '';
             if( this._s.imageFullDate.startsWith('capture/') ) { 
-                this._s.imageDate = this.getState(this._s.lastId,0).state;
+                this._s.imageDate = this._s.imageFullDate.substr(8);
                 this._s.imageFullDate = 'automatically captured at ' + this._s.imageDate;
             } else if( this._s.imageFullDate.startsWith('snapshot/') ) { 
                 this._s.imageDate = this._s.imageFullDate.substr(9);
