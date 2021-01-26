@@ -1257,9 +1257,9 @@ class AarloGlance extends LitElement {
     showOrStopStream() {
         const camera = this.getState(this._s.cameraId,'unknown');
         if ( camera.state === 'streaming' ) {
-            this.stopStream()
+            this.stopStream().then()
         } else {
-            this.playStream()
+            this.playStream().then()
         }
     }
 
@@ -1291,13 +1291,13 @@ class AarloGlance extends LitElement {
 
     clickImage() {
         if ( this._v.imageClick === 'modal-play' ) {
-            this.playStream(true)
+            this.playStream(true).then()
         } else if ( this._v.imageClick === 'play' ) {
-            this.playStream(false)
+            this.playStream(false).then()
         } else if ( this._v.imageClick === 'modal-last' ) {
-            this.playVideo(true)
+            this.playVideo(true).then()
         } else {
-            this.playVideo(false)
+            this.playVideo(false).then()
         }
     }
 
@@ -1329,7 +1329,7 @@ class AarloGlance extends LitElement {
 
     controlStopVideoOrStream() {
         this.stopVideo();
-        this.stopStream();
+        this.stopStream().then()
     }
 
     controlPauseVideo(  ) {
@@ -1352,7 +1352,7 @@ class AarloGlance extends LitElement {
         const prefix = this._stream ? 'stream-' : 'video-';
         const video = this.shadowRoot.getElementById( this.modalId(prefix + this._s.cameraId) );
         if (video.requestFullscreen) {
-            video.requestFullscreen();
+            video.requestFullscreen().then()
         } else if (video.mozRequestFullScreen) {
             video.mozRequestFullScreen(); // Firefox
         } else if (video.webkitRequestFullscreen) {
@@ -1445,7 +1445,7 @@ class AarloGlance extends LitElement {
 
     updateCameraImageSourceLater(seconds = 2) {
         setTimeout(() => {
-            this.updateCameraImageSrc()
+            this.updateCameraImageSrc().then()
         }, seconds * 1000);
     }
 
