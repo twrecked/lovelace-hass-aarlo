@@ -76,7 +76,6 @@ class AarloGlance extends LitElement {
 
     static get outerStyleTemplate() {
         return html`
-        <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
         <style>
             ha-card {
                 position: relative;
@@ -285,7 +284,9 @@ class AarloGlance extends LitElement {
 
         return html`
             ${AarloGlance.outerStyleTemplate}
-            <div id="modal-viewer" class="w3-modal">
+            ${AarloGlance.innerStyleTemplate}
+            <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+            <div id="modal-viewer-${this._s.cameraId}" class="w3-modal">
               <div class="w3-modal-content w3-animate-opacity modal-base-${this._v.aspectRatio}">
               <div class="modal-video-wrapper-${this._v.aspectRatio}">
                   <video class="${this._v.modalVideo} modal-video-${this._v.aspectRatio}"
@@ -325,7 +326,6 @@ class AarloGlance extends LitElement {
               </div>
             </div>
             <ha-card>
-            ${AarloGlance.innerStyleTemplate}
             <div id="aarlo-wrapper" class="base-${this._v.aspectRatio}">
                 <video class="${this._v.stream} video-${this._v.aspectRatio}"
                     id="stream-${this._s.cameraId}"
@@ -1086,7 +1086,8 @@ class AarloGlance extends LitElement {
         this._v.aspectRatio = config.aspect_ratio === 'square' ? '1x1' : '16x9';
  
         // on click
-        this._v.imageClick = config.image_click ? config.image_click : false;
+        this._v.imageClick = config.image_click ? config.image_click : '';
+        this._v.libraryClick = config.library_click ? config.library_click : '';
 
         // stream directly from Arlo
         this._v.playDirect = config.play_direct ? config.play_direct : false;
@@ -1201,7 +1202,7 @@ class AarloGlance extends LitElement {
     async playVideo( modal ) {
         const video = await this.wsLoadLibrary(1);
         if ( video ) {
-            this._modalViewer  = modal
+            this._modalViewer = modal
             this._video       = video[0].url;
             this._videoPoster = video[0].thumbnail;
             this._videoType   = "video/mp4"
@@ -1272,10 +1273,12 @@ class AarloGlance extends LitElement {
     showLibraryVideo(index) {
         index += this._libraryOffset;
         if (this._library && index < this._library.length) {
-            this._video = this._library[index].url;
+            this._modalViewer = this._v.libraryClick === 'modal'
+            this._video       = this._library[index].url;
             this._videoPoster = this._library[index].thumbnail;
         } else {
-            this._video = null;
+            this._modalViewer = false
+            this._video       = null;
             this._videoPoster = null
         }
     }
@@ -1310,14 +1313,14 @@ class AarloGlance extends LitElement {
     }
 
     openModal() {
-        const modal = this.shadowRoot.getElementById('modal-viewer')
+        const modal = this.shadowRoot.getElementById('modal-viewer-' + this._s.cameraId)
         if ( modal.style.display !== 'block' ) {
             modal.style.display='block'
         }
     }
 
     closeModal() {
-        const modal = this.shadowRoot.getElementById('modal-viewer')
+        const modal = this.shadowRoot.getElementById('modal-viewer-' + this._s.cameraId)
         if ( modal.style.display !== 'none' ) {
             modal.style.display='none'
         }
@@ -1458,11 +1461,6 @@ s.onload = function() {
     s2.src = 'https://cdn.dashjs.org/v3.1.1/dash.all.min.js';
     s2.onload = function() {
         customElements.define('aarlo-glance', AarloGlance);
-        // const s3 = document.createElement("script");
-        // s3.src = 'https://cdn.jsdelivr.net/npm/mobile-detect@1.4.3/mobile-detect.min.js';
-        // s3.onload = function() {
-            // customElements.define('aarlo-glance', AarloGlance);
-        // }
     };
     document.head.appendChild(s2);
 };
