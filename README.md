@@ -45,8 +45,10 @@ Many thanks to:
 #### HACS
 [![hacs_badge](https://img.shields.io/badge/HACS-Default-orange.svg?style=for-the-badge)](https://github.com/custom-components/hacs)
 
-Aarlo is part of the default HACS store. If you're not interested in development
-branches this is the easiest way to install.  See [hass-aarlo-hacs](hacsinstall.md) for some hints on installing and setup using HACS and the home assistant interface.
+Aarlo is part of the default HACS store. If you're not interested in
+development branches this is the easiest way to install.  See
+[hass-aarlo-hacs](hacsinstall.md) for some hints on installing and setup using
+HACS and the home assistant interface.
 
 <a name="installation-from-script"></a>
 #### From Script
@@ -84,7 +86,8 @@ The card supports the following configuration items:
 | top_title     | boolean       | false          |                                                                                               | Show the title at the top of the card                                                                        |
 | top_status    | boolean       | false          |                                                                                               | Show the status at the top of the card                                                                       |
 | top_date      | boolean       | false          |                                                                                               | Show the date at the top of the card                                                                         |
-| image_click   | string        |                | ['play']                                                                                      | Action to perform when image is clicked. Remove attribute to play last recorded video when image is clicked. |
+| image_click   | string        |                | ['play', 'modal-play','modal-last']                                                           | Action to perform when image is clicked. Remove attribute to play last recorded video when image is clicked. |
+| library_click | string        |                | ['modal']                                                                                     | Action to perform when library image is clicked. Remove attribute to play last recorded video when image is clicked. |
 | door          | string        | entity_id      |                                                                                               | Useful if the camera is pointed at a door.                                                                   |
 | door_lock     | string        | entity_id      |                                                                                               |                                                                                                              |
 | door_bell     | string        | entity_id      |                                                                                               |                                                                                                              |
