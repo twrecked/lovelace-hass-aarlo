@@ -38,7 +38,7 @@ class AarloGlance extends LitElement {
     }
 
     parseURL(url) {
-        var parser = document.createElement('a'),
+        let parser = document.createElement('a'),
             searchObject = {},
             queries, split, i;
         // Let the browser do the work
@@ -170,18 +170,18 @@ class AarloGlance extends LitElement {
                     cursor: pointer;
                     width: 100%;
                 }
-                .modal-video-wrapper {
+                .modal-video-wrapper-16x9 {
                     overflow: hidden;
                     position: absolute;
-                    top: 0px;
-                    left: 0px;
+                    top: 0;
+                    left: 0;
                     width: 880px;
                     height: 491px;
                 }
                 .modal-video-16x9 {
                     position: absolute;
-                    top: 0px;
-                    left: 0px;
+                    top: 0;
+                    left: 0;
                     width: 880px;
                     height: 495px;
                 }
@@ -190,6 +190,10 @@ class AarloGlance extends LitElement {
                     overflow: hidden;
                     margin: 0;
                     padding-top: 100%;
+                    position: relative;
+                }
+                div.modal-base-1x1 {
+                    margin: 0 auto;
                     position: relative;
                 }
                 .img-1x1 {
@@ -211,6 +215,21 @@ class AarloGlance extends LitElement {
                 .library-1x1 {
                     cursor: pointer;
                     width: 100%;
+                }
+                .modal-video-wrapper-1x1 {
+                    overflow: hidden;
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    width: 498px;
+                    height: 498px;
+                }
+                .modal-video-1x1 {
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    width: 500px;
+                    height: 500px;
                 }
                 .lrow {
                   display: flex;
@@ -268,12 +287,11 @@ class AarloGlance extends LitElement {
             ${AarloGlance.outerStyleTemplate}
             <div id="modal-viewer" class="w3-modal">
               <div class="w3-modal-content w3-animate-opacity modal-base-${this._v.aspectRatio}">
-              <div class="modal-video-wrapper">
+              <div class="modal-video-wrapper-${this._v.aspectRatio}">
                   <video class="${this._v.modalVideo} modal-video-${this._v.aspectRatio}"
                       autoplay playsinline 
                       id="modal-video-${this._s.cameraId}"
                       src="${this._video}"
-                      type="${this._videoType}"
                       poster="${this._videoPoster}"
                       @ended="${() => { this.stopVideo(); }}"
                       @mouseover="${() => { this.mouseOverVideo(); }}"
@@ -321,7 +339,6 @@ class AarloGlance extends LitElement {
                     autoplay playsinline 
                     id="video-${this._s.cameraId}"
                     src="${this._video}"
-                    type="${this._videoType}"
                     poster="${this._videoPoster}"
                     @ended="${() => { this.stopVideo(); }}"
                     @mouseover="${() => { this.mouseOverVideo(); }}"
@@ -334,7 +351,6 @@ class AarloGlance extends LitElement {
                     alt="${this._s.imageFullDate}"
                     title="${this._s.imageFullDate}"
                     @click="${() => { this.clickImage(); }}">
-                </img>
                 <div class="${this._v.library} img-${this._v.aspectRatio}" >
                     <div class="lrow">
                         <div class="lcolumn">
@@ -670,7 +686,7 @@ class AarloGlance extends LitElement {
         }
 
         if( this._v.onOff === '' ) {
-            if ( this._s.cameraState == 'off' ) {
+            if ( this._s.cameraState === 'off' ) {
                 this._s.onOffOn   = 'state-on';
                 this._s.onOffText = 'click to turn camera on';
                 this._s.onOffIcon = 'mdi:camera'
@@ -713,7 +729,7 @@ class AarloGlance extends LitElement {
         if( this._v.signal === '' ) {
             const signal = this.getState(this._s.signalId, 0);
             this._s.signalText = 'Signal Strength: ' + signal.state;
-            this._s.signalIcon = signal.state === 0 ? 'mdi:wifi-outline' : 'mdi:wifi-strength-' + signal.state;
+            this._s.signalIcon = signal.state === "0" ? 'mdi:wifi-outline' : 'mdi:wifi-strength-' + signal.state;
         }
 
         if( this._v.motion === '' ) {
@@ -729,9 +745,9 @@ class AarloGlance extends LitElement {
         if( this._v.captured === '' ) {
             const captured = this.getState(this._s.captureId, 0).state;
             const last = this.getState(this._s.lastId, 0).state;
-            this._s.capturedText = 'Captured: ' + ( captured === 0 ? 'nothing today' : captured + ' clips today, last at ' + last );
+            this._s.capturedText = 'Captured: ' + ( captured === "0" ? 'nothing today' : captured + ' clips today, last at ' + last );
             this._s.capturedIcon = this._video ? 'mdi:stop' : 'mdi:file-video';
-            this._s.capturedOn   = captured !== 0 ? 'state-update' : ''
+            this._s.capturedOn   = captured !== "0" ? 'state-update' : ''
         }
 
         // OPTIONAL DOORS
@@ -824,7 +840,7 @@ class AarloGlance extends LitElement {
                 if (this._dash === null) {
 
                     const parser = this.parseURL(this._stream);
-                    const et = parser.searchObject.egressToken;
+                    const et = parser.searchObject["egressToken"];
 
                     this._dash = dashjs.MediaPlayer().create();
                     this._dash.extend("RequestModifier", function () {
@@ -1067,7 +1083,7 @@ class AarloGlance extends LitElement {
         const show = this._config.show || [];
 
         // aspect ratio
-        this._v.aspectRatio = config.aspect_ratio == 'square' ? '1x1' : '16x9';
+        this._v.aspectRatio = config.aspect_ratio === 'square' ? '1x1' : '16x9';
  
         // on click
         this._v.imageClick = config.image_click ? config.image_click : false;
@@ -1175,7 +1191,7 @@ class AarloGlance extends LitElement {
 
     async updateCameraImageSrc() {
         const camera = this.getState(this._s.cameraId,'unknown');
-        if ( camera != 'unknown' ) {
+        if ( camera.state !== 'unknown' ) {
             this._image = camera.attributes.entity_picture + "&t=" + this.changed();
         } else {
             this._image = null;
@@ -1295,14 +1311,14 @@ class AarloGlance extends LitElement {
 
     openModal() {
         const modal = this.shadowRoot.getElementById('modal-viewer')
-        if ( modal.style.display != 'block' ) {
+        if ( modal.style.display !== 'block' ) {
             modal.style.display='block'
         }
     }
 
     closeModal() {
         const modal = this.shadowRoot.getElementById('modal-viewer')
-        if ( modal.style.display != 'none' ) {
+        if ( modal.style.display !== 'none' ) {
             modal.style.display='none'
         }
     }
@@ -1345,7 +1361,7 @@ class AarloGlance extends LitElement {
     }
 
     toggleCamera( ) {
-        if ( this._s.cameraState == 'off' ) {
+        if ( this._s.cameraState === 'off' ) {
             this._hass.callService( 'camera','turn_on', { entity_id: this._s.cameraId } )
         } else {
             this._hass.callService( 'camera','turn_off', { entity_id: this._s.cameraId } )
