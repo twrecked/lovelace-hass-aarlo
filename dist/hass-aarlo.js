@@ -135,7 +135,7 @@ class AarloGlance extends LitElement {
         `;
     }
 
-    static get innerStyleTemplate() {
+    static innerStyleTemplate(width, height) {
         return html`
             <style>
                 div.base-16x9 {
@@ -148,6 +148,7 @@ class AarloGlance extends LitElement {
                 div.modal-base-16x9 {
                     margin: 0 auto;
                     position: relative;
+                    width: ${width}px;
                 }
                 .img-16x9 {
                     position: absolute;
@@ -174,15 +175,15 @@ class AarloGlance extends LitElement {
                     position: absolute;
                     top: 0;
                     left: 0;
-                    width: 880px;
-                    height: 491px;
+                    width: ${width}px;
+                    height: ${height - 4}px;
                 }
                 .modal-video-16x9 {
                     position: absolute;
                     top: 0;
                     left: 0;
-                    width: 880px;
-                    height: 495px;
+                    width: ${width}px;
+                    height: ${height}px;
                 }
                 div.base-1x1 {
                     width: 100%;
@@ -194,6 +195,7 @@ class AarloGlance extends LitElement {
                 div.modal-base-1x1 {
                     margin: 0 auto;
                     position: relative;
+                    width: ${width}px;
                 }
                 .img-1x1 {
                     position: absolute;
@@ -220,15 +222,15 @@ class AarloGlance extends LitElement {
                     position: absolute;
                     top: 0;
                     left: 0;
-                    width: 498px;
-                    height: 498px;
+                    width: ${height - 2}px;
+                    height: ${height - 2}px;
                 }
                 .modal-video-1x1 {
                     position: absolute;
                     top: 0;
                     left: 0;
-                    width: 500px;
-                    height: 500px;
+                    width: ${height}px;
+                    height: ${height}px;
                 }
                 .lrow {
                   display: flex;
@@ -282,9 +284,24 @@ class AarloGlance extends LitElement {
 
     render() {
 
+        // calculate a width?
+        let width  = window.innerWidth * .7
+        let height = window.innerHeight * .7
+        let width_height = (width / 16) * 9; // height that will fit in width
+        let height_width = (height / 9) * 16; // width that will fit in height
+        if ( width_height < height ) {
+            height = width_height;
+            width = (height / 9) * 16;
+        } else {
+            width = height_width;
+            height = (width / 16) * 9;
+        }
+        width = Math.round(width)
+        height = Math.round(height)
+
         return html`
             ${AarloGlance.outerStyleTemplate}
-            ${AarloGlance.innerStyleTemplate}
+            ${AarloGlance.innerStyleTemplate(width,height)}
             <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
             <div id="modal-viewer-${this._s.cameraId}" class="w3-modal">
               <div class="w3-modal-content w3-animate-opacity modal-base-${this._v.aspectRatio}">
