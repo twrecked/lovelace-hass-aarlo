@@ -135,69 +135,26 @@ class AarloGlance extends LitElement {
         `;
     }
 
-    static innerStyleTemplate(width, height) {
+    static get innerStyleTemplate() {
         return html`
             <style>
-                div.base-16x9 {
-                    width: 100%;
-                    overflow: hidden;
-                    margin: 0;
+                div.aarlo-aspect-16x9 {
                     padding-top: 55%;
-                    position: relative;
                 }
-                div.modal-base-16x9 {
-                    margin: 0 auto;
-                    position: relative;
-                    width: ${width}px;
-                }
-                .img-16x9 {
-                    position: absolute;
-                    top: 50%;
-                    left: 50%;
-                    width: 100%;
-                    transform: translate(-50%, -50%);
-                    cursor: pointer;
-                }
-                .video-16x9 {
-                    position: absolute;
-                    top: 50%;
-                    left: 50%;
-                    width: 100%;
-                    height: auto;
-                    transform: translate(-50%, -50%);
-                }
-                .library-16x9 {
-                    cursor: pointer;
-                    width: 100%;
-                }
-                .modal-video-wrapper-16x9 {
-                    overflow: hidden;
-                    position: absolute;
-                    top: 0;
-                    left: 0;
-                    width: ${width}px;
-                    height: ${height - 4}px;
-                }
-                .modal-video-16x9 {
-                    position: absolute;
-                    top: 0;
-                    left: 0;
-                    width: ${width}px;
-                    height: ${height}px;
-                }
-                div.base-1x1 {
-                    width: 100%;
-                    overflow: hidden;
-                    margin: 0;
+                div.aarlo-aspect-1x1 {
                     padding-top: 100%;
-                    position: relative;
                 }
-                div.modal-base-1x1 {
+                div.aarlo-base {
+                    margin: 0;
+                    overflow: hidden;
+                    position: relative;
+                    width: 100%;
+                }
+                div.aarlo-modal-base {
                     margin: 0 auto;
                     position: relative;
-                    width: ${width}px;
                 }
-                .img-1x1 {
+                .aarlo-image {
                     position: absolute;
                     top: 50%;
                     left: 50%;
@@ -205,7 +162,7 @@ class AarloGlance extends LitElement {
                     transform: translate(-50%, -50%);
                     cursor: pointer;
                 }
-                .video-1x1 {
+                .aarlo-video {
                     position: absolute;
                     top: 50%;
                     left: 50%;
@@ -213,32 +170,34 @@ class AarloGlance extends LitElement {
                     height: auto;
                     transform: translate(-50%, -50%);
                 }
-                .library-1x1 {
-                    cursor: pointer;
+                .aarlo-library {
                     width: 100%;
+                    cursor: pointer;
                 }
-                .modal-video-wrapper-1x1 {
+                .aarlo-modal-video-wrapper {
                     overflow: hidden;
                     position: absolute;
-                    top: 0;
-                    left: 0;
-                    width: ${height - 2}px;
-                    height: ${height - 2}px;
+                    top: 0px;
+                    left: 0px;
                 }
-                .modal-video-1x1 {
+                .aarlo-modal-video {
+                    position: absolute;
+                    top: 0px;
+                    left: 0px;
+                }
+                .aarlo-modal-video-background {
                     position: absolute;
                     top: 0;
                     left: 0;
-                    width: ${height}px;
-                    height: ${height}px;
+                    background-color: darkgrey;
                 }
                 .lrow {
-                  display: flex;
-                  margin: 6px 2px 6px 2px;
+                    display: flex;
+                    margin: 6px 2px 6px 2px;
                 }
                 .lcolumn {
-                  flex: 32%;
-                  padding: 2px;
+                    flex: 32%;
+                    padding: 2px;
                 }
                 .hidden {
                     display: none;
@@ -248,16 +207,16 @@ class AarloGlance extends LitElement {
                     no-repeat;
                 }
                 .slidecontainer {
-                  width: 70%;
-                 text-align: center;
+                    text-align: center;
+                    width: 70%;
                 }
                 .slider {
                   -webkit-appearance: none;
-                  width: 100%;
-                  height: 10px;
                   background: #d3d3d3;
                   outline: none;
                   opacity: 0.7;
+                  width: 100%;
+                  height: 10px;
                   -webkit-transition: .2s;
                   transition: opacity .2s;
                 }
@@ -267,15 +226,15 @@ class AarloGlance extends LitElement {
                 .slider::-webkit-slider-thumb {
                   -webkit-appearance: none;
                   appearance: none;
+                  background: #4CAF50;
                   width: 10px;
                   height: 10px;
-                  background: #4CAF50;
                   cursor: pointer;
                 }
                 .slider::-moz-range-thumb {
+                  background: #4CAF50;
                   width: 10px;
                   height: 10px;
-                  background: #4CAF50;
                   cursor: pointer;
                 }
             </style>
@@ -284,29 +243,37 @@ class AarloGlance extends LitElement {
 
     render() {
 
-        // calculate a width?
-        let width  = window.innerWidth * .7
-        let height = window.innerHeight * .7
-        let width_height = (width / 16) * 9; // height that will fit in width
-        let height_width = (height / 9) * 16; // width that will fit in height
-        if ( width_height < height ) {
-            height = width_height;
-            width = (height / 9) * 16;
+        // calculate dimensions?
+        let width  = window.innerWidth * this._v.modalMultiplier
+        let height = window.innerHeight * this._v.modalMultiplier
+        if ( this._v.aspectRatio === '1x1' ) {
+            height = Math.min(width,height)
+            width  = height
         } else {
-            width = height_width;
-            height = (width / 16) * 9;
+            let width_height = (width / 16) * 9; // height that will fit in width
+            let height_width = (height / 9) * 16; // width that will fit in height
+            if ( width_height < height ) {
+                height = width_height;
+                width = (height / 9) * 16;
+            } else {
+                width = height_width;
+                height = (width / 16) * 9;
+            }
         }
         width = Math.round(width)
         height = Math.round(height)
 
         return html`
-            ${AarloGlance.outerStyleTemplate}
-            ${AarloGlance.innerStyleTemplate(width,height)}
             <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+            ${AarloGlance.outerStyleTemplate}
+            ${AarloGlance.innerStyleTemplate}
             <div id="modal-viewer-${this._s.cameraId}" class="w3-modal">
-              <div class="w3-modal-content w3-animate-opacity modal-base-${this._v.aspectRatio}">
-              <div class="modal-video-wrapper-${this._v.aspectRatio}">
-                  <video class="${this._v.modalVideo} modal-video-${this._v.aspectRatio}"
+              <div class="w3-modal-content w3-animate-opacity aarlo-modal-base" style="width:${width}px">
+              <div class="aarlo-modal-video-wrapper" style="width:${width - 4}px;height:${height - 4}px">
+                  <div class="aarlo-modal-video-background"
+                      style="width:${width}px;height:${height}px">
+                  </div>
+                  <video class="${this._v.modalVideo} aarlo-modal-video" style="width:${width}px;height:${height}px"
                       autoplay playsinline 
                       id="modal-video-${this._s.cameraId}"
                       src="${this._video}"
@@ -316,7 +283,7 @@ class AarloGlance extends LitElement {
                       @click="${() => { this.clickVideo(); }}">
                           Your browser does not support the video tag.
                   </video>
-                  <video class="${this._v.modalStream} video-${this._v.aspectRatio}"
+                  <video class="${this._v.modalStream} aarlo-modal-video" style="width:${width}px;height:${height}px"
                       id="modal-stream-${this._s.cameraId}"
                       poster="${this._streamPoster}"
                       @ended="${() => { this.stopStream(); }}"
@@ -343,8 +310,8 @@ class AarloGlance extends LitElement {
               </div>
             </div>
             <ha-card>
-            <div id="aarlo-wrapper" class="base-${this._v.aspectRatio}">
-                <video class="${this._v.stream} video-${this._v.aspectRatio}"
+            <div id="aarlo-wrapper" class="aarlo-base aarlo-aspect-${this._v.aspectRatio}">
+                <video class="${this._v.stream} aarlo-video"
                     id="stream-${this._s.cameraId}"
                     poster="${this._streamPoster}"
                     @ended="${() => { this.stopStream(); }}"
@@ -352,7 +319,7 @@ class AarloGlance extends LitElement {
                     @click="${() => { this.clickVideo(); }}">
                         Your browser does not support the video tag.
                 </video>
-                <video class="${this._v.video} video-${this._v.aspectRatio}"
+                <video class="${this._v.video} aarlo-video"
                     autoplay playsinline 
                     id="video-${this._s.cameraId}"
                     src="${this._video}"
@@ -362,60 +329,60 @@ class AarloGlance extends LitElement {
                     @click="${() => { this.clickVideo(); }}">
                         Your browser does not support the video tag.
                 </video>
-                <img class="${this._v.image} ${this._v.cameraOn} img-${this._v.aspectRatio}"
+                <img class="${this._v.image} ${this._v.cameraOn} aarlo-image"
                     id="image-${this._s.cameraId}"
                     src="${this._image}"
                     alt="${this._s.imageFullDate}"
                     title="${this._s.imageFullDate}"
                     @click="${() => { this.clickImage(); }}">
-                <div class="${this._v.library} img-${this._v.aspectRatio}" >
+                <div class="${this._v.library} aarlo-image">
                     <div class="lrow">
                         <div class="lcolumn">
-                            <img class="${this._s.libraryItem[0].hidden} library-${this._v.aspectRatio}" 
+                            <img class="${this._s.libraryItem[0].hidden} aarlo-library"
                                 src="${this._s.libraryItem[0].thumbnail}"
                                 alt="${this._s.libraryItem[0].captured_at}"
                                 title="${this._s.libraryItem[0].captured_at}"
                                 @click="${() => { this.showLibraryVideo(0); }}"/>
-                            <img class="${this._s.libraryItem[3].hidden} library-${this._v.aspectRatio}"
+                            <img class="${this._s.libraryItem[3].hidden} aarlo-library"
                                 src="${this._s.libraryItem[3].thumbnail}"
                                 alt="${this._s.libraryItem[3].captured_at}"
                                 title="${this._s.libraryItem[3].captured_at}"
                                 @click="${() => { this.showLibraryVideo(3); }}"/>
-                            <img class="${this._s.libraryItem[6].hidden} library-${this._v.aspectRatio}"
+                            <img class="${this._s.libraryItem[6].hidden} aarlo-library"
                                 src="${this._s.libraryItem[6].thumbnail}"
                                 alt="${this._s.libraryItem[6].captured_at}"
                                 title="${this._s.libraryItem[6].captured_at}"
                                 @click="${() => { this.showLibraryVideo(6); }}"/>
                         </div>
                         <div class="lcolumn">
-                            <img class="${this._s.libraryItem[1].hidden} library-${this._v.aspectRatio}"
+                            <img class="${this._s.libraryItem[1].hidden} aarlo-library"
                                 src="${this._s.libraryItem[1].thumbnail}"
                                 alt="${this._s.libraryItem[1].captured_at}"
                                 title="${this._s.libraryItem[1].captured_at}"
                                 @click="${() => { this.showLibraryVideo(1); }}"/>
-                            <img class="${this._s.libraryItem[4].hidden} library-${this._v.aspectRatio}"
+                            <img class="${this._s.libraryItem[4].hidden} aarlo-library"
                                 src="${this._s.libraryItem[4].thumbnail}"
                                 alt="${this._s.libraryItem[4].captured_at}"
                                 title="${this._s.libraryItem[4].captured_at}"
                                 @click="${() => { this.showLibraryVideo(4); }}"/>
-                            <img class="${this._s.libraryItem[7].hidden} library-${this._v.aspectRatio}"
+                            <img class="${this._s.libraryItem[7].hidden} aarlo-library"
                                 src="${this._s.libraryItem[7].thumbnail}"
                                 alt="${this._s.libraryItem[7].captured_at}"
                                 title="${this._s.libraryItem[7].captured_at}"
                                 @click="${() => { this.showLibraryVideo(7); }}"/>
                         </div>
                         <div class="lcolumn">
-                            <img class="${this._s.libraryItem[2].hidden} library-${this._v.aspectRatio}"
+                            <img class="${this._s.libraryItem[2].hidden} aarlo-library"
                                 src="${this._s.libraryItem[2].thumbnail}"
                                 alt="${this._s.libraryItem[2].captured_at}"
                                 title="${this._s.libraryItem[2].captured_at}"
                                 @click="${() => { this.showLibraryVideo(2); }}"/>
-                            <img class="${this._s.libraryItem[5].hidden} library-${this._v.aspectRatio}"
+                            <img class="${this._s.libraryItem[5].hidden} aarlo-library"
                                 src="${this._s.libraryItem[5].thumbnail}"
                                 alt="${this._s.libraryItem[5].captured_at}"
                                 title="${this._s.libraryItem[5].captured_at}"
                                 @click="${() => { this.showLibraryVideo(5); }}"/>
-                            <img class="${this._s.libraryItem[8].hidden} library-${this._v.aspectRatio}"
+                            <img class="${this._s.libraryItem[8].hidden} aarlo-library"
                                 src="${this._s.libraryItem[8].thumbnail}"
                                 alt="${this._s.libraryItem[8].captured_at}"
                                 title="${this._s.libraryItem[8].captured_at}"
@@ -423,7 +390,7 @@ class AarloGlance extends LitElement {
                         </div>
                     </div>
                 </div>
-                <div class="${this._v.brokeStatus} img-${this._v.aspectRatio}" style="height: 100px" id="brokenImage"></div>
+                <div class="${this._v.brokeStatus} aarlo-image" style="height: 100px" id="brokenImage"></div>
             </div>
             <div class="box box-top ${this._v.topBar}">
                 <div class="box-title ${this._v.topTitle}">
@@ -545,6 +512,7 @@ class AarloGlance extends LitElement {
             library: 'hidden',
             broke: 'hidden',
             aspectRatio: '16x9',
+            modalMultiplier: 0.7,
 
             // camera On/Off
             cameraOn: 'hidden',
@@ -1105,6 +1073,9 @@ class AarloGlance extends LitElement {
         // on click
         this._v.imageClick = config.image_click ? config.image_click : '';
         this._v.libraryClick = config.library_click ? config.library_click : '';
+
+        // modal window multiplier
+        this._v.modalMultiplier = config.modal_multiplier ? parseFloat(config.modal_multiplier) : 0.7;
 
         // stream directly from Arlo
         this._v.playDirect = config.play_direct ? config.play_direct : false;
