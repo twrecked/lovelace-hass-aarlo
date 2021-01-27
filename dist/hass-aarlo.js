@@ -4,19 +4,8 @@ const LitElement = Object.getPrototypeOf(
     );
 const html = LitElement.prototype.html;
 
+// noinspection JSUnresolvedVariable,CssUnknownTarget,CssUnresolvedCustomProperty
 class AarloGlance extends LitElement {
-    // To quieten down JetBrains...
-    // created_at_pretty;
-    // states;
-    // image_click;
-    // door_bell;
-    // door_lock;
-    // door2_bell;
-    // door2_lock;
-    // top_title;
-    // top_date;
-    // top_status;
-    // videos;
 
     static get properties() {
         return {
@@ -242,6 +231,7 @@ class AarloGlance extends LitElement {
         let height = window.innerHeight * this._v.modalMultiplier
         if ( this._v.aspectRatio === '1x1' ) {
             height = Math.min(width,height)
+            // noinspection JSSuspiciousNameCombination
             width  = height
         } else {
             let width_height = (width / 16) * 9; // height that will fit in width
@@ -1002,14 +992,14 @@ class AarloGlance extends LitElement {
     setConfig(config) {
 
         // find camera
-        let camera = null;
+        let camera = ""
         if( config.entity ) {
             camera = config.entity.replace( 'camera.','' );
         }
         if( config.camera ) {
-            camera = config.camera;
+            camera = config.camera
         }
-        if( camera === null ) {
+        if( camera === "" ) {
             this.throwError( 'missing a camera definition' )
             return
         }
@@ -1020,7 +1010,7 @@ class AarloGlance extends LitElement {
 
         // see if aarlo prefix, remove from custom names if not present
         let prefix = "";
-        if ( camera.startsWith( 'aarlo_','' ) ) {
+        if ( camera.startsWith( 'aarlo_' ) ) {
             camera = camera.replace( 'aarlo_','' )
             prefix = "aarlo_"
         }
