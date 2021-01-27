@@ -250,206 +250,253 @@ class AarloGlance extends LitElement {
         return html`
             ${AarloGlance.styleTemplate}
             <div id="modal-viewer-${this._s.cameraId}" class="w3-modal">
-              <div class="w3-modal-content w3-animate-opacity aarlo-modal-base"
-                  style="width:${width}px">
-                <div class="aarlo-modal-video-wrapper"
-                    style="width:${width - 4}px;height:${height - 4}px">
-                  <div class="aarlo-modal-video-background"
-                      style="width:${width}px;height:${height}px">
-                  </div>
-                  <video class="${this._v.modalVideo} aarlo-modal-video"
-                      style="width:${width}px;height:${height}px"
-                      autoplay playsinline 
-                      id="modal-video-${this._s.cameraId}"
-                      src="${this._video}"
-                      poster="${this._videoPoster}"
-                      @ended="${() => { this.stopVideo(); }}"
-                      @mouseover="${() => { this.mouseOverVideo(); }}"
-                      @click="${() => { this.clickVideo(); }}">
-                          Your browser does not support the video tag.
-                  </video>
-                  <video class="${this._v.modalStream} aarlo-modal-video"
-                      style="width:${width}px;height:${height}px"
-                      id="modal-stream-${this._s.cameraId}"
-                      poster="${this._streamPoster}"
-                      @ended="${() => { this.stopStream() }}"
-                      @mouseover="${() => { this.mouseOverVideo(); }}"
-                      @click="${() => { this.clickVideo(); }}">
-                          Your browser does not support the video tag.
-                  </video>
-                  <div class="box box-bottom ${this._v.modalVideoControls}">
-                    <div>
-                      <ha-icon @click="${() => { this.toggleLock(this._s.doorLockId); }}" class="${this._s.doorLockOn} ${this._v.doorLock}" icon="${this._s.doorLockIcon}" title="${this._s.doorLockText}"></ha-icon>
-                      <ha-icon @click="${() => { this.toggleLight(this._s.lightId); }}" class="${this._s.lightOn} ${this._v.light}" icon="${this._s.lightIcon}" title="${this._s.lightText}"></ha-icon>
-                      <ha-icon @click="${() => { this.controlStopVideoOrStream(); }}" class="${this._v.videoStop}" icon="mdi:stop" title="Click to stop"></ha-icon>
-                      <ha-icon @click="${() => { this.controlPlayVideo(); }}" class="${this._v.videoPlay}" icon="mdi:play" title="Click to play"></ha-icon>
-                      <ha-icon @click="${() => { this.controlPauseVideo(); }}" class="${this._v.videoPause}" icon="mdi:pause" title="Click to pause"></ha-icon>
+                <div class="w3-modal-content w3-animate-opacity aarlo-modal-base"
+                     style="width:${width}px">
+                    <div class="aarlo-modal-video-wrapper"
+                         style="width:${width - 4}px;height:${height - 4}px">
+                        <div class="aarlo-modal-video-background"
+                             style="width:${width}px;height:${height}px">
+                        </div>
+                        <video class="${this._v.modalVideo} aarlo-modal-video"
+                               style="width:${width}px;height:${height}px"
+                               autoplay playsinline
+                               id="modal-video-${this._s.cameraId}"
+                               src="${this._video}"
+                               poster="${this._videoPoster}"
+                               @ended="${() => { this.stopVideo(); }}"
+                               @mouseover="${() => { this.mouseOverVideo(); }}"
+                               @click="${() => { this.clickVideo(); }}">
+                            Your browser does not support the video tag.
+                        </video>
+                        <video class="${this._v.modalStream} aarlo-modal-video"
+                               style="width:${width}px;height:${height}px"
+                               id="modal-stream-${this._s.cameraId}"
+                               poster="${this._streamPoster}"
+                               @ended="${() => { this.stopStream() }}"
+                               @mouseover="${() => { this.mouseOverVideo(); }}"
+                               @click="${() => { this.clickVideo(); }}">
+                            Your browser does not support the video tag.
+                        </video>
+                        <div class="box box-bottom ${this._v.modalVideoControls}">
+                            <div>
+                                <ha-icon @click="${() => { this.toggleLock(this._s.doorLockId); }}"
+                                         class="${this._s.doorLockOn} ${this._v.doorLock}" icon="${this._s.doorLockIcon}"
+                                         title="${this._s.doorLockText}"></ha-icon>
+                                <ha-icon @click="${() => { this.toggleLight(this._s.lightId); }}"
+                                         class="${this._s.lightOn} ${this._v.light}" icon="${this._s.lightIcon}"
+                                         title="${this._s.lightText}"></ha-icon>
+                                <ha-icon @click="${() => { this.controlStopVideoOrStream(); }}" class="${this._v.videoStop}"
+                                         icon="mdi:stop" title="Click to stop"></ha-icon>
+                                <ha-icon @click="${() => { this.controlPlayVideo(); }}" class="${this._v.videoPlay}" icon="mdi:play"
+                                         title="Click to play"></ha-icon>
+                                <ha-icon @click="${() => { this.controlPauseVideo(); }}" class="${this._v.videoPause}"
+                                         icon="mdi:pause" title="Click to pause"></ha-icon>
+                            </div>
+                            <div class='slidecontainer'>
+                                <input type="range" id="modal-video-seek-${this._s.cameraId}" value="0" min="1" max="100"
+                                       class="slider ${this._v.videoSeek}">
+                            </div>
+                            <div>
+                                <ha-icon @click="${() => { this.controlFullScreen(); }}" class="${this._v.videoFull}"
+                                         icon="mdi:fullscreen" title="Click to go full screen"></ha-icon>
+                            </div>
+                        </div>
                     </div>
-                    <div class='slidecontainer'>
-                      <input type="range" id="modal-video-seek-${this._s.cameraId}" value="0" min="1" max="100" class="slider ${this._v.videoSeek}">
-                    </div>
-                    <div >
-                      <ha-icon @click="${() => { this.controlFullScreen(); }}" class="${this._v.videoFull}" icon="mdi:fullscreen" title="Click to go full screen"></ha-icon>
-                    </div>
-                  </div>
                 </div>
-              </div>
             </div>
             <ha-card>
-              <div id="aarlo-wrapper" class="aarlo-base aarlo-aspect-${this._v.aspectRatio}">
-                <video class="${this._v.stream} aarlo-video"
-                    id="stream-${this._s.cameraId}"
-                    poster="${this._streamPoster}"
-                    @ended="${() => { this.stopStream() }}"
-                    @mouseover="${() => { this.mouseOverVideo(); }}"
-                    @click="${() => { this.clickVideo(); }}">
+                <div id="aarlo-wrapper" class="aarlo-base aarlo-aspect-${this._v.aspectRatio}">
+                    <video class="${this._v.stream} aarlo-video"
+                           id="stream-${this._s.cameraId}"
+                           poster="${this._streamPoster}"
+                           @ended="${() => { this.stopStream() }}"
+                           @mouseover="${() => { this.mouseOverVideo(); }}"
+                           @click="${() => { this.clickVideo(); }}">
                         Your browser does not support the video tag.
-                </video>
-                <video class="${this._v.video} aarlo-video"
-                    autoplay playsinline 
-                    id="video-${this._s.cameraId}"
-                    src="${this._video}"
-                    poster="${this._videoPoster}"
-                    @ended="${() => { this.stopVideo(); }}"
-                    @mouseover="${() => { this.mouseOverVideo(); }}"
-                    @click="${() => { this.clickVideo(); }}">
+                    </video>
+                    <video class="${this._v.video} aarlo-video"
+                           autoplay playsinline
+                           id="video-${this._s.cameraId}"
+                           src="${this._video}"
+                           poster="${this._videoPoster}"
+                           @ended="${() => { this.stopVideo(); }}"
+                           @mouseover="${() => { this.mouseOverVideo(); }}"
+                           @click="${() => { this.clickVideo(); }}">
                         Your browser does not support the video tag.
-                </video>
-                <img class="${this._v.image} ${this._v.cameraOn} aarlo-image"
-                    id="image-${this._s.cameraId}"
-                    src="${this._image}"
-                    alt="${this._s.imageFullDate}"
-                    title="${this._s.imageFullDate}"
-                    @click="${() => { this.clickImage(); }}">
-                <div class="${this._v.library} aarlo-image">
-                    <div class="lrow">
-                        <div class="lcolumn">
-                            <img class="${this._s.libraryItem[0].hidden} aarlo-library"
-                                src="${this._s.libraryItem[0].thumbnail}"
-                                alt="${this._s.libraryItem[0].captured_at}"
-                                title="${this._s.libraryItem[0].captured_at}"
-                                @click="${() => { this.showLibraryVideo(0); }}"/>
-                            <img class="${this._s.libraryItem[3].hidden} aarlo-library"
-                                src="${this._s.libraryItem[3].thumbnail}"
-                                alt="${this._s.libraryItem[3].captured_at}"
-                                title="${this._s.libraryItem[3].captured_at}"
-                                @click="${() => { this.showLibraryVideo(3); }}"/>
-                            <img class="${this._s.libraryItem[6].hidden} aarlo-library"
-                                src="${this._s.libraryItem[6].thumbnail}"
-                                alt="${this._s.libraryItem[6].captured_at}"
-                                title="${this._s.libraryItem[6].captured_at}"
-                                @click="${() => { this.showLibraryVideo(6); }}"/>
-                        </div>
-                        <div class="lcolumn">
-                            <img class="${this._s.libraryItem[1].hidden} aarlo-library"
-                                src="${this._s.libraryItem[1].thumbnail}"
-                                alt="${this._s.libraryItem[1].captured_at}"
-                                title="${this._s.libraryItem[1].captured_at}"
-                                @click="${() => { this.showLibraryVideo(1); }}"/>
-                            <img class="${this._s.libraryItem[4].hidden} aarlo-library"
-                                src="${this._s.libraryItem[4].thumbnail}"
-                                alt="${this._s.libraryItem[4].captured_at}"
-                                title="${this._s.libraryItem[4].captured_at}"
-                                @click="${() => { this.showLibraryVideo(4); }}"/>
-                            <img class="${this._s.libraryItem[7].hidden} aarlo-library"
-                                src="${this._s.libraryItem[7].thumbnail}"
-                                alt="${this._s.libraryItem[7].captured_at}"
-                                title="${this._s.libraryItem[7].captured_at}"
-                                @click="${() => { this.showLibraryVideo(7); }}"/>
-                        </div>
-                        <div class="lcolumn">
-                            <img class="${this._s.libraryItem[2].hidden} aarlo-library"
-                                src="${this._s.libraryItem[2].thumbnail}"
-                                alt="${this._s.libraryItem[2].captured_at}"
-                                title="${this._s.libraryItem[2].captured_at}"
-                                @click="${() => { this.showLibraryVideo(2); }}"/>
-                            <img class="${this._s.libraryItem[5].hidden} aarlo-library"
-                                src="${this._s.libraryItem[5].thumbnail}"
-                                alt="${this._s.libraryItem[5].captured_at}"
-                                title="${this._s.libraryItem[5].captured_at}"
-                                @click="${() => { this.showLibraryVideo(5); }}"/>
-                            <img class="${this._s.libraryItem[8].hidden} aarlo-library"
-                                src="${this._s.libraryItem[8].thumbnail}"
-                                alt="${this._s.libraryItem[8].captured_at}"
-                                title="${this._s.libraryItem[8].captured_at}"
-                                @click="${() => { this.showLibraryVideo(8); }}"/>
+                    </video>
+                    <img class="${this._v.image} ${this._v.cameraOn} aarlo-image"
+                         id="image-${this._s.cameraId}"
+                         src="${this._image}"
+                         alt="${this._s.imageFullDate}"
+                         title="${this._s.imageFullDate}"
+                         @click="${() => { this.clickImage(); }}">
+                    <div class="${this._v.library} aarlo-image">
+                        <div class="lrow">
+                            <div class="lcolumn">
+                                <img class="${this._s.libraryItem[0].hidden} aarlo-library"
+                                     src="${this._s.libraryItem[0].thumbnail}"
+                                     alt="${this._s.libraryItem[0].captured_at}"
+                                     title="${this._s.libraryItem[0].captured_at}"
+                                     @click="${() => { this.showLibraryVideo(0); }}"/>
+                                <img class="${this._s.libraryItem[3].hidden} aarlo-library"
+                                     src="${this._s.libraryItem[3].thumbnail}"
+                                     alt="${this._s.libraryItem[3].captured_at}"
+                                     title="${this._s.libraryItem[3].captured_at}"
+                                     @click="${() => { this.showLibraryVideo(3); }}"/>
+                                <img class="${this._s.libraryItem[6].hidden} aarlo-library"
+                                     src="${this._s.libraryItem[6].thumbnail}"
+                                     alt="${this._s.libraryItem[6].captured_at}"
+                                     title="${this._s.libraryItem[6].captured_at}"
+                                     @click="${() => { this.showLibraryVideo(6); }}"/>
+                            </div>
+                            <div class="lcolumn">
+                                <img class="${this._s.libraryItem[1].hidden} aarlo-library"
+                                     src="${this._s.libraryItem[1].thumbnail}"
+                                     alt="${this._s.libraryItem[1].captured_at}"
+                                     title="${this._s.libraryItem[1].captured_at}"
+                                     @click="${() => { this.showLibraryVideo(1); }}"/>
+                                <img class="${this._s.libraryItem[4].hidden} aarlo-library"
+                                     src="${this._s.libraryItem[4].thumbnail}"
+                                     alt="${this._s.libraryItem[4].captured_at}"
+                                     title="${this._s.libraryItem[4].captured_at}"
+                                     @click="${() => { this.showLibraryVideo(4); }}"/>
+                                <img class="${this._s.libraryItem[7].hidden} aarlo-library"
+                                     src="${this._s.libraryItem[7].thumbnail}"
+                                     alt="${this._s.libraryItem[7].captured_at}"
+                                     title="${this._s.libraryItem[7].captured_at}"
+                                     @click="${() => { this.showLibraryVideo(7); }}"/>
+                            </div>
+                            <div class="lcolumn">
+                                <img class="${this._s.libraryItem[2].hidden} aarlo-library"
+                                     src="${this._s.libraryItem[2].thumbnail}"
+                                     alt="${this._s.libraryItem[2].captured_at}"
+                                     title="${this._s.libraryItem[2].captured_at}"
+                                     @click="${() => { this.showLibraryVideo(2); }}"/>
+                                <img class="${this._s.libraryItem[5].hidden} aarlo-library"
+                                     src="${this._s.libraryItem[5].thumbnail}"
+                                     alt="${this._s.libraryItem[5].captured_at}"
+                                     title="${this._s.libraryItem[5].captured_at}"
+                                     @click="${() => { this.showLibraryVideo(5); }}"/>
+                                <img class="${this._s.libraryItem[8].hidden} aarlo-library"
+                                     src="${this._s.libraryItem[8].thumbnail}"
+                                     alt="${this._s.libraryItem[8].captured_at}"
+                                     title="${this._s.libraryItem[8].captured_at}"
+                                     @click="${() => { this.showLibraryVideo(8); }}"/>
+                            </div>
                         </div>
                     </div>
+                    <div class="${this._v.brokeStatus} aarlo-image" style="height: 100px" id="brokenImage"></div>
                 </div>
-                <div class="${this._v.brokeStatus} aarlo-image" style="height: 100px" id="brokenImage"></div>
-            </div>
-            <div class="box box-top ${this._v.topBar}">
-                <div class="box-title ${this._v.topTitle}">
-                    ${this._s.cameraName} 
+                <div class="box box-top ${this._v.topBar}">
+                    <div class="box-title ${this._v.topTitle}">
+                        ${this._s.cameraName}
+                    </div>
+                    <div class="box-status ${this._v.topDate} ${this._v.image_date}" title="${this._s.imageFullDate}">
+                        ${this._s.imageDate}
+                    </div>
+                    <div class="box-status ${this._v.topStatus}">
+                        ${this._s.cameraState}
+                    </div>
                 </div>
-                <div class="box-status ${this._v.topDate} ${this._v.image_date}" title="${this._s.imageFullDate}">
-                    ${this._s.imageDate}
+                <div class="box box-bottom ${this._v.bottomBar}">
+                    <div class="box-title ${this._v.bottomTitle}">
+                        ${this._s.cameraName}
+                    </div>
+                    <div class="${this._v.cameraOn}">
+                        <ha-icon @click="${() => { this.toggleCamera() }}" class="${this._s.onOffOn} ${this._v.onOff}"
+                                 icon="${this._s.onOffIcon}" title="${this._s.onOffText}"></ha-icon>
+                        <ha-icon @click="${() => { this.moreInfo(this._s.motionId); }}"
+                                 class="${this._s.motionOn} ${this._v.motion}" icon="mdi:run-fast"
+                                 title="${this._s.motionText}"></ha-icon>
+                        <ha-icon @click="${() => { this.moreInfo(this._s.soundId); }}" class="${this._s.soundOn} ${this._v.sound}"
+                                 icon="mdi:ear-hearing" title="${this._s.soundText}"></ha-icon>
+                        <ha-icon @click="${() => { this.showLibrary(0) }}" class="${this._s.capturedOn} ${this._v.captured}"
+                                 icon="${this._s.capturedIcon}" title="${this._s.capturedText}"></ha-icon>
+                        <ha-icon @click="${() => { this.showOrStopStream() }}" class="${this._s.playOn} ${this._v.play}"
+                                 icon="${this._s.playIcon}" title="${this._s.playText}"></ha-icon>
+                        <ha-icon @click="${() => { this.wsUpdateSnapshot() }}" class="${this._s.snapshotOn} ${this._v.snapshot}"
+                                 icon="${this._s.snapshotIcon}" title="${this._s.snapshotText}"></ha-icon>
+                        <ha-icon @click="${() => { this.moreInfo(this._s.batteryId) }}"
+                                 class="${this._s.batteryState} ${this._v.battery}" icon="mdi:${this._s.batteryIcon}"
+                                 title="${this._s.batteryText}"></ha-icon>
+                        <ha-icon @click="${() => { this.moreInfo(this._s.signalId) }}" class="state-update ${this._v.signal}"
+                                 icon="${this._s.signalIcon}" title="${this._s.signalText}"></ha-icon>
+                        <ha-icon @click="${() => { this.toggleLight(this._s.lightId) }}"
+                                 class="${this._s.lightOn} ${this._v.lightLeft}" icon="${this._s.lightIcon}"
+                                 title="${this._s.lightText}"></ha-icon>
+                    </div>
+                    <div class="${this._v.cameraOff}">
+                        <ha-icon @click="${() => { this.toggleCamera() }}" class="${this._s.onOffOn} ${this._v.onOff}"
+                                 icon="${this._s.onOffIcon}" title="${this._s.onOffText}"></ha-icon>
+                        <ha-icon @click="${() => { this.showLibrary(0) }}" class="${this._s.capturedOn} ${this._v.captured}"
+                                 icon="${this._s.capturedIcon}" title="${this._s.capturedText}"></ha-icon>
+                    </div>
+                    <div class="box-title ${this._v.bottomDate} ${this._v.image_date}" title="${this._s.imageFullDate}">
+                        ${this._s.imageDate}
+                    </div>
+                    <div class="box-status ${this._v.externalsStatus}">
+                        <ha-icon @click="${() => { this.moreInfo(this._s.doorId); }}" class="${this._s.doorOn} ${this._v.door}"
+                                 icon="${this._s.doorIcon}" title="${this._s.doorText}"></ha-icon>
+                        <ha-icon @click="${() => { this.moreInfo(this._s.doorBellId); }}"
+                                 class="${this._s.doorBellOn} ${this._v.doorBell}" icon="${this._s.doorBellIcon}"
+                                 title="${this._s.doorBellText}"></ha-icon>
+                        <ha-icon @click="${() => { this.toggleLock(this._s.doorLockId); }}"
+                                 class="${this._s.doorLockOn} ${this._v.doorLock}" icon="${this._s.doorLockIcon}"
+                                 title="${this._s.doorLockText}"></ha-icon>
+                        <ha-icon @click="${() => { this.moreInfo(this._s.door2Id); }}" class="${this._s.door2On} ${this._v.door2}"
+                                 icon="${this._s.door2Icon}" title="${this._s.door2Text}"></ha-icon>
+                        <ha-icon @click="${() => { this.moreInfo(this._s.door2BellId); }}"
+                                 class="${this._s.door2BellOn} ${this._v.door2Bell}" icon="${this._s.door2BellIcon}"
+                                 title="${this._s.door2BellText}"></ha-icon>
+                        <ha-icon @click="${() => { this.toggleLock(this._s.door2LockId); }}"
+                                 class="${this._s.door2LockOn} ${this._v.door2Lock}" icon="${this._s.door2LockIcon}"
+                                 title="${this._s.door2LockText}"></ha-icon>
+                        <ha-icon @click="${() => { this.toggleLight(this._s.lightId); }}"
+                                 class="${this._s.lightOn} ${this._v.lightRight}" icon="${this._s.lightIcon}"
+                                 title="${this._s.lightText}"></ha-icon>
+                    </div>
+                    <div class="box-status ${this._v.bottomStatus}">
+                        ${this._s.cameraState}
+                    </div>
                 </div>
-                <div class="box-status ${this._v.topStatus}">
-                    ${this._s.cameraState}
+                <div class="box box-bottom-small ${this._v.library}">
+                    <div>
+                        <ha-icon @click="${() => { this.setLibraryBase(this._libraryOffset - 9); }}"
+                                 class="${this._v.libraryPrev} state-on" icon="mdi:chevron-left" title="previous"></ha-icon>
+                    </div>
+                    <div>
+                        <ha-icon @click="${() => { this.stopLibrary(); }}" class="state-on" icon="mdi:close"
+                                 title="close library"></ha-icon>
+                    </div>
+                    <div>
+                        <ha-icon @click="${() => { this.setLibraryBase(this._libraryOffset + 9); }}"
+                                 class="${this._v.libraryNext} state-on" icon="mdi:chevron-right" title="next"></ha-icon>
+                    </div>
                 </div>
-            </div>
-            <div class="box box-bottom ${this._v.bottomBar}">
-                <div class="box-title ${this._v.bottomTitle}">
-                    ${this._s.cameraName} 
+                <div class="box box-bottom ${this._v.videoControls}">
+                    <div>
+                        <ha-icon @click="${() => { this.toggleLock(this._s.doorLockId); }}"
+                                 class="${this._s.doorLockOn} ${this._v.doorLock}" icon="${this._s.doorLockIcon}"
+                                 title="${this._s.doorLockText}"></ha-icon>
+                        <ha-icon @click="${() => { this.toggleLight(this._s.lightId); }}"
+                                 class="${this._s.lightOn} ${this._v.light}" icon="${this._s.lightIcon}"
+                                 title="${this._s.lightText}"></ha-icon>
+                        <ha-icon @click="${() => { this.controlStopVideoOrStream(); }}" class="${this._v.videoStop}" icon="mdi:stop"
+                                 title="Click to stop"></ha-icon>
+                        <ha-icon @click="${() => { this.controlPlayVideo(); }}" class="${this._v.videoPlay}" icon="mdi:play"
+                                 title="Click to play"></ha-icon>
+                        <ha-icon @click="${() => { this.controlPauseVideo(); }}" class="${this._v.videoPause}" icon="mdi:pause"
+                                 title="Click to pause"></ha-icon>
+                    </div>
+                    <div class='slidecontainer'>
+                        <input type="range" id="video-seek-${this._s.cameraId}" value="0" min="1" max="100"
+                               class="slider ${this._v.videoSeek}">
+                    </div>
+                    <div>
+                        <ha-icon @click="${() => { this.controlFullScreen(); }}" class="${this._v.videoFull}" icon="mdi:fullscreen"
+                                 title="Click to go full screen"></ha-icon>
+                    </div>
                 </div>
-                <div class="${this._v.cameraOn}">
-                    <ha-icon @click="${() => { this.toggleCamera() }}" class="${this._s.onOffOn} ${this._v.onOff}" icon="${this._s.onOffIcon}" title="${this._s.onOffText}"></ha-icon>
-                    <ha-icon @click="${() => { this.moreInfo(this._s.motionId); }}" class="${this._s.motionOn} ${this._v.motion}" icon="mdi:run-fast" title="${this._s.motionText}"></ha-icon>
-                    <ha-icon @click="${() => { this.moreInfo(this._s.soundId); }}" class="${this._s.soundOn} ${this._v.sound}" icon="mdi:ear-hearing" title="${this._s.soundText}"></ha-icon>
-                    <ha-icon @click="${() => { this.showLibrary(0) }}" class="${this._s.capturedOn} ${this._v.captured}" icon="${this._s.capturedIcon}" title="${this._s.capturedText}"></ha-icon>
-                    <ha-icon @click="${() => { this.showOrStopStream() }}" class="${this._s.playOn} ${this._v.play}" icon="${this._s.playIcon}" title="${this._s.playText}"></ha-icon>
-                    <ha-icon @click="${() => { this.wsUpdateSnapshot() }}" class="${this._s.snapshotOn} ${this._v.snapshot}" icon="${this._s.snapshotIcon}" title="${this._s.snapshotText}"></ha-icon>
-                    <ha-icon @click="${() => { this.moreInfo(this._s.batteryId) }}" class="${this._s.batteryState} ${this._v.battery}" icon="mdi:${this._s.batteryIcon}" title="${this._s.batteryText}"></ha-icon>
-                    <ha-icon @click="${() => { this.moreInfo(this._s.signalId) }}" class="state-update ${this._v.signal}" icon="${this._s.signalIcon}" title="${this._s.signalText}"></ha-icon>
-                    <ha-icon @click="${() => { this.toggleLight(this._s.lightId) }}" class="${this._s.lightOn} ${this._v.lightLeft}" icon="${this._s.lightIcon}" title="${this._s.lightText}"></ha-icon>
-                </div>
-                <div class="${this._v.cameraOff}">
-                    <ha-icon @click="${() => { this.toggleCamera() }}" class="${this._s.onOffOn} ${this._v.onOff}" icon="${this._s.onOffIcon}" title="${this._s.onOffText}"></ha-icon>
-                    <ha-icon @click="${() => { this.showLibrary(0) }}" class="${this._s.capturedOn} ${this._v.captured}" icon="${this._s.capturedIcon}" title="${this._s.capturedText}"></ha-icon>
-                </div>
-                <div class="box-title ${this._v.bottomDate} ${this._v.image_date}" title="${this._s.imageFullDate}">
-                    ${this._s.imageDate}
-                </div>
-                <div class="box-status ${this._v.externalsStatus}">
-                    <ha-icon @click="${() => { this.moreInfo(this._s.doorId); }}" class="${this._s.doorOn} ${this._v.door}" icon="${this._s.doorIcon}" title="${this._s.doorText}"></ha-icon>
-                    <ha-icon @click="${() => { this.moreInfo(this._s.doorBellId); }}" class="${this._s.doorBellOn} ${this._v.doorBell}" icon="${this._s.doorBellIcon}" title="${this._s.doorBellText}"></ha-icon>
-                    <ha-icon @click="${() => { this.toggleLock(this._s.doorLockId); }}" class="${this._s.doorLockOn} ${this._v.doorLock}" icon="${this._s.doorLockIcon}" title="${this._s.doorLockText}"></ha-icon>
-                    <ha-icon @click="${() => { this.moreInfo(this._s.door2Id); }}" class="${this._s.door2On} ${this._v.door2}" icon="${this._s.door2Icon}" title="${this._s.door2Text}"></ha-icon>
-                    <ha-icon @click="${() => { this.moreInfo(this._s.door2BellId); }}" class="${this._s.door2BellOn} ${this._v.door2Bell}" icon="${this._s.door2BellIcon}" title="${this._s.door2BellText}"></ha-icon>
-                    <ha-icon @click="${() => { this.toggleLock(this._s.door2LockId); }}" class="${this._s.door2LockOn} ${this._v.door2Lock}" icon="${this._s.door2LockIcon}" title="${this._s.door2LockText}"></ha-icon>
-                    <ha-icon @click="${() => { this.toggleLight(this._s.lightId); }}" class="${this._s.lightOn} ${this._v.lightRight}" icon="${this._s.lightIcon}" title="${this._s.lightText}"></ha-icon>
-                </div>
-                <div class="box-status ${this._v.bottomStatus}">
-                    ${this._s.cameraState}
-                </div>
-            </div>
-            <div class="box box-bottom-small ${this._v.library}">
-                <div >
-                    <ha-icon @click="${() => { this.setLibraryBase(this._libraryOffset - 9); }}" class="${this._v.libraryPrev} state-on" icon="mdi:chevron-left" title="previous"></ha-icon>
-                </div>
-                <div >
-                    <ha-icon @click="${() => { this.stopLibrary(); }}" class="state-on" icon="mdi:close" title="close library"></ha-icon>
-                </div>
-                <div >
-                    <ha-icon @click="${() => { this.setLibraryBase(this._libraryOffset + 9); }}" class="${this._v.libraryNext} state-on" icon="mdi:chevron-right" title="next"></ha-icon>
-                </div>
-            </div>
-            <div class="box box-bottom ${this._v.videoControls}">
-                <div >
-                    <ha-icon @click="${() => { this.toggleLock(this._s.doorLockId); }}" class="${this._s.doorLockOn} ${this._v.doorLock}" icon="${this._s.doorLockIcon}" title="${this._s.doorLockText}"></ha-icon>
-                    <ha-icon @click="${() => { this.toggleLight(this._s.lightId); }}" class="${this._s.lightOn} ${this._v.light}" icon="${this._s.lightIcon}" title="${this._s.lightText}"></ha-icon>
-                    <ha-icon @click="${() => { this.controlStopVideoOrStream(); }}" class="${this._v.videoStop}" icon="mdi:stop" title="Click to stop"></ha-icon>
-                    <ha-icon @click="${() => { this.controlPlayVideo(); }}" class="${this._v.videoPlay}" icon="mdi:play" title="Click to play"></ha-icon>
-                    <ha-icon @click="${() => { this.controlPauseVideo(); }}" class="${this._v.videoPause}" icon="mdi:pause" title="Click to pause"></ha-icon>
-                </div>
-                <div class='slidecontainer'>
-                    <input type="range" id="video-seek-${this._s.cameraId}" value="0" min="1" max="100" class="slider ${this._v.videoSeek}">
-                </div>
-                <div >
-                    <ha-icon @click="${() => { this.controlFullScreen(); }}" class="${this._v.videoFull}" icon="mdi:fullscreen" title="Click to go full screen"></ha-icon>
-                </div>
-            </div>
             </ha-card>
         `;
     }
