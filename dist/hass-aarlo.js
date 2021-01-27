@@ -1177,7 +1177,7 @@ class AarloGlance extends LitElement {
     }
 
     wsUpdateSnapshot() {
-        return this.asyncWSUpdateSnapshot().then()
+        this.asyncWSUpdateSnapshot().then()
     }
 
     updateCameraImageSrc() {
