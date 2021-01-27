@@ -74,70 +74,64 @@ class AarloGlance extends LitElement {
         this.resetVisiblity();
     }
 
-    static get outerStyleTemplate() {
+    static get styleTemplate() {
         return html`
-        <style>
-            ha-card {
-                position: relative;
-                min-height: 48px;
-                overflow: hidden;
-            }
-            .box {
-                white-space: var(--paper-font-common-nowrap_-_white-space); overflow: var(--paper-font-common-nowrap_-_overflow); text-overflow: var(--paper-font-common-nowrap_-_text-overflow);
-                position: absolute;
-                left: 0;
-                right: 0;
-                background-color: rgba(0, 0, 0, 0.4);
-                padding: 4px 8px;
-                font-size: 16px;
-                line-height: 36px;
-                color: white;
-                display: flex;
-                justify-content: space-between;
-            }
-            .box-top {
-                top: 0;
-            }
-            .box-bottom {
-                bottom: 0;
-            }
-            .box-bottom-small {
-                bottom: 0;
-                line-height: 30px;
-            }
-            .box-title {
-                font-weight: 500;
-                margin-left: 4px;
-            }
-            .box-status {
-                font-weight: 500;
-                margin-right: 4px;
-                text-transform: capitalize;
-            }
-            ha-icon {
-                cursor: pointer;
-                padding: 2px;
-                color: #a9a9a9;
-            }
-            ha-icon.state-update {
-                color: #cccccc;
-            }
-            ha-icon.state-on {
-                color: white;
-            }
-            ha-icon.state-warn {
-                color: orange;
-            }
-            ha-icon.state-error {
-                color: red;
-            }
-        </style>
-        `;
-    }
-
-    static get innerStyleTemplate() {
-        return html`
+            <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
             <style>
+                ha-card {
+                    position: relative;
+                    min-height: 48px;
+                    overflow: hidden;
+                }
+                .box {
+                    white-space: var(--paper-font-common-nowrap_-_white-space); overflow: var(--paper-font-common-nowrap_-_overflow); text-overflow: var(--paper-font-common-nowrap_-_text-overflow);
+                    position: absolute;
+                    left: 0;
+                    right: 0;
+                    background-color: rgba(0, 0, 0, 0.4);
+                    padding: 4px 8px;
+                    font-size: 16px;
+                    line-height: 36px;
+                    color: white;
+                    display: flex;
+                    justify-content: space-between;
+                }
+                .box-top {
+                    top: 0;
+                }
+                .box-bottom {
+                    bottom: 0;
+                }
+                .box-bottom-small {
+                    bottom: 0;
+                    line-height: 30px;
+                }
+                .box-title {
+                    font-weight: 500;
+                    margin-left: 4px;
+                }
+                .box-status {
+                    font-weight: 500;
+                    margin-right: 4px;
+                    text-transform: capitalize;
+                }
+                ha-icon {
+                    cursor: pointer;
+                    padding: 2px;
+                    color: #a9a9a9;
+                }
+                ha-icon.state-update {
+                    color: #cccccc;
+                }
+                ha-icon.state-on {
+                    color: white;
+                }
+                ha-icon.state-warn {
+                    color: orange;
+                }
+                ha-icon.state-error {
+                    color: red;
+                }
                 div.aarlo-aspect-16x9 {
                     padding-top: 55%;
                 }
@@ -177,13 +171,13 @@ class AarloGlance extends LitElement {
                 .aarlo-modal-video-wrapper {
                     overflow: hidden;
                     position: absolute;
-                    top: 0px;
-                    left: 0px;
+                    top: 0;
+                    left: 0;
                 }
                 .aarlo-modal-video {
                     position: absolute;
-                    top: 0px;
-                    left: 0px;
+                    top: 0;
+                    left: 0;
                 }
                 .aarlo-modal-video-background {
                     position: absolute;
@@ -211,31 +205,31 @@ class AarloGlance extends LitElement {
                     width: 70%;
                 }
                 .slider {
-                  -webkit-appearance: none;
-                  background: #d3d3d3;
-                  outline: none;
-                  opacity: 0.7;
-                  width: 100%;
-                  height: 10px;
-                  -webkit-transition: .2s;
-                  transition: opacity .2s;
+                    -webkit-appearance: none;
+                    background: #d3d3d3;
+                    outline: none;
+                    opacity: 0.7;
+                    width: 100%;
+                    height: 10px;
+                    -webkit-transition: .2s;
+                    transition: opacity .2s;
                 }
                 .slider:hover {
-                  opacity: 1;
+                    opacity: 1;
                 }
                 .slider::-webkit-slider-thumb {
-                  -webkit-appearance: none;
-                  appearance: none;
-                  background: #4CAF50;
-                  width: 10px;
-                  height: 10px;
-                  cursor: pointer;
+                    -webkit-appearance: none;
+                    appearance: none;
+                    background: #4CAF50;
+                    width: 10px;
+                    height: 10px;
+                    cursor: pointer;
                 }
                 .slider::-moz-range-thumb {
-                  background: #4CAF50;
-                  width: 10px;
-                  height: 10px;
-                  cursor: pointer;
+                    background: #4CAF50;
+                    width: 10px;
+                    height: 10px;
+                    cursor: pointer;
                 }
             </style>
         `;
@@ -264,16 +258,17 @@ class AarloGlance extends LitElement {
         height = Math.round(height)
 
         return html`
-            <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
-            ${AarloGlance.outerStyleTemplate}
-            ${AarloGlance.innerStyleTemplate}
+            ${AarloGlance.styleTemplate}
             <div id="modal-viewer-${this._s.cameraId}" class="w3-modal">
-              <div class="w3-modal-content w3-animate-opacity aarlo-modal-base" style="width:${width}px">
-              <div class="aarlo-modal-video-wrapper" style="width:${width - 4}px;height:${height - 4}px">
+              <div class="w3-modal-content w3-animate-opacity aarlo-modal-base"
+                  style="width:${width}px">
+                <div class="aarlo-modal-video-wrapper"
+                    style="width:${width - 4}px;height:${height - 4}px">
                   <div class="aarlo-modal-video-background"
                       style="width:${width}px;height:${height}px">
                   </div>
-                  <video class="${this._v.modalVideo} aarlo-modal-video" style="width:${width}px;height:${height}px"
+                  <video class="${this._v.modalVideo} aarlo-modal-video"
+                      style="width:${width}px;height:${height}px"
                       autoplay playsinline 
                       id="modal-video-${this._s.cameraId}"
                       src="${this._video}"
@@ -283,38 +278,39 @@ class AarloGlance extends LitElement {
                       @click="${() => { this.clickVideo(); }}">
                           Your browser does not support the video tag.
                   </video>
-                  <video class="${this._v.modalStream} aarlo-modal-video" style="width:${width}px;height:${height}px"
+                  <video class="${this._v.modalStream} aarlo-modal-video"
+                      style="width:${width}px;height:${height}px"
                       id="modal-stream-${this._s.cameraId}"
                       poster="${this._streamPoster}"
-                      @ended="${() => { this.stopStream(); }}"
+                      @ended="${() => { this.stopStream().then(); }}"
                       @mouseover="${() => { this.mouseOverVideo(); }}"
                       @click="${() => { this.clickVideo(); }}">
                           Your browser does not support the video tag.
                   </video>
                   <div class="box box-bottom ${this._v.modalVideoControls}">
-                      <div >
-                          <ha-icon @click="${() => { this.toggleLock(this._s.doorLockId); }}" class="${this._s.doorLockOn} ${this._v.doorLock}" icon="${this._s.doorLockIcon}" title="${this._s.doorLockText}"></ha-icon>
-                          <ha-icon @click="${() => { this.toggleLight(this._s.lightId); }}" class="${this._s.lightOn} ${this._v.light}" icon="${this._s.lightIcon}" title="${this._s.lightText}"></ha-icon>
-                          <ha-icon @click="${() => { this.controlStopVideoOrStream(); }}" class="${this._v.videoStop}" icon="mdi:stop" title="Click to stop"></ha-icon>
-                          <ha-icon @click="${() => { this.controlPlayVideo(); }}" class="${this._v.videoPlay}" icon="mdi:play" title="Click to play"></ha-icon>
-                          <ha-icon @click="${() => { this.controlPauseVideo(); }}" class="${this._v.videoPause}" icon="mdi:pause" title="Click to pause"></ha-icon>
-                      </div>
-                      <div class='slidecontainer'>
-                          <input type="range" id="modal-video-seek-${this._s.cameraId}" value="0" min="1" max="100" class="slider ${this._v.videoSeek}">
-                      </div>
-                      <div >
-                          <ha-icon @click="${() => { this.controlFullScreen(); }}" class="${this._v.videoFull}" icon="mdi:fullscreen" title="Click to go full screen"></ha-icon>
-                      </div>
+                    <div >
+                      <ha-icon @click="${() => { this.toggleLock(this._s.doorLockId); }}" class="${this._s.doorLockOn} ${this._v.doorLock}" icon="${this._s.doorLockIcon}" title="${this._s.doorLockText}"></ha-icon>
+                      <ha-icon @click="${() => { this.toggleLight(this._s.lightId); }}" class="${this._s.lightOn} ${this._v.light}" icon="${this._s.lightIcon}" title="${this._s.lightText}"></ha-icon>
+                      <ha-icon @click="${() => { this.controlStopVideoOrStream(); }}" class="${this._v.videoStop}" icon="mdi:stop" title="Click to stop"></ha-icon>
+                      <ha-icon @click="${() => { this.controlPlayVideo(); }}" class="${this._v.videoPlay}" icon="mdi:play" title="Click to play"></ha-icon>
+                      <ha-icon @click="${() => { this.controlPauseVideo(); }}" class="${this._v.videoPause}" icon="mdi:pause" title="Click to pause"></ha-icon>
+                    </div>
+                    <div class='slidecontainer'>
+                      <input type="range" id="modal-video-seek-${this._s.cameraId}" value="0" min="1" max="100" class="slider ${this._v.videoSeek}">
+                    </div>
+                    <div >
+                      <ha-icon @click="${() => { this.controlFullScreen(); }}" class="${this._v.videoFull}" icon="mdi:fullscreen" title="Click to go full screen"></ha-icon>
+                    </div>
                   </div>
-              </div>
+                </div>
               </div>
             </div>
             <ha-card>
-            <div id="aarlo-wrapper" class="aarlo-base aarlo-aspect-${this._v.aspectRatio}">
+              <div id="aarlo-wrapper" class="aarlo-base aarlo-aspect-${this._v.aspectRatio}">
                 <video class="${this._v.stream} aarlo-video"
                     id="stream-${this._s.cameraId}"
                     poster="${this._streamPoster}"
-                    @ended="${() => { this.stopStream(); }}"
+                    @ended="${() => { this.stopStream().then(); }}"
                     @mouseover="${() => { this.mouseOverVideo(); }}"
                     @click="${() => { this.clickVideo(); }}">
                         Your browser does not support the video tag.
@@ -411,16 +407,16 @@ class AarloGlance extends LitElement {
                     <ha-icon @click="${() => { this.toggleCamera(); }}" class="${this._s.onOffOn} ${this._v.onOff}" icon="${this._s.onOffIcon}" title="${this._s.onOffText}"></ha-icon>
                     <ha-icon @click="${() => { this.moreInfo(this._s.motionId); }}" class="${this._s.motionOn} ${this._v.motion}" icon="mdi:run-fast" title="${this._s.motionText}"></ha-icon>
                     <ha-icon @click="${() => { this.moreInfo(this._s.soundId); }}" class="${this._s.soundOn} ${this._v.sound}" icon="mdi:ear-hearing" title="${this._s.soundText}"></ha-icon>
-                    <ha-icon @click="${() => { this.showLibrary(0); }}" class="${this._s.capturedOn} ${this._v.captured}" icon="${this._s.capturedIcon}" title="${this._s.capturedText}"></ha-icon>
-                    <ha-icon @click="${() => { this.showOrStopStream(); }}" class="${this._s.playOn} ${this._v.play}" icon="${this._s.playIcon}" title="${this._s.playText}"></ha-icon>
-                    <ha-icon @click="${() => { this.wsUpdateSnapshot(); }}" class="${this._s.snapshotOn} ${this._v.snapshot}" icon="${this._s.snapshotIcon}" title="${this._s.snapshotText}"></ha-icon>
+                    <ha-icon @click="${() => { this.showLibrary(0).then() }}" class="${this._s.capturedOn} ${this._v.captured}" icon="${this._s.capturedIcon}" title="${this._s.capturedText}"></ha-icon>
+                    <ha-icon @click="${() => { this.showOrStopStream() }}" class="${this._s.playOn} ${this._v.play}" icon="${this._s.playIcon}" title="${this._s.playText}"></ha-icon>
+                    <ha-icon @click="${() => { this.wsUpdateSnapshot().then() }}" class="${this._s.snapshotOn} ${this._v.snapshot}" icon="${this._s.snapshotIcon}" title="${this._s.snapshotText}"></ha-icon>
                     <ha-icon @click="${() => { this.moreInfo(this._s.batteryId); }}" class="${this._s.batteryState} ${this._v.battery}" icon="mdi:${this._s.batteryIcon}" title="${this._s.batteryText}"></ha-icon>
                     <ha-icon @click="${() => { this.moreInfo(this._s.signalId); }}" class="state-update ${this._v.signal}" icon="${this._s.signalIcon}" title="${this._s.signalText}"></ha-icon>
                     <ha-icon @click="${() => { this.toggleLight(this._s.lightId); }}" class="${this._s.lightOn} ${this._v.lightLeft}" icon="${this._s.lightIcon}" title="${this._s.lightText}"></ha-icon>
                 </div>
                 <div class="${this._v.cameraOff}">
                     <ha-icon @click="${() => { this.toggleCamera(); }}" class="${this._s.onOffOn} ${this._v.onOff}" icon="${this._s.onOffIcon}" title="${this._s.onOffText}"></ha-icon>
-                    <ha-icon @click="${() => { this.showLibrary(0); }}" class="${this._s.capturedOn} ${this._v.captured}" icon="${this._s.capturedIcon}" title="${this._s.capturedText}"></ha-icon>
+                    <ha-icon @click="${() => { this.showLibrary(0).then() }}" class="${this._s.capturedOn} ${this._v.captured}" icon="${this._s.capturedIcon}" title="${this._s.capturedText}"></ha-icon>
                 </div>
                 <div class="box-title ${this._v.bottomDate} ${this._v.image_date}" title="${this._s.imageFullDate}">
                     ${this._s.imageDate}
@@ -639,12 +635,12 @@ class AarloGlance extends LitElement {
         // has happened.
         if ( camera.state !== this._s.cameraState ) {
             if ( this._s.cameraState === 'taking snapshot' ) {
-                //console.log( 'snapshot ' + this._s.cameraName + ':' + this._s.cameraState + '-->' + camera.state );
-                this.updateCameraImageSrc();
-                this.updateCameraImageSourceLater(5);
+                // console.log( 'snapshot ' + this._s.cameraName + ':' + this._s.cameraState + '-->' + camera.state );
+                this.updateCameraImageSrc()
+                this.updateCameraImageSourceLater(5)
                 this.updateCameraImageSourceLater(10)
             } else {
-                //console.log( 'updating2 ' + this._s.cameraName + ':' + this._s.cameraState + '-->' + camera.state );
+                // console.log( 'updating2 ' + this._s.cameraName + ':' + this._s.cameraState + '-->' + camera.state );
                 this.updateCameraImageSrc()
             }
         }
@@ -653,7 +649,7 @@ class AarloGlance extends LitElement {
         this._s.cameraState = camera.state;
 
         if ( this._s.imageSource !== camera.attributes.image_source ) {
-            //console.log( 'updating3 ' + this._s.cameraName + ':' + this._s.imageSource + '-->' + camera.attributes.image_source );
+            // console.log( 'updating3 ' + this._s.cameraName + ':' + this._s.imageSource + '-->' + camera.attributes.image_source );
             this._s.imageSource = camera.attributes.image_source
             this.updateCameraImageSrc()
         }
@@ -1014,10 +1010,12 @@ class AarloGlance extends LitElement {
             camera = config.camera;
         }
         if( camera === null ) {
-            this.throwError( 'missing a camera definition' );
+            this.throwError( 'missing a camera definition' )
+            return
         }
         if( !config.show ) {
             this.throwError( 'missing show components' );
+            return
         }
 
         // see if aarlo prefix, remove from custom names if not present
@@ -1178,7 +1176,7 @@ class AarloGlance extends LitElement {
         }
     }
 
-    async updateCameraImageSrc() {
+    updateCameraImageSrc() {
         const camera = this.getState(this._s.cameraId,'unknown');
         if ( camera.state !== 'unknown' ) {
             this._image = camera.attributes.entity_picture + "&t=" + this.changed();
@@ -1193,12 +1191,10 @@ class AarloGlance extends LitElement {
             this._modalViewer = modal
             this._video       = video[0].url;
             this._videoPoster = video[0].thumbnail;
-            this._videoType   = "video/mp4"
         } else {
             this._modalViewer = false;
             this._video       = null;
             this._videoPoster = null;
-            this._videoType   = null
         }
     }
 
@@ -1436,22 +1432,22 @@ class AarloGlance extends LitElement {
 
     updateCameraImageSourceLater(seconds = 2) {
         setTimeout(() => {
-            this.updateCameraImageSrc().then()
+            this.updateCameraImageSrc()
         }, seconds * 1000);
     }
 
 }
 
-const s = document.createElement("script");
-s.src = 'https://cdn.jsdelivr.net/npm/hls.js@latest';
+const s = document.createElement("script")
+s.src = 'https://cdn.jsdelivr.net/npm/hls.js@latest'
 s.onload = function() {
-    const s2 = document.createElement("script");
-    s2.src = 'https://cdn.dashjs.org/v3.1.1/dash.all.min.js';
+    const s2 = document.createElement("script")
+    s2.src = 'https://cdn.dashjs.org/v3.1.1/dash.all.min.js'
     s2.onload = function() {
-        customElements.define('aarlo-glance', AarloGlance);
-    };
-    document.head.appendChild(s2);
-};
-document.head.appendChild(s);
+        customElements.define('aarlo-glance', AarloGlance)
+    }
+    document.head.appendChild(s2)
+}
+document.head.appendChild(s)
 
 // vim: set expandtab:ts=4:sw=4
