@@ -282,13 +282,13 @@ class AarloGlance extends LitElement {
                       style="width:${width}px;height:${height}px"
                       id="modal-stream-${this._s.cameraId}"
                       poster="${this._streamPoster}"
-                      @ended="${() => { this.stopStream().then(); }}"
+                      @ended="${() => { this.stopStream() }}"
                       @mouseover="${() => { this.mouseOverVideo(); }}"
                       @click="${() => { this.clickVideo(); }}">
                           Your browser does not support the video tag.
                   </video>
                   <div class="box box-bottom ${this._v.modalVideoControls}">
-                    <div >
+                    <div>
                       <ha-icon @click="${() => { this.toggleLock(this._s.doorLockId); }}" class="${this._s.doorLockOn} ${this._v.doorLock}" icon="${this._s.doorLockIcon}" title="${this._s.doorLockText}"></ha-icon>
                       <ha-icon @click="${() => { this.toggleLight(this._s.lightId); }}" class="${this._s.lightOn} ${this._v.light}" icon="${this._s.lightIcon}" title="${this._s.lightText}"></ha-icon>
                       <ha-icon @click="${() => { this.controlStopVideoOrStream(); }}" class="${this._v.videoStop}" icon="mdi:stop" title="Click to stop"></ha-icon>
@@ -310,7 +310,7 @@ class AarloGlance extends LitElement {
                 <video class="${this._v.stream} aarlo-video"
                     id="stream-${this._s.cameraId}"
                     poster="${this._streamPoster}"
-                    @ended="${() => { this.stopStream().then(); }}"
+                    @ended="${() => { this.stopStream() }}"
                     @mouseover="${() => { this.mouseOverVideo(); }}"
                     @click="${() => { this.clickVideo(); }}">
                         Your browser does not support the video tag.
@@ -404,19 +404,19 @@ class AarloGlance extends LitElement {
                     ${this._s.cameraName} 
                 </div>
                 <div class="${this._v.cameraOn}">
-                    <ha-icon @click="${() => { this.toggleCamera(); }}" class="${this._s.onOffOn} ${this._v.onOff}" icon="${this._s.onOffIcon}" title="${this._s.onOffText}"></ha-icon>
+                    <ha-icon @click="${() => { this.toggleCamera() }}" class="${this._s.onOffOn} ${this._v.onOff}" icon="${this._s.onOffIcon}" title="${this._s.onOffText}"></ha-icon>
                     <ha-icon @click="${() => { this.moreInfo(this._s.motionId); }}" class="${this._s.motionOn} ${this._v.motion}" icon="mdi:run-fast" title="${this._s.motionText}"></ha-icon>
                     <ha-icon @click="${() => { this.moreInfo(this._s.soundId); }}" class="${this._s.soundOn} ${this._v.sound}" icon="mdi:ear-hearing" title="${this._s.soundText}"></ha-icon>
-                    <ha-icon @click="${() => { this.showLibrary(0).then() }}" class="${this._s.capturedOn} ${this._v.captured}" icon="${this._s.capturedIcon}" title="${this._s.capturedText}"></ha-icon>
+                    <ha-icon @click="${() => { this.showLibrary(0) }}" class="${this._s.capturedOn} ${this._v.captured}" icon="${this._s.capturedIcon}" title="${this._s.capturedText}"></ha-icon>
                     <ha-icon @click="${() => { this.showOrStopStream() }}" class="${this._s.playOn} ${this._v.play}" icon="${this._s.playIcon}" title="${this._s.playText}"></ha-icon>
-                    <ha-icon @click="${() => { this.wsUpdateSnapshot().then() }}" class="${this._s.snapshotOn} ${this._v.snapshot}" icon="${this._s.snapshotIcon}" title="${this._s.snapshotText}"></ha-icon>
-                    <ha-icon @click="${() => { this.moreInfo(this._s.batteryId); }}" class="${this._s.batteryState} ${this._v.battery}" icon="mdi:${this._s.batteryIcon}" title="${this._s.batteryText}"></ha-icon>
-                    <ha-icon @click="${() => { this.moreInfo(this._s.signalId); }}" class="state-update ${this._v.signal}" icon="${this._s.signalIcon}" title="${this._s.signalText}"></ha-icon>
-                    <ha-icon @click="${() => { this.toggleLight(this._s.lightId); }}" class="${this._s.lightOn} ${this._v.lightLeft}" icon="${this._s.lightIcon}" title="${this._s.lightText}"></ha-icon>
+                    <ha-icon @click="${() => { this.wsUpdateSnapshot() }}" class="${this._s.snapshotOn} ${this._v.snapshot}" icon="${this._s.snapshotIcon}" title="${this._s.snapshotText}"></ha-icon>
+                    <ha-icon @click="${() => { this.moreInfo(this._s.batteryId) }}" class="${this._s.batteryState} ${this._v.battery}" icon="mdi:${this._s.batteryIcon}" title="${this._s.batteryText}"></ha-icon>
+                    <ha-icon @click="${() => { this.moreInfo(this._s.signalId) }}" class="state-update ${this._v.signal}" icon="${this._s.signalIcon}" title="${this._s.signalText}"></ha-icon>
+                    <ha-icon @click="${() => { this.toggleLight(this._s.lightId) }}" class="${this._s.lightOn} ${this._v.lightLeft}" icon="${this._s.lightIcon}" title="${this._s.lightText}"></ha-icon>
                 </div>
                 <div class="${this._v.cameraOff}">
-                    <ha-icon @click="${() => { this.toggleCamera(); }}" class="${this._s.onOffOn} ${this._v.onOff}" icon="${this._s.onOffIcon}" title="${this._s.onOffText}"></ha-icon>
-                    <ha-icon @click="${() => { this.showLibrary(0).then() }}" class="${this._s.capturedOn} ${this._v.captured}" icon="${this._s.capturedIcon}" title="${this._s.capturedText}"></ha-icon>
+                    <ha-icon @click="${() => { this.toggleCamera() }}" class="${this._s.onOffOn} ${this._v.onOff}" icon="${this._s.onOffIcon}" title="${this._s.onOffText}"></ha-icon>
+                    <ha-icon @click="${() => { this.showLibrary(0) }}" class="${this._s.capturedOn} ${this._v.captured}" icon="${this._s.capturedIcon}" title="${this._s.capturedText}"></ha-icon>
                 </div>
                 <div class="box-title ${this._v.bottomDate} ${this._v.image_date}" title="${this._s.imageFullDate}">
                     ${this._s.imageDate}
@@ -1165,7 +1165,7 @@ class AarloGlance extends LitElement {
         }
     }
 
-    async wsUpdateSnapshot() {
+    async asyncWSUpdateSnapshot() {
         try {
             return await this._hass.callWS({
                 type: "aarlo_request_snapshot",
@@ -1174,6 +1174,10 @@ class AarloGlance extends LitElement {
         } catch (err) {
             return null
         }
+    }
+
+    wsUpdateSnapshot() {
+        return this.asyncWSUpdateSnapshot().then()
     }
 
     updateCameraImageSrc() {
@@ -1185,7 +1189,7 @@ class AarloGlance extends LitElement {
         }
     }
 
-    async playVideo( modal ) {
+    async asyncPlayVideo(modal ) {
         const video = await this.wsLoadLibrary(1);
         if ( video ) {
             this._modalViewer = modal
@@ -1198,6 +1202,10 @@ class AarloGlance extends LitElement {
         }
     }
 
+    playVideo(modal) {
+        this.asyncPlayVideo(modal).then()
+    }
+
     stopVideo() {
         if ( this._video ) {
             const video = this.shadowRoot.getElementById( this.modalId('video-' + this._s.cameraId) );
@@ -1207,7 +1215,7 @@ class AarloGlance extends LitElement {
         }
     }
 
-    async playStream( modal ) {
+    async asyncPlayStream( modal ) {
         const stream = await this.wsStartStream();
         if (stream) {
             this._modalViewer  = modal;
@@ -1220,7 +1228,11 @@ class AarloGlance extends LitElement {
         }
     }
 
-    async stopStream() {
+    playStream( modal ) {
+        this.asyncPlayStream(modal).then()
+    }
+
+    async asyncStopStream() {
         if (this._stream) {
             const stream = this.shadowRoot.getElementById( this.modalId('stream-' + this._s.cameraId) );
             stream.pause();
@@ -1239,19 +1251,27 @@ class AarloGlance extends LitElement {
         }
     }
 
+    stopStream() {
+        this.asyncStopStream().then()
+    }
+
     showOrStopStream() {
         const camera = this.getState(this._s.cameraId,'unknown');
         if ( camera.state === 'streaming' ) {
-            this.stopStream().then()
+            this.stopStream()
         } else {
-            this.playStream().then()
+            this.playStream()
         }
     }
 
-    async showLibrary(base) {
+    async asyncShowLibrary(base) {
         this._video = null;
         this._library = await this.wsLoadLibrary(99);
         this._libraryOffset = base
+    }
+
+    showLibrary(base) {
+        this.asyncShowLibrary(base).then()
     }
 
     showLibraryVideo(index) {
@@ -1278,13 +1298,13 @@ class AarloGlance extends LitElement {
 
     clickImage() {
         if ( this._v.imageClick === 'modal-play' ) {
-            this.playStream(true).then()
+            this.playStream(true)
         } else if ( this._v.imageClick === 'play' ) {
-            this.playStream(false).then()
+            this.playStream(false)
         } else if ( this._v.imageClick === 'modal-last' ) {
-            this.playVideo(true).then()
+            this.playVideo(true)
         } else {
-            this.playVideo(false).then()
+            this.playVideo(false)
         }
     }
 

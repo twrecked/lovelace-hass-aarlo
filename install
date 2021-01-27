@@ -1,5 +1,6 @@
 #!/bin/bash
-#
+
+# Installation code.
 
 if [[ "${1}" == "go" ]]; then
 	ECHO=
