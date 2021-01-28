@@ -61,6 +61,11 @@ class AarloGlance extends LitElement {
         this._video = null
         this._stream = null
 
+        this._top = 0
+        this._left = 0
+        this._height = 0
+        this._width = 0
+
         this.resetConfig()
         this.resetStatuses()
         this.resetVisiblity()
@@ -228,40 +233,20 @@ class AarloGlance extends LitElement {
     }
 
     render() {
-
-        // calculate dimensions?
-        let width  = window.innerWidth * this._c.modalMultiplier
-        let height = window.innerHeight * this._c.modalMultiplier
-        if ( this._c.aspectRatio === '1x1' ) {
-            height = Math.min(width,height)
-            // noinspection JSSuspiciousNameCombination
-            width  = height
-        } else {
-            let width_height = (width / 16) * 9; // height that will fit in width
-            let height_width = (height / 9) * 16; // width that will fit in height
-            if ( width_height < height ) {
-                height = width_height;
-                width = (height / 9) * 16;
-            } else {
-                width = height_width;
-                height = (width / 16) * 9;
-            }
-        }
-        width = Math.round(width)
-        height = Math.round(height)
-
+        this.calculatePosition()
         return html`
             ${AarloGlance.styleTemplate}
             <div id="modal-viewer-${this._s.cameraId}" class="w3-modal">
                 <div class="w3-modal-content w3-animate-opacity aarlo-modal-base"
-                     style="width:${width}px">
+                     id="modal-content-${this._s.cameraId}"
+                     style="width:${this._width}px">
                     <div class="aarlo-modal-video-wrapper"
-                         style="width:${width - 4}px;height:${height - 4}px">
+                         style="width:${this._width - 4}px;height:${this._height - 4}px">
                         <div class="aarlo-modal-video-background"
-                             style="width:${width}px;height:${height}px">
+                             style="width:${this._width}px;height:${this._height}px">
                         </div>
                         <video class="${this._v.modalVideo} aarlo-modal-video"
-                               style="width:${width}px;height:${height}px"
+                               style="width:${this._width}px;height:${this._height}px"
                                autoplay playsinline
                                id="modal-video-${this._s.cameraId}"
                                src="${this._video}"
@@ -272,7 +257,7 @@ class AarloGlance extends LitElement {
                             Your browser does not support the video tag.
                         </video>
                         <video class="${this._v.modalStream} aarlo-modal-video"
-                               style="width:${width}px;height:${height}px"
+                               style="width:${this._width}px;height:${this._height}px"
                                id="modal-stream-${this._s.cameraId}"
                                poster="${this._streamPoster}"
                                @ended="${() => { this.stopStream() }}"
@@ -529,6 +514,38 @@ class AarloGlance extends LitElement {
                     charging: false
                 }
             };
+    }
+
+    calculatePosition() {
+        // calculate dimensions?
+        let width  = window.innerWidth * this._c.modalMultiplier
+        let height = window.innerHeight * this._c.modalMultiplier
+        if ( this._c.aspectRatio === '1x1' ) {
+            height = Math.min(width,height)
+            // noinspection JSSuspiciousNameCombination
+            width  = height
+        } else {
+            let width_height = (width / 16) * 9; // height that will fit in width
+            let height_width = (height / 9) * 16; // width that will fit in height
+            if ( width_height < height ) {
+                height = width_height;
+                width = (height / 9) * 16;
+            } else {
+                width = height_width;
+                height = (width / 16) * 9;
+            }
+        }
+        this._width = Math.round(width)
+        this._height = Math.round(height)
+        let topOffset = window.pageYOffset
+        let leftOffset = window.pageXOffset
+        if( topOffset !== 0 ) {
+            this._top = topOffset + Math.round( (window.innerHeight - height) / 2 )
+            this._left = leftOffset + Math.round( (window.innerWidth - width) / 2 )
+        } else {
+            this._top = 0
+            this._left = 0
+        }
     }
 
     emptyLibrary() {
@@ -1398,6 +1415,14 @@ class AarloGlance extends LitElement {
     openModal() {
         const modal = this.shadowRoot.getElementById('modal-viewer-' + this._s.cameraId)
         if ( modal.style.display !== 'block' ) {
+            this.calculatePosition()
+            const content = this.shadowRoot.getElementById('modal-content-' + this._s.cameraId)
+            if ( this._top !== 0 ) {
+                content.style.top=`${this._top}px`
+            }
+            if ( this._left !== 0 ) {
+                content.style.left=`${this._left}px`
+            }
             modal.style.display='block'
         }
     }
