@@ -58,9 +58,12 @@ class AarloGlance extends LitElement {
         this._change = 0;
         this._hls = null;
         this._dash = null;
+        this._video = null
+        this._stream = null
 
-        this.resetStatuses();
-        this.resetVisiblity();
+        this.resetConfig()
+        this.resetStatuses()
+        this.resetVisiblity()
     }
 
     static get styleTemplate() {
@@ -227,9 +230,9 @@ class AarloGlance extends LitElement {
     render() {
 
         // calculate dimensions?
-        let width  = window.innerWidth * this._v.modalMultiplier
-        let height = window.innerHeight * this._v.modalMultiplier
-        if ( this._v.aspectRatio === '1x1' ) {
+        let width  = window.innerWidth * this._c.modalMultiplier
+        let height = window.innerHeight * this._c.modalMultiplier
+        if ( this._c.aspectRatio === '1x1' ) {
             height = Math.min(width,height)
             // noinspection JSSuspiciousNameCombination
             width  = height
@@ -305,7 +308,7 @@ class AarloGlance extends LitElement {
                 </div>
             </div>
             <ha-card>
-                <div id="aarlo-wrapper" class="aarlo-base aarlo-aspect-${this._v.aspectRatio}">
+                <div id="aarlo-wrapper" class="aarlo-base aarlo-aspect-${this._c.aspectRatio}">
                     <video class="${this._v.stream} aarlo-video"
                            id="stream-${this._s.cameraId}"
                            poster="${this._streamPoster}"
@@ -535,6 +538,22 @@ class AarloGlance extends LitElement {
         }
     }
 
+    resetConfig() {
+        this._c = {
+            aspectRatio: '16x9',
+
+            imageClick: '',
+            libraryClick: '',
+            
+            modalMultiplier: 0.7,
+            
+            playDirect: false,
+            
+            autoPlayMaster: false,
+            autoPlay: false
+        }
+    }
+    
     resetVisiblity() {
         this._v = {
 
@@ -853,7 +872,7 @@ class AarloGlance extends LitElement {
 
             const video = this.shadowRoot.getElementById( this.modalId('stream-' + this._s.cameraId) );
 
-            if ( this._v.playDirect ) {
+            if ( this._c.playDirect ) {
                 // mpeg-dash support
                 if (this._dash === null) {
 
@@ -996,6 +1015,15 @@ class AarloGlance extends LitElement {
 
                 case '_change':
                     //console.log( 'change is updated' );
+                    // restart stream?
+                    if ( this._stream === null ) {
+                        if( this._c.autoPlay ) {
+                            setTimeout(() => {
+                                this.playStream(false)
+                            }, 5 * 1000);
+                        }
+                    }
+
                     break;
             }
         });
@@ -1066,10 +1094,29 @@ class AarloGlance extends LitElement {
         }
 
         // save new config and reset decoration properties
-        this._config = config;
-        this.checkConfig();
-        this.resetStatuses();
+        this._config = config
+        this.checkConfig()
+        this.resetConfig()
+        this.resetStatuses()
 
+        // config
+        // aspect ratio
+        this._c.aspectRatio = config.aspect_ratio === 'square' ? '1x1' : '16x9';
+ 
+        // on click
+        this._c.imageClick = config.image_click ? config.image_click : '';
+        this._c.libraryClick = config.library_click ? config.library_click : '';
+
+        // modal window multiplier
+        this._c.modalMultiplier = config.modal_multiplier ? parseFloat(config.modal_multiplier) : 0.7;
+
+        // stream directly from Arlo
+        this._c.playDirect = config.play_direct ? config.play_direct : false;
+
+        // auto play
+        this._c.autoPlayMaster = config.auto_play ? config.auto_play : false
+        this._c.autoPlay = this._c.autoPlayMaster
+        
         // camera and sensors
         this._s.cameraId  = config.camera_id ? config.camera_id : 'camera.' + prefix + camera;
         this._s.motionId  = config.motion_id ? config.motion_id : 'binary_sensor.' + prefix + 'motion_' + camera;
@@ -1099,22 +1146,6 @@ class AarloGlance extends LitElement {
         const hide_date   = hide.includes('date') ? 'hidden':'';
         const hide_status = hide.includes('status') ? 'hidden':'';
 
-        // what are we showing?
-        const show = this._config.show || [];
-
-        // aspect ratio
-        this._v.aspectRatio = config.aspect_ratio === 'square' ? '1x1' : '16x9';
- 
-        // on click
-        this._v.imageClick = config.image_click ? config.image_click : '';
-        this._v.libraryClick = config.library_click ? config.library_click : '';
-
-        // modal window multiplier
-        this._v.modalMultiplier = config.modal_multiplier ? parseFloat(config.modal_multiplier) : 0.7;
-
-        // stream directly from Arlo
-        this._v.playDirect = config.play_direct ? config.play_direct : false;
-
         // ui configuration
         this._v.topTitle     = config.top_title ? hide_title:'hidden';
         this._v.topDate      = config.top_date ? hide_date:'hidden';
@@ -1123,6 +1154,9 @@ class AarloGlance extends LitElement {
         this._v.bottomDate   = config.top_date ? 'hidden':hide_date;
         this._v.bottomStatus = config.top_status ? 'hidden':hide_status;
 
+        // what are we showing?
+        const show = this._config.show || [];
+        
         this._v.play      = show.includes('play') ? '':'hidden';
         this._v.snapshot  = show.includes('snapshot') ? '':'hidden';
         this._v.onOff     = show.includes('on_off') ? '':'hidden';
@@ -1183,7 +1217,7 @@ class AarloGlance extends LitElement {
     async wsStartStream() {
         try {
             return await this._hass.callWS({
-                type: this._v.playDirect ? "aarlo_stream_url" : "camera/stream",
+                type: this._c.playDirect ? "aarlo_stream_url" : "camera/stream",
                 entity_id: this._s.cameraId,
             })
         } catch (err) {
@@ -1240,7 +1274,9 @@ class AarloGlance extends LitElement {
     }
 
     playVideo(modal) {
-        this.asyncPlayVideo(modal).then()
+        if ( this._video === null ) {
+            this.asyncPlayVideo(modal).then()
+        }
     }
 
     stopVideo() {
@@ -1266,7 +1302,12 @@ class AarloGlance extends LitElement {
     }
 
     playStream( modal ) {
-        this.asyncPlayStream(modal).then()
+        if ( this._stream === null ) {
+            if( this._c.autoPlayMaster ) {
+                this._c.autoPlay = this._c.autoPlayMaster
+            }
+            this.asyncPlayStream(modal).then()
+        }
     }
 
     async asyncStopStream() {
@@ -1289,6 +1330,7 @@ class AarloGlance extends LitElement {
     }
 
     stopStream() {
+        this._c.autoPlay = false
         this.asyncStopStream().then()
     }
 
@@ -1314,7 +1356,7 @@ class AarloGlance extends LitElement {
     showLibraryVideo(index) {
         index += this._libraryOffset;
         if (this._library && index < this._library.length) {
-            this._modalViewer = this._v.libraryClick === 'modal'
+            this._modalViewer = this._c.libraryClick === 'modal'
             this._video       = this._library[index].url;
             this._videoPoster = this._library[index].thumbnail;
         } else {
@@ -1334,11 +1376,11 @@ class AarloGlance extends LitElement {
     }
 
     clickImage() {
-        if ( this._v.imageClick === 'modal-play' ) {
+        if ( this._c.imageClick === 'modal-play' ) {
             this.playStream(true)
-        } else if ( this._v.imageClick === 'play' ) {
+        } else if ( this._c.imageClick === 'play' ) {
             this.playStream(false)
-        } else if ( this._v.imageClick === 'modal-last' ) {
+        } else if ( this._c.imageClick === 'modal-last' ) {
             this.playVideo(true)
         } else {
             this.playVideo(false)
