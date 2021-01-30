@@ -18,7 +18,6 @@ class AarloGlance extends LitElement {
         this._dash = null;
         this._video = null
         this._videoState = ''
-        this._libraryLastOffset = ''
         this._stream = null
         this._modalViewer = false
 
@@ -78,18 +77,6 @@ class AarloGlance extends LitElement {
                     padding: 2px;
                     color: #a9a9a9;
                 }
-                ha-icon.state-update {
-                    color: #cccccc;
-                }
-                ha-icon.state-on {
-                    color: white;
-                }
-                ha-icon.state-warn {
-                    color: orange;
-                }
-                ha-icon.state-error {
-                    color: red;
-                }
                 div.aarlo-aspect-16x9 {
                     padding-top: 55%;
                 }
@@ -134,7 +121,7 @@ class AarloGlance extends LitElement {
                 }
                 .aarlo-modal-video {
                     position: absolute;
-                    top: 0;
+                    top: -2px;
                     left: 0;
                 }
                 .aarlo-modal-video-background {
@@ -153,10 +140,6 @@ class AarloGlance extends LitElement {
                 }
                 .hidden {
                     display: none;
-                }
-                #broken-image {
-                    background: grey url("/static/images/image-broken.svg") center/36px
-                    no-repeat;
                 }
                 .aarlo-broken-image {
                     background: grey url("/static/images/image-broken.svg") center/36px
@@ -198,35 +181,30 @@ class AarloGlance extends LitElement {
     }
 
     render() {
-        this.calculatePosition()
+                     // style="width:${this._width - 4}px!important">
+        this.initialView()
         return html`
             ${AarloGlance.styleTemplate}
             <div class="w3-modal"
-                 id="${this._id('modal-viewer')}">
+                 id="${this._id('modal-viewer')}"
+                 style="display:none">
                 <div class="w3-modal-content w3-animate-opacity aarlo-modal-base"
-                     id="${this._id('modal-content')}"
-                     style="width:${this._width - 4}px!important">
+                     id="${this._id('modal-content')}">
                     <div class="aarlo-modal-video-wrapper"
-                         style="width:${this._width - 4}px;height:${this._height - 4}px">
+                         id="${this._id('modal-video-wrapper')}">
                         <div class="aarlo-modal-video-background"
-                             style="width:${this._width}px;height:${this._height}px">
+                             id="${this._id('modal-video-background')}">
                         </div>
-                        <video class="${this._v.modalStream} aarlo-modal-video"
+                        <video class="aarlo-modal-video"
                                id="${this._id('modal-stream-player')}"
-                               style="width:${this._width}px;height:${this._height}px"
-                               poster="${this._streamPoster}"
                                @ended="${() => { this.stopStream() }}"
                                @mouseover="${() => { this.mouseOverVideo(); }}"
                                @click="${() => { this.clickVideo(); }}">
                             Your browser does not support the video tag.
                         </video>
-                        <video class="${this._v.modalVideo} aarlo-modal-video"
+                        <video class="aarlo-modal-video"
                                id="${this._id('modal-video-player')}"
-                               style="width:${this._width}px;height:${this._height}px"
                                autoplay playsinline
-                               src="${this._video}"
-                               poster="${this._videoPoster}"
-                               onscroll="${() => { this.positionModal(); }}"
                                @ended="${() => { this.stopVideo(); }}"
                                @mouseover="${() => { this.mouseOverVideo(); }}"
                                @click="${() => { this.clickVideo(); }}">
@@ -235,28 +213,36 @@ class AarloGlance extends LitElement {
                         <div class="box box-bottom"
                                id="${this._id('modal-video-controls')}">
                             <div>
-                                <ha-icon @click="${() => { this.toggleLock(this._s.doorLockId); }}"
-                                         class="${this._s.doorLockOn} ${this._v.doorLock}" icon="${this._s.doorLockIcon}"
-                                         title="${this._s.doorLockText}"></ha-icon>
-                                <ha-icon @click="${() => { this.toggleLight(this._s.lightId); }}"
-                                         class="${this._s.lightOn} ${this._v.light}" icon="${this._s.lightIcon}"
-                                         title="${this._s.lightText}"></ha-icon>
-                                <ha-icon @click="${() => { this.controlStopVideoOrStream(); }}" class="${this._v.videoStop}"
-                                         icon="mdi:stop" title="Click to stop"></ha-icon>
-                                <ha-icon @click="${() => { this.controlPlayVideo(); }}" class="${this._v.videoPlay}" icon="mdi:play"
-                                         title="Click to play"></ha-icon>
-                                <ha-icon @click="${() => { this.controlPauseVideo(); }}" class="${this._v.videoPause}"
-                                         icon="mdi:pause" title="Click to pause"></ha-icon>
+                                <ha-icon id="${this._id('modal-video-door-lock')}"
+                                         @click="${() => { this.toggleLock(this._s.doorLockId); }}">
+                                </ha-icon>
+                                <ha-icon id="${this._id('modal-video-light-on')}"
+                                         @click="${() => { this.toggleLight(this._s.lightId); }}">
+                                </ha-icon>
+                                <ha-icon id="${this._id('modal-video-stop')}"
+                                         icon="mdi:stop" title="Click to stop"
+                                         @click="${() => { this.controlStopVideoOrStream(); }}">
+                                </ha-icon>
+                                <ha-icon id="${this._id('modal-video-play')}"
+                                         icon="mdi:play" title="Click to play"
+                                         @click="${() => { this.controlPlayVideo(); }}">
+                                </ha-icon>
+                                <ha-icon id="${this._id('modal-video-pause')}"
+                                         icon="mdi:pause" title="Click to pause"
+                                         @click="${() => { this.controlPauseVideo(); }}">
+                                </ha-icon>
                             </div>
                             <div class='slidecontainer'>
-                                <input class="slider ${this._v.videoSeek}"
+                                <input class="slider"
                                        id="${this._id('modal-video-seek')}"
                                        type="range" value="0" min="1" max="100">
                             </div>
                             <div>
                                 <ha-icon class="${this._v.videoFull}"
-                                         @click="${() => { this.controlFullScreen(); }}"
-                                         icon="mdi:fullscreen" title="Click to go full screen"></ha-icon>
+                                         id="${this._id('modal-video-full-screen')}"
+                                         icon="mdi:fullscreen" title="Click to go full screen"
+                                         @click="${() => { this.controlFullScreen(); }}">
+                                </ha-icon>
                             </div>
                         </div>
                     </div>
@@ -267,6 +253,7 @@ class AarloGlance extends LitElement {
                      id="${this._id('aarlo-wrapper')}">
                     <video class="aarlo-video"
                            id="${this._id('stream-player')}"
+                           style="display:none"
                            poster="${this._streamPoster}"
                            @ended="${() => { this.stopStream() }}"
                            @mouseover="${() => { this.mouseOverVideo(); }}"
@@ -275,6 +262,7 @@ class AarloGlance extends LitElement {
                     </video>
                     <video class="aarlo-video"
                            id="${this._id('video-player')}"
+                           style="display:none"
                            autoplay playsinline
                            @ended="${() => { this.stopVideo(); }}"
                            @mouseover="${() => { this.mouseOverVideo(); }}"
@@ -283,42 +271,44 @@ class AarloGlance extends LitElement {
                     </video>
                     <img class="aarlo-image"
                          id="${this._id('image-viewer')}"
+                         style="display:none"
                          @click="${() => { this.clickImage(); }}">
                     <div class="aarlo-image"
-                         id="${this._id('library-viewer')}">
+                         id="${this._id('library-viewer')}"
+                         style="display:none">
                         <div class="lrow">
                             <div class="lcolumn">
                                 <img class="aarlo-library"
                                      id="${this._id('library-0')}"
-                                     @click="${() => { this.showLibraryVideo(0); }}"/>
+                                     @click="${() => { this.playLibraryVideo(0); }}"/>
                                 <img class="aarlo-library"
                                      id="${this._id('library-3')}"
-                                     @click="${() => { this.showLibraryVideo(3); }}"/>
+                                     @click="${() => { this.playLibraryVideo(3); }}"/>
                                 <img class="aarlo-library"
                                      id="${this._id('library-6')}"
-                                     @click="${() => { this.showLibraryVideo(6); }}"/>
+                                     @click="${() => { this.playLibraryVideo(6); }}"/>
                             </div>
                             <div class="lcolumn">
                                 <img class="aarlo-library"
                                      id="${this._id('library-1')}"
-                                     @click="${() => { this.showLibraryVideo(1); }}"/>
+                                     @click="${() => { this.playLibraryVideo(1); }}"/>
                                 <img class="aarlo-library"
                                      id="${this._id('library-4')}"
-                                     @click="${() => { this.showLibraryVideo(4); }}"/>
+                                     @click="${() => { this.playLibraryVideo(4); }}"/>
                                 <img class="aarlo-library"
                                      id="${this._id('library-7')}"
-                                     @click="${() => { this.showLibraryVideo(7); }}"/>
+                                     @click="${() => { this.playLibraryVideo(7); }}"/>
                             </div>
                             <div class="lcolumn">
                                 <img class="aarlo-library"
                                      id="${this._id('library-2')}"
-                                     @click="${() => { this.showLibraryVideo(2); }}"/>
+                                     @click="${() => { this.playLibraryVideo(2); }}"/>
                                 <img class="aarlo-library"
                                      id="${this._id('library-5')}"
-                                     @click="${() => { this.showLibraryVideo(5); }}"/>
+                                     @click="${() => { this.playLibraryVideo(5); }}"/>
                                 <img class="aarlo-library"
                                      id="${this._id('library-8')}"
-                                     @click="${() => { this.showLibraryVideo(8); }}"/>
+                                     @click="${() => { this.playLibraryVideo(8); }}"/>
                             </div>
                         </div>
                     </div>
@@ -328,7 +318,8 @@ class AarloGlance extends LitElement {
                     </div>
                 </div>
                 <div class="box box-top"
-                     id="${this._id('top-bar')}">
+                     id="${this._id('top-bar')}"
+                     style="display:none">
                     <div class="box-title"
                          id="${this._id('top-bar-title')}">
                     </div>
@@ -340,7 +331,8 @@ class AarloGlance extends LitElement {
                     </div>
                 </div>
                 <div class="box box-bottom"
-                     id="${this._id('bottom-bar')}">
+                     id="${this._id('bottom-bar')}"
+                     style="display:none">
                     <div class="box-title"
                          id="${this._id('bottom-bar-title')}">
                     </div>
@@ -356,7 +348,7 @@ class AarloGlance extends LitElement {
                                  @click="${() => { this.moreInfo(this._s.soundId); }}">
                         </ha-icon>
                         <ha-icon id="${this._id('camera-captured')}"
-                                 @click="${() => { this.showLibrary(0) }}">
+                                 @click="${() => { this.openLibrary(0) }}">
                         </ha-icon>
                         <ha-icon id="${this._id('camera-play')}"
                                  @click="${() => { this.showOrStopStream() }}">
@@ -406,7 +398,8 @@ class AarloGlance extends LitElement {
                     </div>
                 </div>
                 <div class="box box-bottom-small"
-                     id="${this._id('library-controls')}">
+                     id="${this._id('library-controls')}"
+                     style="display:none">
                     <div>
                         <ha-icon class="state-on" 
                                  id="${this._id('library-control-previous')}"
@@ -417,7 +410,7 @@ class AarloGlance extends LitElement {
                     <div>
                         <ha-icon class="state-on" 
                                  icon="mdi:close" title="close library"
-                                 @click="${() => { this.stopLibrary(); }}">
+                                 @click="${() => { this.closeLibrary(); }}">
                         </ha-icon>
                     </div>
                     <div>
@@ -429,7 +422,8 @@ class AarloGlance extends LitElement {
                     </div>
                 </div>
                 <div class="box box-bottom"
-                     id="${this._id('video-controls')}">
+                     id="${this._id('video-controls')}"
+                     style="display:none">
                     <div>
                         <ha-icon id="${this._id('video-door-lock')}"
                                  @click="${() => { this.toggleLock(this._s.doorLockId); }}">
@@ -475,7 +469,7 @@ class AarloGlance extends LitElement {
     }
 
     updated(_changedProperties) {
-        this.updateView();
+        this.setImageElementData();
         if ( this._stream === null ) {
             if( this._c.autoPlay ) {
                 setTimeout(() => {
@@ -489,7 +483,7 @@ class AarloGlance extends LitElement {
         const old = this._hass;
         this._hass = hass;
         this.updateStatuses( old )
-        this.updateView()
+        this.setImageElementData()
     }
 
     getCardSize() {
@@ -652,12 +646,22 @@ class AarloGlance extends LitElement {
         this.__state( this._mid(id), state )
     }
 
-    _dimensions( id, width, _height ) {
-        let element = this.shadowRoot.getElementById( this._id(id) )
+    __dimensions( id, width, height, width_suffix = '' ) {
+        let element = this.shadowRoot.getElementById( id )
         if ( element ) {
-            element.style.width = `${width}px`
-            element.style.height = `${width}px`
+            if ( width !== null ) {
+                element.style.width = `${width}px${width_suffix}`
+            }
+            if ( height !== null ) {
+                element.style.height = `${height}px`
+            }
         }
+    }
+    _dimensions( id, width, height ) {
+        this.__dimensions( this._id(id), width, height )
+    }
+    _mdimensions( id, width, height ) {
+        this.__dimensions( this._mid(id), width, height )
     }
 
     parseURL(url) {
@@ -1127,6 +1131,31 @@ class AarloGlance extends LitElement {
         this._s.idSuffix = this._s.cameraId.replaceAll('.','-').replaceAll('_','-')
     }
 
+    setModalElementData() {
+        this.calculatePosition()
+        this._dimensions("modal-content", this._width - 4, null)
+        this._dimensions("modal-video-wrapper", this._width - 4, this._height - 4)
+        this._dimensions("modal-video-background", this._width, this._height)
+        this._dimensions("modal-video-player", this._width, this._height)
+        this._dimensions("modal-stream-player", this._width, this._height)
+ 
+        // window.onscroll = () => {
+            // this.positionModal()
+        // }
+        // window.ontouchend = () => {
+            // this.showVideoControls(2)
+        // }
+    }
+
+    showModal( show = true ) {
+        const modal = this.shadowRoot.getElementById( this._id('modal-viewer') )
+        modal.style.display =  show ? 'block' : 'none'
+    }
+
+    hideModal() {
+        const modal = this.shadowRoot.getElementById( this._id('modal-viewer') )
+        modal.style.display = 'none'
+    }
 
     setImageElementData() {
 
@@ -1254,41 +1283,7 @@ class AarloGlance extends LitElement {
         this._hide("modal-video-controls")
         this._hide("library-viewer")
         this._hide("library-controls")
-    }
-
-
-    setVideoElementData() {
-        this._mstate("video-door-lock", this._s.doorLockOn)
-        this._mtext ("video-door-lock", this._s.doorLockText)
-        this._micon ("video-door-lock", this._s.doorLockIcon)
-        this._mtitle("video-door-light", this._s.lightText)
-        this._mstate("video-door-light", this._s.lightOn)
-        this._micon ("video-door-light", this._s.lightIcon)
-    }
-
-    showVideoElements( state = '' ) {
-        if( state !== '' ) {
-            this._videoState = state
-        }
-        this._mshow("video-stop")
-        this._mshow("video-play", this._videoState === 'paused')
-        this._mshow("video-pause", this._videoState === 'playing')
-        this._mshow("video-full-screen")
-        this._mshow("video-door-lock", this._v.doorLock === '')
-        this._mshow("video-door-light", this._v.doorLight === '')
-    }
-
-    showVideoLayers() {
-        this._show("video-player")
-        this._show("video-controls")
-        this._hide('top-bar')
-        this._hide('bottom-bar')
-        this._hide("image-viewer")
-        this._hide("stream-player")
-        this._hide("modal-video-controls")
-        this._hide("library-viewer")
-        this._hide("library-controls")
-        this._hide("broken-image")
+        this.hideModal()
     }
 
     setLibraryElementData() {
@@ -1327,125 +1322,164 @@ class AarloGlance extends LitElement {
         this._hide("video-controls")
         this._hide("modal-video-controls")
         this._hide("broken-image")
+        this.hideModal()
+    }
+
+    setVideoElementData() {
+        this._msrc   ('video-player', this._video )
+        this._mposter('video-player', this._videoPoster )
+
+        this._mstate ("video-door-lock", this._s.doorLockOn)
+        this._mtext  ("video-door-lock", this._s.doorLockText)
+        this._micon  ("video-door-lock", this._s.doorLockIcon)
+        this._mtitle ("video-door-light", this._s.lightText)
+        this._mstate ("video-door-light", this._s.lightOn)
+        this._micon  ("video-door-light", this._s.lightIcon)
+
+        this.setUpSeekBar();
+    }
+
+    showVideoElements( state = '' ) {
+        if( state !== '' ) {
+            this._videoState = state
+        }
+        this._mshow("video-stop")
+        this._mshow("video-play", this._videoState === 'paused')
+        this._mshow("video-pause", this._videoState === 'playing')
+        this._mshow("video-seek")
+        this._mshow("video-full-screen")
+        this._mshow("video-door-lock", this._v.doorLock === '')
+        this._mshow("video-door-light", this._v.doorLight === '')
+    }
+
+    showVideoLayers() {
+        this._mshow("video-player")
+        this._mshow("video-controls")
+        if( this._modalViewer ) {
+            this.setModalElementData()
+            this.showModal()
+        }
+        this._hide('top-bar')
+        this._hide('bottom-bar')
+        this._hide("image-viewer")
+        this._hide("stream-player")
+        this._hide("modal-video-controls")
+        this._hide("library-viewer")
+        this._hide("library-controls")
+        this._hide("broken-image")
+    }
+
+    showVideo() {
+        this.setVideoElementData()
+        this.showVideoElements('playing')
+        this.showVideoLayers()
+        this.showVideoControls(2);
     }
  
+    setMPEGStreamElementData() {
+        const video = this.shadowRoot.getElementById( this._mid('stream-player') )
+        const parser = this.parseURL(this._stream);
+        const et = parser.searchObject["egressToken"];
 
-    updateView() {
+        this._dash = dashjs.MediaPlayer().create();
+        this._dash.extend("RequestModifier", function () {
+            return {
+                modifyRequestHeader: function (xhr) {
+                    xhr.setRequestHeader('Egress-Token',et);
+                    return xhr;
+                }
+            };
+        }, true);
+        // this._dash.on(dashjs.MediaPlayer.events.PLAYBACK_STARTED, () => {
+            // if ( this._modalViewer ) {
+                // this.openModal()
+            // }
+        // })
+        this._dash.initialize(video, this._stream, true);
+        // this._dash.updateSettings({
+            // 'debug': {
+                // 'logLevel': dashjs.Debug.LOG_LEVEL_DEBUG
+            // }
+        // });
+    }
 
-        // Is the view in place?
+    setHLSStreamElementData() {
+        const video = this.shadowRoot.getElementById( this._mid('stream-player') )
+        if (Hls.isSupported()) {
+            this._hls = new Hls();
+            this._hls.attachMedia(video);
+            this._hls.on(Hls.Events.MEDIA_ATTACHED, () => {
+                this._hls.loadSource(this._stream);
+                this._hls.on(Hls.Events.MANIFEST_PARSED, () => {
+                    video.play();
+                    // if ( this._modalViewer ) {
+                        // this.openModal()
+                    // }
+                });
+            })
+        } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+            video.src = this._stream;
+            video.addEventListener('loadedmetadata', () => {
+                video.play();
+                // if ( this._modalViewer ) {
+                    // this.openModal()
+                // }
+            });
+        }
+    }
+
+    setStreamElementData() {
+        if ( this._c.playDirect ) {
+            this.setMPEGStreamElementData()
+        } else {
+            this.setHLSStreamElementData()
+        }
+        this.setModalElementData()
+    }
+
+    showStreamElements() {
+        this._mhide("video-seek")
+    }
+
+    showStreamLayers() {
+        this._show("stream-player")
+        this._hide("video-player")
+        this._hide("video-controls")
+        this._hide('top-bar')
+        this._hide('bottom-bar')
+        this._hide("image-viewer")
+        this._hide("modal-video-controls")
+        this._hide("library-viewer")
+        this._hide("library-controls")
+        this._hide("broken-image")
+    }
+
+    showStream() {
+        this.setStreamElementData()
+        this.showStreamElements()
+        this.showStreamLayers()
+        this.showVideoControls(5);
+    }
+
+    initialView() {
+
+        // Keep trying until it appears
         if( !this.shadowRoot.getElementById( this._id('image-viewer') ) ) {
+            setTimeout( () => {
+                this.initialView()
+            }, 100);
             return
         }
 
-        if( this._stream ) {
-            if ( this._modalViewer ) {
-                this._v.modalStream = ''
-            } else {
-                this._v.stream = ''
-            }
-            this._v.videoPlay = 'hidden';
-            this._v.videoStop = '';
-            this._v.videoPause = 'hidden';
-            this._v.videoSeek = 'hidden';
-            this._v.videoFull = '';
-            this.showVideoControls(2);
+        this.setImageElementData()
+        this.showImageElements()
+        this.showImageLayers()
+    }
 
-            const video = this.shadowRoot.getElementById( this._mid('stream') )
-
-            if ( this._c.playDirect ) {
-                // mpeg-dash support
-                if (this._dash === null) {
-
-                    const parser = this.parseURL(this._stream);
-                    const et = parser.searchObject["egressToken"];
-
-                    this._dash = dashjs.MediaPlayer().create();
-                    this._dash.extend("RequestModifier", function () {
-                        return {
-                            modifyRequestHeader: function (xhr) {
-                                xhr.setRequestHeader('Egress-Token',et);
-                                return xhr;
-                            }
-                        };
-                    }, true);
-                    // this._dash.on(dashjs.MediaPlayer.events.PLAYBACK_STARTED, () => {
-                        // if ( this._modalViewer ) {
-                            // this.openModal()
-                        // }
-                    // })
-                    this._dash.initialize(video, this._stream, true);
-                    // this._dash.updateSettings({
-                        // 'debug': {
-                            // 'logLevel': dashjs.Debug.LOG_LEVEL_DEBUG
-                        // }
-                    // });
-                    if ( this._modalViewer ) {
-                        this.openModal()
-                    }
-                }
-            } else {
-                // Start HLS to handle video streaming.
-                if (this._hls === null) {
-                    if (Hls.isSupported()) {
-                        this._hls = new Hls();
-                        this._hls.attachMedia(video);
-                        this._hls.on(Hls.Events.MEDIA_ATTACHED, () => {
-                            this._hls.loadSource(this._stream);
-                            this._hls.on(Hls.Events.MANIFEST_PARSED, () => {
-                                video.play();
-                                // if ( this._modalViewer ) {
-                                    // this.openModal()
-                                // }
-                            });
-                        })
-                        if ( this._modalViewer ) {
-                            this.openModal()
-                        }
-                    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-                        video.src = this._stream;
-                        video.addEventListener('loadedmetadata', () => {
-                            video.play();
-                            // if ( this._modalViewer ) {
-                                // this.openModal()
-                            // }
-                        });
-                        if ( this._modalViewer ) {
-                            this.openModal()
-                        }
-                    }
-                }
-            }
-
-
-        } else if( this._video ) {
-
-            // Only set up if not already running
-            if( this._videoState === '' ) {
-                this._src('video-player', this._video )
-                this._poster('video-player', this._videoPoster )
-                this.setVideoElementData()
-                this.showVideoElements('playing')
-                this.setUpSeekBar();
-                this.showVideoControls(2);
-                this.showVideoLayers()
-            } else {
-                console.log('video already running')
-            }
-
-        } else if ( this._library ) {
-
-            // Only reload if changed
-            if( this._libraryLastOffset !== this._libraryOffset ) {
-                this._libraryLastOffset = this._libraryOffset
-                this.setLibraryElementData()
-            }
-            this.showLibraryElements()
+    resetView() {
+        if ( this._library ) {
             this.showLibraryLayers()
-
         } else {
-
-            this.setImageElementData()
-            this.showImageElements()
             this.showImageLayers()
         }
     }
@@ -1507,10 +1541,10 @@ class AarloGlance extends LitElement {
         } else {
             this._image = '';
         }
-        this.updateView()
+        this.setImageElementData()
     }
 
-    async asyncPlayVideo(modal ) {
+    async asyncLoadLatestVideo(modal) {
         const video = await this.wsLoadLibrary(1);
         if ( video ) {
             this._modalViewer = modal
@@ -1523,22 +1557,22 @@ class AarloGlance extends LitElement {
         }
     }
 
-    playVideo(modal) {
+    playLatestVideo(modal) {
         if ( this._video === null ) {
-            this.asyncPlayVideo(modal).then( () => {
-                this.updateView()
+            this.asyncLoadLatestVideo(modal).then( () => {
+                this.showVideo()
             })
         }
     }
 
     stopVideo() {
-        if ( this._videoState !== '' ) {
-            this._video = null
-            this._videoState = ''
-            this.closeModal()
-            this.updateView()
+        if ( this._video ) {
             const video = this.shadowRoot.getElementById( this._mid('video-player' ) )
             video.pause()
+            this.hideModal()
+            this.resetView()
+            this._video = null
+            this._videoState = ''
         }
     }
 
@@ -1546,7 +1580,7 @@ class AarloGlance extends LitElement {
         const stream = await this.wsStartStream();
         if (stream) {
             this._modalViewer  = modal;
-            this._stream = stream.url;
+            this._stream       = stream.url;
             this._streamPoster = this._image;
         } else {
             this._modalViewer  = false;
@@ -1560,32 +1594,36 @@ class AarloGlance extends LitElement {
             if( this._c.autoPlayMaster ) {
                 this._c.autoPlay = this._c.autoPlayMaster
             }
-            this.asyncPlayStream(modal).then()
+            this.asyncPlayStream(modal).then( () => {
+                this.showStream()
+            })
         }
     }
 
     async asyncStopStream() {
-        if (this._stream) {
-            const stream = this.shadowRoot.getElementById( this._mid('stream' ) )
+        if( this._stream ) {
+            const stream = this.shadowRoot.getElementById( this._mid('stream-player' ) )
             stream.pause();
             await this.wsStopStream();
-            this._stream = null;
-            this.closeModal()
-        }
-        if (this._hls) {
-            this._hls.stopLoad();
-            this._hls.destroy();
-            this._hls = null
-        }
-        if (this._dash) {
-            this._dash.reset();
-            this._dash = null;
         }
     }
 
     stopStream() {
-        this._c.autoPlay = false
-        this.asyncStopStream().then()
+        this.resetView()
+
+        this.asyncStopStream().then( () => {
+            this._c.autoPlay = false
+            this._stream = null;
+            if(this._hls) {
+                this._hls.stopLoad();
+                this._hls.destroy();
+                this._hls = null
+            }
+            if(this._dash) {
+                this._dash.reset();
+                this._dash = null;
+            }
+        })
     }
 
     showOrStopStream() {
@@ -1597,41 +1635,44 @@ class AarloGlance extends LitElement {
         }
     }
 
-    async asyncShowLibrary(base) {
+    async asyncLoadLibrary(base) {
         this._video = null;
         this._library = await this.wsLoadLibrary(99);
         this._libraryOffset = base
     }
 
-    showLibrary(base) {
-        this.asyncShowLibrary(base).then( () => {
-            this.updateView();
+    openLibrary(base) {
+        this.asyncLoadLibrary(base).then( () => {
+            this.setLibraryElementData()
+            this.showLibraryElements()
+            this.showLibraryLayers()
         })
     }
 
-    showLibraryVideo(index) {
+    playLibraryVideo(index) {
         index += this._libraryOffset;
         if (this._library && index < this._library.length) {
             this._modalViewer = this._c.libraryClick === 'modal'
             this._video       = this._library[index].url;
             this._videoPoster = this._library[index].thumbnail;
+            this.showVideo()
         } else {
             this._modalViewer = false
             this._video       = null;
             this._videoPoster = null
         }
-        this.updateView()
     }
 
     setLibraryBase(base) {
         this._libraryOffset = base
-        this.updateView()
+        this.setLibraryElementData()
+        this.showLibraryElements()
     }
 
-    stopLibrary() {
-        this.stopVideo();
+    closeLibrary() {
+        this.stopVideo()
         this._library = null
-        this.updateView();
+        this.showImageLayers()
     }
 
     clickImage() {
@@ -1640,9 +1681,9 @@ class AarloGlance extends LitElement {
         } else if ( this._c.imageClick === 'play' ) {
             this.playStream(false)
         } else if ( this._c.imageClick === 'modal-last' ) {
-            this.playVideo(true)
+            this.playLatestVideo(true)
         } else {
-            this.playVideo(false)
+            this.playLatestVideo(false)
         }
     }
 
@@ -1663,28 +1704,6 @@ class AarloGlance extends LitElement {
         // if ( this._left !== 0 ) {
         //     const content = this.shadowRoot.getElementById('modal-content-' + this._s.cameraId)
         //     content.style.left=`${this._left}px`
-        // }
-    }
-
-    openModal() {
-        // this.positionModal()
-        // const modal = this.shadowRoot.getElementById('modal-viewer-' + this._s.cameraId)
-        // if ( modal.style.display !== 'block' ) {
-            // modal.style.display='block'
-        // }
-        // window.onscroll = () => {
-            // this.positionModal()
-        // }
-        // window.ontouchend = () => {
-            // this.showVideoControls(2)
-        // }
-    }
-
-
-    closeModal() {
-        // const modal = this.shadowRoot.getElementById('modal-viewer-' + this._s.cameraId)
-        // if ( modal.style.display !== 'none' ) {
-            // modal.style.display='none'
         // }
     }
 
@@ -1711,7 +1730,7 @@ class AarloGlance extends LitElement {
 
     controlFullScreen() {
         const prefix = this._stream ? 'stream-player' : 'video-player';
-        var video = this.shadowRoot.getElementById( this._mid( prefix ) )
+        let video = this.shadowRoot.getElementById( this._mid( prefix ) )
         if (video.requestFullscreen) {
             video.requestFullscreen().then()
         } else if (video.mozRequestFullScreen) {
@@ -1750,6 +1769,7 @@ class AarloGlance extends LitElement {
         let video = this.shadowRoot.getElementById( this._mid('video-player') )
         let seekBar = this.shadowRoot.getElementById( this._mid('video-seek') )
 
+        seekBar.value = 1
         video.addEventListener("timeupdate", function() {
             seekBar.value = (100 / video.duration) * video.currentTime;
         });
@@ -1765,8 +1785,6 @@ class AarloGlance extends LitElement {
             video.play();
             this.hideVideoControlsLater()
         });
-        this.showVideoControls(2);
-
     }
   
     showVideoControls(seconds = 0) {
