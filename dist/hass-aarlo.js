@@ -650,15 +650,16 @@ class AarloGlance extends LitElement {
         let element = this.shadowRoot.getElementById( id )
         if ( element ) {
             if ( width !== null ) {
-                element.style.width = `${width}px${width_suffix}`
+                element.style.setProperty("width",`${width}px`,width_suffix)
+                // element.style.width = `${width}px${width_suffix}`
             }
             if ( height !== null ) {
                 element.style.height = `${height}px`
             }
         }
     }
-    _dimensions( id, width, height ) {
-        this.__dimensions( this._id(id), width, height )
+    _dimensions( id, width, height, width_suffix ) {
+        this.__dimensions( this._id(id), width, height, width_suffix )
     }
     _mdimensions( id, width, height ) {
         this.__dimensions( this._mid(id), width, height )
@@ -1133,7 +1134,7 @@ class AarloGlance extends LitElement {
 
     setModalElementData() {
         this.calculatePosition()
-        this._dimensions("modal-content", this._width - 4, null)
+        this._dimensions("modal-content", this._width - 4, null, "important")
         this._dimensions("modal-video-wrapper", this._width - 4, this._height - 4)
         this._dimensions("modal-video-background", this._width, this._height)
         this._dimensions("modal-video-player", this._width, this._height)
@@ -1814,7 +1815,6 @@ class AarloGlance extends LitElement {
             this._s.controlTimeout = null
         }
     }
-
 
     updateCameraImageSourceLater(seconds = 2) {
         setTimeout(() => {
