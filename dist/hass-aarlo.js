@@ -540,6 +540,14 @@ class AarloGlance extends LitElement {
         this.__hide( this._mid(id) )
     }
 
+    __isHidden( id ) {
+        let element = this.shadowRoot.getElementById( id )
+        return element && element.style.display === 'none'
+    }
+    _misHidden( id ) {
+        return this.__isHidden( this._mid(id) )
+    }
+
     __title( id, title ) {
         let element = this.shadowRoot.getElementById( id )
         if ( element ) {
@@ -646,23 +654,25 @@ class AarloGlance extends LitElement {
         this.__state( this._mid(id), state )
     }
 
-    __dimensions( id, width, height, width_suffix = '' ) {
-        let element = this.shadowRoot.getElementById( id )
+    _widthHeight(id, width, height, width_suffix = '' ) {
+        let element = this.shadowRoot.getElementById( this._id(id) )
         if ( element ) {
             if ( width !== null ) {
                 element.style.setProperty("width",`${width}px`,width_suffix)
-                // element.style.width = `${width}px${width_suffix}`
             }
             if ( height !== null ) {
                 element.style.height = `${height}px`
             }
         }
     }
-    _dimensions( id, width, height, width_suffix ) {
-        this.__dimensions( this._id(id), width, height, width_suffix )
-    }
-    _mdimensions( id, width, height ) {
-        this.__dimensions( this._mid(id), width, height )
+
+    _paddingTop( id, top ) {
+        let element = this.shadowRoot.getElementById( this._id(id) )
+        if ( element ) {
+            if ( top !== null ) {
+                element.style.paddingTop=`${top}px`
+            }
+        }
     }
 
     parseURL(url) {
@@ -705,35 +715,6 @@ class AarloGlance extends LitElement {
                     charging: false
                 }
             };
-    }
-
-    calculatePosition() {
-        // calculate dimensions?
-        let width  = window.innerWidth * this._c.modalMultiplier
-        let height = window.innerHeight * this._c.modalMultiplier
-        if ( this._c.aspectRatio === '1x1' ) {
-            height = Math.min(width,height)
-            // noinspection JSSuspiciousNameCombination
-            width  = height
-        } else {
-            let width_height = (width / 16) * 9; // height that will fit in width
-            let height_width = (height / 9) * 16; // width that will fit in height
-            if ( width_height < height ) {
-                height = width_height;
-                width = (height / 9) * 16;
-            } else {
-                width = height_width;
-                height = (width / 16) * 9;
-            }
-        }
-        this._width = Math.round(width)
-        this._height = Math.round(height)
-        let topOffset = window.pageYOffset
-        if( topOffset !== 0 ) {
-            this._top = Math.round( topOffset + ( (window.innerHeight - height) / 2 ) )
-        } else {
-            this._top = 0
-        }
     }
 
     resetStatuses() {
@@ -972,7 +953,7 @@ class AarloGlance extends LitElement {
             imageClick: '',
             libraryClick: '',
             
-            modalMultiplier: 0.7,
+            modalMultiplier: 0.8,
             
             playDirect: false,
             
@@ -1054,7 +1035,7 @@ class AarloGlance extends LitElement {
         this._c.libraryClick = config.library_click ? config.library_click : '';
 
         // modal window multiplier
-        this._c.modalMultiplier = config.modal_multiplier ? parseFloat(config.modal_multiplier) : 0.7;
+        this._c.modalMultiplier = config.modal_multiplier ? parseFloat(config.modal_multiplier) : 0.8;
 
         // stream directly from Arlo
         this._c.playDirect = config.play_direct ? config.play_direct : false;
@@ -1132,13 +1113,48 @@ class AarloGlance extends LitElement {
         this._s.idSuffix = this._s.cameraId.replaceAll('.','-').replaceAll('_','-')
     }
 
+    getModalDimensions() {
+        // calculate dimensions?
+        let width  = window.innerWidth * this._c.modalMultiplier
+        let height = window.innerHeight * this._c.modalMultiplier
+        if ( this._c.aspectRatio === '1x1' ) {
+            height = Math.min(width,height)
+            // noinspection JSSuspiciousNameCombination
+            width  = height
+        } else {
+            let width_height = (width / 16) * 9; // height that will fit in width
+            let height_width = (height / 9) * 16; // width that will fit in height
+            if ( width_height < height ) {
+                height = width_height;
+                width = (height / 9) * 16;
+            } else {
+                width = height_width;
+                height = (width / 16) * 9;
+            }
+        }
+        this._width = Math.round(width)
+        this._height = Math.round(height)
+        let topOffset = window.pageYOffset
+        if( topOffset !== 0 ) {
+            this._top = Math.round( topOffset + ( (window.innerHeight - height) / 2 ) )
+        } else {
+            this._top = null
+        }
+    }
+
+    repositionModal() {
+        this.getModalDimensions()
+        this._paddingTop( "modal-viewer", this._top )
+    }
+
     setModalElementData() {
-        this.calculatePosition()
-        this._dimensions("modal-content", this._width - 4, null, "important")
-        this._dimensions("modal-video-wrapper", this._width - 4, this._height - 4)
-        this._dimensions("modal-video-background", this._width, this._height)
-        this._dimensions("modal-video-player", this._width, this._height)
-        this._dimensions("modal-stream-player", this._width, this._height)
+        this.getModalDimensions()
+        this._paddingTop( "modal-viewer", this._top )
+        this._widthHeight("modal-content", this._width - 4, null, "important")
+        this._widthHeight("modal-video-wrapper", this._width - 4, this._height - 4)
+        this._widthHeight("modal-video-background", this._width, this._height)
+        this._widthHeight("modal-video-player", this._width, this._height)
+        this._widthHeight("modal-stream-player", this._width, this._height)
  
         // window.onscroll = () => {
             // this.positionModal()
@@ -1157,6 +1173,7 @@ class AarloGlance extends LitElement {
         const modal = this.shadowRoot.getElementById( this._id('modal-viewer') )
         modal.style.display = 'none'
     }
+
 
     setImageElementData() {
 
@@ -1538,7 +1555,8 @@ class AarloGlance extends LitElement {
     updateCameraImageSrc() {
         const camera = this.getState(this._s.cameraId,'unknown');
         if ( camera.state !== 'unknown' ) {
-            this._image = camera.attributes.entity_picture + "&t=" + new Date().getTime()
+            // this._image = camera.attributes.entity_picture + "&t=" + new Date().getTime()
+            this._image = camera.attributes.last_thumbnail+ "&t=" + new Date().getTime()
         } else {
             this._image = '';
         }
@@ -1559,11 +1577,16 @@ class AarloGlance extends LitElement {
     }
 
     playLatestVideo(modal) {
-        if ( this._video === null ) {
-            this.asyncLoadLatestVideo(modal).then( () => {
-                this.showVideo()
-            })
-        }
+        const camera = this.getState(this._s.cameraId,'unknown');
+        this._modalViewer = modal
+        this._video       = camera.attributes.last_video
+        this._videoPoster = camera.attributes.last_thumbnail
+        this.showVideo()
+        // if ( this._video === null ) {
+            // this.asyncLoadLatestVideo(modal).then( () => {
+                // this.showVideo()
+            // })
+        // }
     }
 
     stopVideo() {
@@ -1657,6 +1680,7 @@ class AarloGlance extends LitElement {
             this._video       = this._library[index].url;
             this._videoPoster = this._library[index].thumbnail;
             this.showVideo()
+            //this.showVideo2( this._c.libraryClick === 'modal', this._library[index].url, this._library[index].thumbnail )
         } else {
             this._modalViewer = false
             this._video       = null;
@@ -1689,23 +1713,11 @@ class AarloGlance extends LitElement {
     }
 
     clickVideo() {
-        if (this._v.videoControls === 'hidden') {
+        if ( this._misHidden("video-controls") ) {
             this.showVideoControls(2)
         } else {
             this.hideVideoControls();
         }
-    }
-
-    positionModal() {
-        this.calculatePosition()
-        if ( this._top !== 0 ) {
-            const viewer = this.shadowRoot.getElementById('modal-viewer-' + this._s.cameraId)
-            viewer.style.paddingTop=`${this._top}px`
-        }
-        // if ( this._left !== 0 ) {
-        //     const content = this.shadowRoot.getElementById('modal-content-' + this._s.cameraId)
-        //     content.style.left=`${this._left}px`
-        // }
     }
 
     mouseOverVideo() {
