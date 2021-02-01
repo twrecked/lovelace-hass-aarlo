@@ -48,8 +48,6 @@ class AarloGlance extends LitElement {
         this._stream = null
         this._modalViewer = false
 
-        this._change = 0;
-
         // config
         this._c = {}
         // states
@@ -488,8 +486,7 @@ class AarloGlance extends LitElement {
 
     static get properties() {
         return {
-            // Any time a render is needed we bump this number.
-            _change: Number,
+            // we don't need to re-render
         }
     }
 
@@ -720,11 +717,6 @@ class AarloGlance extends LitElement {
             searchObject: searchObject,
             hash: parser.hash
         };
-    }
-
-    changed() {
-        this._change = new Date().getTime();
-        return this._change;
     }
 
     getState(_id, default_value = '') {
