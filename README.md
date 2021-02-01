@@ -1,5 +1,16 @@
 # lovelace-hass-arlo
 
+## Version 0.2
+
+**Be warned, 0.2 is in alpha**
+
+It's working for me, but it's very alpha so be prepared to return to
+version 0.1 if things go wrong.
+
+I've put it out there so people can try it if they want. The underlying
+architecture is very different and (I hope) a lot more efficient.
+
+
 ## Table of Contents
 - [Introduction](#introduction)
 - [Installation](#installation)
