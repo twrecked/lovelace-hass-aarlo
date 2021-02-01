@@ -1,3 +1,30 @@
+/**
+ * @fileoverview Lovelace class for accessing Arlo camera through the AArlo
+ * module.
+ *
+ * Startup Notes:
+ * - hass(); called at startup; set initial internal status and then updates
+ *   image element data
+ * - setConfig(); called at startup; we read out config data and store inside
+ *   `_c` variable.
+ * - render(); called at startup; we start initialView() and return the
+ *   skeleton HTML for the card.
+ * - initialView(); loops until HTML is in place then set up which individual
+ *   elements are present (eg, motion sensor if asked for) and then displays
+ *   the image card.
+ *
+ * Running Notes:
+ * - hass(); called when state changes; update internal status and then updates
+ *   image element data
+ *
+ * Controlling what's on screen:
+ * - setup(Image|library|Video|Stream)View; one off, set visibility that doesn't
+ *   change
+ * - update(Image|Video|Stream)View; set up text, alt, state and visibility that
+ *   do change
+ * - show(Image|Video|Stream)View; show layers for this card
+ * - hide(Image|Video|Stream)View; don't show layers for this card
+ */
 
 const LitElement = Object.getPrototypeOf(
         customElements.get("ha-panel-lovelace")
@@ -181,7 +208,6 @@ class AarloGlance extends LitElement {
     }
 
     render() {
-                     // style="width:${this._width - 4}px!important">
         this.initialView()
         return html`
             ${AarloGlance.styleTemplate}
@@ -280,35 +306,35 @@ class AarloGlance extends LitElement {
                             <div class="lcolumn">
                                 <img class="aarlo-library"
                                      id="${this._id('library-0')}"
-                                     @click="${() => { this.playLibraryVideo(0); }}"/>
+                                     @click="${() => { this.playLibraryVideo(0); }}">
                                 <img class="aarlo-library"
                                      id="${this._id('library-3')}"
-                                     @click="${() => { this.playLibraryVideo(3); }}"/>
+                                     @click="${() => { this.playLibraryVideo(3); }}">
                                 <img class="aarlo-library"
                                      id="${this._id('library-6')}"
-                                     @click="${() => { this.playLibraryVideo(6); }}"/>
+                                     @click="${() => { this.playLibraryVideo(6); }}">
                             </div>
                             <div class="lcolumn">
                                 <img class="aarlo-library"
                                      id="${this._id('library-1')}"
-                                     @click="${() => { this.playLibraryVideo(1); }}"/>
+                                     @click="${() => { this.playLibraryVideo(1); }}">
                                 <img class="aarlo-library"
                                      id="${this._id('library-4')}"
-                                     @click="${() => { this.playLibraryVideo(4); }}"/>
+                                     @click="${() => { this.playLibraryVideo(4); }}">
                                 <img class="aarlo-library"
                                      id="${this._id('library-7')}"
-                                     @click="${() => { this.playLibraryVideo(7); }}"/>
+                                     @click="${() => { this.playLibraryVideo(7); }}">
                             </div>
                             <div class="lcolumn">
                                 <img class="aarlo-library"
                                      id="${this._id('library-2')}"
-                                     @click="${() => { this.playLibraryVideo(2); }}"/>
+                                     @click="${() => { this.playLibraryVideo(2); }}">
                                 <img class="aarlo-library"
                                      id="${this._id('library-5')}"
-                                     @click="${() => { this.playLibraryVideo(5); }}"/>
+                                     @click="${() => { this.playLibraryVideo(5); }}">
                                 <img class="aarlo-library"
                                      id="${this._id('library-8')}"
-                                     @click="${() => { this.playLibraryVideo(8); }}"/>
+                                     @click="${() => { this.playLibraryVideo(8); }}">
                             </div>
                         </div>
                     </div>
@@ -457,8 +483,7 @@ class AarloGlance extends LitElement {
                         </ha-icon>
                     </div>
                 </div>
-            </ha-card>
-        `;
+            </ha-card>`
     }
 
     static get properties() {
@@ -469,7 +494,7 @@ class AarloGlance extends LitElement {
     }
 
     updated(_changedProperties) {
-        this.setImageElementData();
+        this.updateImageView();
         if ( this._stream === null ) {
             if( this._c.autoPlay ) {
                 setTimeout(() => {
@@ -483,7 +508,10 @@ class AarloGlance extends LitElement {
         const old = this._hass;
         this._hass = hass;
         this.updateStatuses( old )
-        this.setImageElementData()
+        this.updateImageView()
+        this.updateLibraryView()
+        this.updateVideoView()
+        this.updateStreamView()
     }
 
     getCardSize() {
@@ -514,119 +542,114 @@ class AarloGlance extends LitElement {
         return (this._modalViewer ? "modal-" : "") + this._id(id)
     }
 
-    __show( id, show ) {
-        let element = this.shadowRoot.getElementById( id )
-        if ( element ) {
-            element.style.display = show ? '' : 'none'
-        }
+    /**
+     * @brief Look for card element in shadown domain.
+     *
+     * @param id The element or `null`
+    */
+    _element( id ) {
+        return this.shadowRoot.getElementById( this._id(id) )
+    }
+
+    /**
+     * @brief Look for modal card element in shadown domain.
+     *
+     * Automatically chooses modal name if modal window open.
+     *
+     * @param id The element or `null`
+    */
+    _melement( id ) {
+        return this.shadowRoot.getElementById( this._mid(id) )
+    }
+
+    __show( element, show ) {
+        if ( element ) { element.style.display = show ? '' : 'none' }
     }
     _show( id, show = true ) {
-        this.__show( this._id(id), show )
+        this.__show( this._element(id), show )
     }
     _mshow( id, show = true ) {
-        this.__show( this._mid(id), show )
+        this.__show( this._melement(id), show )
     }
 
-    __hide( id ) {
-        let element = this.shadowRoot.getElementById( id )
-        if ( element ) {
-            element.style.display = 'none'
-        }
+    __hide( element ) {
+        if ( element ) { element.style.display = 'none' }
     }
     _hide( id ) {
-        this.__hide( this._id(id) )
+        this.__hide( this._element(id) )
     }
     _mhide( id ) {
-        this.__hide( this._mid(id) )
+        this.__hide( this._melement(id) )
     }
 
-    __isHidden( id ) {
-        let element = this.shadowRoot.getElementById( id )
+    __isHidden( element ) {
         return element && element.style.display === 'none'
     }
     _misHidden( id ) {
-        return this.__isHidden( this._mid(id) )
+        return this.__isHidden( this._melement(id) )
     }
 
-    __title( id, title ) {
-        let element = this.shadowRoot.getElementById( id )
-        if ( element ) {
-            element.title = title
-        }
+    __title( element, title ) {
+        if ( element ) { element.title = title }
     }
     _title( id, title ) {
-        this.__title( this._id(id), title )
+        this.__title( this._element(id), title )
     }
     _mtitle( id, title ) {
-        this.__title( this._mid(id), title )
+        this.__title( this._melement(id), title )
     }
 
-    __text( id, text ) {
-        let element = this.shadowRoot.getElementById( id )
-        if ( element ) {
-            element.innerText = text
-        }
+    __text( element, text ) {
+        if ( element ) { element.innerText = text }
     }
     _text( id, text ) {
-        this.__text( this._id(id), text )
+        this.__text( this._element(id), text )
     }
     _mtext( id, text ) {
-        this.__text( this._mid(id), text )
+        this.__text( this._melement(id), text )
     }
 
-    __alt( id, alt ) {
-        let element = this.shadowRoot.getElementById( id )
-        if ( element ) {
-            element.alt = alt
-        }
+    __alt( element, alt ) {
+        if ( element ) { element.alt = alt }
     }
     _alt( id, alt ) {
-        this.__alt( this._id(id), alt )
+        this.__alt( this._element(id), alt )
     }
     _malt( id, alt ) {
-        this.__alt( this._mid(id), alt )
+        this.__alt( this._melement(id), alt )
     }
 
-    __src( id, src ) {
-        let element = this.shadowRoot.getElementById( id )
-        if ( element ) {
-            element.src = src
-        }
+    __src( element, src ) {
+        if ( element ) { element.src = src }
     }
     _src( id, src ) {
-        this.__src( this._id(id), src )
+        this.__src( this._element(id), src )
     }
     _msrc( id, src ) {
-        this.__src( this._mid(id), src )
+        this.__src( this._melement(id), src )
     }
 
-    __poster( id, poster ) {
-        let element = this.shadowRoot.getElementById( id )
-        if ( element ) {
-            element.poster = poster
-        }
+    __poster( element, poster ) {
+        if ( element ) { element.poster = poster }
     }
     _poster( id, poster ) {
-        this.__poster( this._id(id), poster )
+        this.__poster( this._element(id), poster )
     }
     _mposter( id, poster ) {
-        this.__poster( this._mid(id), poster )
+        this.__poster( this._melement(id), poster )
     }
 
-    __icon( id, icon ) {
-        let element = this.shadowRoot.getElementById( id )
-        if ( element ) {
-            element.icon = icon
-        }
+    __icon( element, icon ) {
+        if ( element ) { element.icon = icon }
     }
     _icon( id, icon ) {
-        this.__icon( this._id(id), icon )
+        this.__icon( this._element(id), icon )
     }
     _micon( id, icon ) {
-        this.__icon( this._mid(id), icon )
+        this.__icon( this._melement(id), icon )
     }
 
-    __state( id, state ) {
+    __state( element, state ) {
         let color = ""
         switch( state ) {
             case "state-on":
@@ -642,20 +665,19 @@ class AarloGlance extends LitElement {
                 color = "#cccccc"
                 break
         }
-        let element = this.shadowRoot.getElementById( id )
         if ( element ) {
             element.style.color = color
         }
     }
     _state( id, state ) {
-        this.__state( this._id(id), state )
+        this.__state( this._element(id), state )
     }
     _mstate( id, state ) {
-        this.__state( this._mid(id), state )
+        this.__state( this._melement(id), state )
     }
 
     _widthHeight(id, width, height, width_suffix = '' ) {
-        let element = this.shadowRoot.getElementById( this._id(id) )
+        let element = this._element(id)
         if ( element ) {
             if ( width !== null ) {
                 element.style.setProperty("width",`${width}px`,width_suffix)
@@ -667,7 +689,7 @@ class AarloGlance extends LitElement {
     }
 
     _paddingTop( id, top ) {
-        let element = this.shadowRoot.getElementById( this._id(id) )
+        let element = this._element(id)
         if ( element ) {
             if ( top !== null ) {
                 element.style.paddingTop=`${top}px`
@@ -888,13 +910,12 @@ class AarloGlance extends LitElement {
             this._s.soundText = 'Sound: ' + (this._s.soundOn !== '' ? 'detected' : 'clear');
         }
 
-        if( this._v.captured === '' ) {
-            const captured = this.getState(this._s.captureId, 0).state;
-            const last = this.getState(this._s.lastId, 0).state;
-            this._s.capturedText = 'Captured: ' + ( captured === "0" ? 'nothing today' : captured + ' clips today, last at ' + last );
-            this._s.capturedIcon = this._video ? 'mdi:stop' : 'mdi:file-video';
-            this._s.capturedOn   = captured !== "0" ? 'state-update' : ''
-        }
+        // We always save this, used by library code to check for updates
+        const captured = this.getState(this._s.captureId, 0).state;
+        const last = this.getState(this._s.lastId, 0).state;
+        this._s.capturedText = 'Captured: ' + ( captured === "0" ? 'nothing today' : captured + ' clips today, last at ' + last );
+        this._s.capturedIcon = this._video ? 'mdi:stop' : 'mdi:file-video';
+        this._s.capturedOn   = captured !== "0" ? 'state-update' : ''
 
         // OPTIONAL DOORS
         if( this._v.door === '' ) {
@@ -1074,12 +1095,12 @@ class AarloGlance extends LitElement {
         const hide_status = hide.includes('status') ? 'hidden':'';
 
         // ui configuration
-        this._v.topTitle     = config.top_title ? hide_title:'hidden';
-        this._v.topDate      = config.top_date ? hide_date:'hidden';
-        this._v.topStatus    = config.top_status ? hide_status:'hidden';
-        this._v.bottomTitle  = config.top_title ? 'hidden':hide_title;
-        this._v.bottomDate   = config.top_date ? 'hidden':hide_date;
-        this._v.bottomStatus = config.top_status ? 'hidden':hide_status;
+        this._v.topTitle     = config.top_title ? hide_title : 'hidden';
+        this._v.topDate      = config.top_date ? hide_date : 'hidden';
+        this._v.topStatus    = config.top_status ? hide_status : 'hidden';
+        this._v.bottomTitle  = config.top_title ? 'hidden' : hide_title;
+        this._v.bottomDate   = config.top_date ? 'hidden' : hide_date;
+        this._v.bottomStatus = config.top_status ? 'hidden' : hide_status;
 
         // what are we showing?
         const show = this._config.show || [];
@@ -1175,7 +1196,29 @@ class AarloGlance extends LitElement {
     }
 
 
-    setImageElementData() {
+    setupImageView() {
+        this._show('top-bar-title', this._v.topTitle === '' )
+        this._show('top-bar-date', this._v.topDate === '' && this._v.imageDate === '')
+        this._show('top-bar-status', this._v.topStatus === '' )
+        this._show('bottom-bar-title', this._v.bottomTitle === '' )
+        this._show('bottom-bar-camera', this._v.cameraOn === '' || this._v.cameraOff === '' )
+        this._show('bottom-bar-date', this._v.bottomDate === '' && this._v.imageDate === '')
+        this._show('bottom-bar-externals', this._v.externalsStatus === '' )
+        this._show('bottom-bar-status', this._v.bottomStatus === '' )
+
+        this._show('camera-on-off', this._v.onOff === '' )
+        this._show('camera-captured', this._v.captured === '' )
+
+        this._show("externals-door", this._v.door === '' )
+        this._show("externals-door-bell", this._v.doorLock === '' )
+        this._show("externals-door-lock", this._v.doorBell === '' )
+        this._show("externals-door-2", this._v.door2 === '' )
+        this._show("externals-door-bell-2", this._v.door2Lock === '' )
+        this._show("externals-door-lock-2", this._v.door2Bell === '' )
+        this._show("externals-light", this._v.light === '' )
+    }
+
+    updateImageView() {
 
         if( this._image !== '' ) {
             const camera = this.getState(this._s.cameraId,'unknown');
@@ -1212,24 +1255,30 @@ class AarloGlance extends LitElement {
         this._title("camera-motion", this._s.motionText)
         this._icon ("camera-motion", "mdi:run-fast")
         this._state("camera-motion", this._s.motionOn)
+        this._show ('camera-motion', this._v.motion === '' && this._v.cameraOn === '')
         this._title("camera-sound", this._s.soundText)
         this._icon ("camera-sound", "mdi:ear-hearing")
         this._state("camera-sound", this._s.soundOn)
+        this._show ('camera-sound', this._v.sound === '' && this._v.cameraOn === '')
         this._title("camera-captured", this._s.capturedText)
         this._icon ("camera-captured", this._s.capturedIcon)
         this._state("camera-captured", this._s.capturedOn)
         this._title("camera-play", this._s.playText)
         this._icon ("camera-play", this._s.playIcon)
         this._state("camera-play", this._s.playOn)
+        this._show ('camera-play', this._v.play === '' && this._v.cameraOn === '')
         this._title("camera-snapshot", this._s.snapshotText)
         this._icon ("camera-snapshot", this._s.snapshotIcon)
         this._state("camera-snapshot", this._s.snapshotOn)
+        this._show ('camera-snapshot', this._v.snapshot === '' && this._v.cameraOn === '')
         this._title("camera-battery", this._s.batteryText)
         this._icon ("camera-battery", `mdi:${this._s.batteryIcon}`)
         this._state("camera-battery", this._s.batteryOn)
+        this._show ('camera-battery', this._v.battery === '' && this._v.cameraOn === '')
         this._title("camera-wifi-signal", this._s.signalText)
         this._icon ("camera-wifi-signal", this._s.signalIcon)
         this._state("camera-wifi-signal", 'state-update')
+        this._show ('camera-wifi-signal', this._v.signal === '' && this._v.cameraOn === '')
         this._title("camera-light-left", this._s.lightText)
         this._icon ("camera-light-left", this._s.lightIcon)
         this._state("camera-light-left", this._s.lightOn)
@@ -1257,35 +1306,7 @@ class AarloGlance extends LitElement {
         this._icon ("externals-light", this._s.lightIcon)
     }
 
-    showImageElements() {
-        this._show('top-bar-title', this._v.topTitle === '' )
-        this._show('top-bar-date', this._v.topDate === '' && this._v.imageDate === '')
-        this._show('top-bar-status', this._v.topStatus === '' )
-        this._show('bottom-bar-title', this._v.bottomTitle === '' )
-        this._show('bottom-bar-camera', this._v.cameraOn === '' || this._v.cameraOff === '' )
-        this._show('bottom-bar-date', this._v.bottomDate === '' && this._v.imageDate === '')
-        this._show('bottom-bar-externals', this._v.externalsStatus === '' )
-        this._show('bottom-bar-status', this._v.bottomStatus === '' )
-
-        this._show('camera-on-off', this._v.onOff === '' )
-        this._show('camera-motion', this._v.motion === '' )
-        this._show('camera-sound', this._v.sound === '' )
-        this._show('camera-captured', this._v.captured === '' )
-        this._show('camera-play', this._v.play === '' )
-        this._show('camera-snapshot', this._v.snapshot === '' )
-        this._show('camera-battery', this._v.battery === '' )
-        this._show('camera-signal', this._v.signal === '' )
-
-        this._show("externals-door", this._v.door === '' )
-        this._show("externals-door-bell", this._v.doorLock === '' )
-        this._show("externals-door-lock", this._v.doorBell === '' )
-        this._show("externals-door-2", this._v.door2 === '' )
-        this._show("externals-door-bell-2", this._v.door2Lock === '' )
-        this._show("externals-door-lock-2", this._v.door2Bell === '' )
-        this._show("externals-light", this._v.light === '' )
-    }
-
-    showImageLayers() {
+    showImageView() {
         if( this._image !== '' ) {
             this._show("image-viewer")
             this._hide("broken-image")
@@ -1304,7 +1325,17 @@ class AarloGlance extends LitElement {
         this.hideModal()
     }
 
-    setLibraryElementData() {
+    hideImageView() {
+        this._hide("image-viewer")
+        this._hide("broken-image")
+        this._hide('top-bar')
+        this._hide('bottom-bar')
+    }
+
+    setupLibraryView() {
+    }
+
+    _updateLibraryView() {
         let i = 0;
         let j= this._libraryOffset;
         const last = Math.min(j + 9, this._library.length)
@@ -1322,14 +1353,34 @@ class AarloGlance extends LitElement {
         for( ; i < 9; i++ ) {
             this._hide(`library-${i}`)
         }
-    }
 
-    showLibraryElements() {
+        this._libraryLastOffset = this._libraryOffset
+        this._libraryLastCapture = this._s.capturedText
+
         this._show("library-control-previous", this._libraryOffset !== 0)
         this._show("library-control-next", this._libraryOffset + 9 < this._library.length )
     }
 
-    showLibraryLayers() {
+    updateLibraryView() {
+
+        // No library, do nothing
+        if ( !this._library ) {
+            return
+        }
+
+        // If capture changed reload library
+        if ( this._libraryLastCapture !== this._s.capturedText ) {
+            this.asyncLoadLibrary().then( () => {
+                this._updateLibraryView()
+            })
+
+        // If offset has changed then reload images
+        } else if ( this._libraryLastOffset !== this._libraryOffset ) {
+            this._updateLibraryView()
+        }
+    }
+
+    showLibraryView() {
         this._show("library-viewer")
         this._show("library-controls")
         this._hide('top-bar')
@@ -1343,9 +1394,27 @@ class AarloGlance extends LitElement {
         this.hideModal()
     }
 
-    setVideoElementData() {
-        this._msrc   ('video-player', this._video )
-        this._mposter('video-player', this._videoPoster )
+    hideLibraryView() {
+        this._hide("library-viewer")
+        this._hide("library-controls")
+    }
+
+    setupVideoView() {
+        this._mshow("video-stop")
+        this._mshow("video-full-screen")
+    }
+
+    updateVideoView( state = '' ) {
+        if( state === 'starting' ) {
+            this._msrc   ('video-player', this._video )
+            this._mposter('video-player', this._videoPoster )
+            this._videoState = 'playing'
+            this._mshow("video-seek")
+            this.setUpSeekBar();
+            this.showVideoControls(4);
+        } else if( state !== '' ) {
+            this._videoState = state
+        }
 
         this._mstate ("video-door-lock", this._s.doorLockOn)
         this._mtext  ("video-door-lock", this._s.doorLockText)
@@ -1354,23 +1423,11 @@ class AarloGlance extends LitElement {
         this._mstate ("video-door-light", this._s.lightOn)
         this._micon  ("video-door-light", this._s.lightIcon)
 
-        this.setUpSeekBar();
-    }
-
-    showVideoElements( state = '' ) {
-        if( state !== '' ) {
-            this._videoState = state
-        }
-        this._mshow("video-stop")
         this._mshow("video-play", this._videoState === 'paused')
         this._mshow("video-pause", this._videoState === 'playing')
-        this._mshow("video-seek")
-        this._mshow("video-full-screen")
-        this._mshow("video-door-lock", this._v.doorLock === '')
-        this._mshow("video-door-light", this._v.doorLight === '')
     }
 
-    showVideoLayers() {
+    showVideoView() {
         this._mshow("video-player")
         this._mshow("video-controls")
         if( this._modalViewer ) {
@@ -1387,11 +1444,17 @@ class AarloGlance extends LitElement {
         this._hide("broken-image")
     }
 
+    hideVideoView() {
+        this._mhide("video-player")
+        this._mhide("video-controls")
+        if( this._modalViewer ) {
+            this.hideModal()
+        }
+    }
+
     showVideo() {
-        this.setVideoElementData()
-        this.showVideoElements('playing')
-        this.showVideoLayers()
-        this.showVideoControls(2);
+        this.updateVideoView('starting')
+        this.showVideoView()
     }
  
     setMPEGStreamElementData() {
@@ -1408,11 +1471,6 @@ class AarloGlance extends LitElement {
                 }
             };
         }, true);
-        // this._dash.on(dashjs.MediaPlayer.events.PLAYBACK_STARTED, () => {
-            // if ( this._modalViewer ) {
-                // this.openModal()
-            // }
-        // })
         this._dash.initialize(video, this._stream, true);
         // this._dash.updateSettings({
             // 'debug': {
@@ -1430,39 +1488,37 @@ class AarloGlance extends LitElement {
                 this._hls.loadSource(this._stream);
                 this._hls.on(Hls.Events.MANIFEST_PARSED, () => {
                     video.play();
-                    // if ( this._modalViewer ) {
-                        // this.openModal()
-                    // }
                 });
             })
         } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
             video.src = this._stream;
             video.addEventListener('loadedmetadata', () => {
                 video.play();
-                // if ( this._modalViewer ) {
-                    // this.openModal()
-                // }
             });
         }
     }
 
-    setStreamElementData() {
-        if ( this._c.playDirect ) {
-            this.setMPEGStreamElementData()
-        } else {
-            this.setHLSStreamElementData()
+    // Mostly handled in setupVideoView
+    setupStreamView() {
+    }
+
+    updateStreamView( state = '' ) {
+        if ( state === 'starting' ) {
+            if ( this._c.playDirect ) {
+                this.setMPEGStreamElementData()
+            } else {
+                this.setHLSStreamElementData()
+            }
+            this._mhide("video-seek")
+            this.showVideoControls(4);
         }
         this.setModalElementData()
     }
 
-    showStreamElements() {
-        this._mhide("video-seek")
-    }
-
-    showStreamLayers() {
-        this._show("stream-player")
+    showStreamView() {
+        this._mshow("stream-player")
+        this._mshow("video-controls")
         this._hide("video-player")
-        this._hide("video-controls")
         this._hide('top-bar')
         this._hide('bottom-bar')
         this._hide("image-viewer")
@@ -1472,11 +1528,17 @@ class AarloGlance extends LitElement {
         this._hide("broken-image")
     }
 
+    hideStreamView() {
+        this._mhide("stream-player")
+        this._mhide("video-controls")
+        if( this._modalViewer ) {
+            this.hideModal()
+        }
+    }
+
     showStream() {
-        this.setStreamElementData()
-        this.showStreamElements()
-        this.showStreamLayers()
-        this.showVideoControls(5);
+        this.updateStreamView('starting')
+        this.showStreamView()
     }
 
     initialView() {
@@ -1489,16 +1551,20 @@ class AarloGlance extends LitElement {
             return
         }
 
-        this.setImageElementData()
-        this.showImageElements()
-        this.showImageLayers()
+        this.setupImageView()
+        this.setupLibraryView()
+        this.setupVideoView()
+        this.setupStreamView()
+
+        this.updateImageView()
+        this.showImageView()
     }
 
     resetView() {
         if ( this._library ) {
-            this.showLibraryLayers()
+            this.showLibraryView()
         } else {
-            this.showImageLayers()
+            this.showImageView()
         }
     }
 
@@ -1560,7 +1626,7 @@ class AarloGlance extends LitElement {
         } else {
             this._image = '';
         }
-        this.setImageElementData()
+        this.updateImageView()
     }
 
     async asyncLoadLatestVideo(modal) {
@@ -1659,17 +1725,17 @@ class AarloGlance extends LitElement {
         }
     }
 
-    async asyncLoadLibrary(base) {
+    async asyncLoadLibrary() {
         this._video = null;
         this._library = await this.wsLoadLibrary(99);
-        this._libraryOffset = base
+        this._libraryLastCapture = this._s.capturedText
     }
 
     openLibrary(base) {
-        this.asyncLoadLibrary(base).then( () => {
-            this.setLibraryElementData()
-            this.showLibraryElements()
-            this.showLibraryLayers()
+        this.asyncLoadLibrary().then( () => {
+            this._libraryOffset = base
+            this.updateLibraryView()
+            this.showLibraryView()
         })
     }
 
@@ -1690,14 +1756,13 @@ class AarloGlance extends LitElement {
 
     setLibraryBase(base) {
         this._libraryOffset = base
-        this.setLibraryElementData()
-        this.showLibraryElements()
+        this.updateLibraryView()
     }
 
     closeLibrary() {
         this.stopVideo()
         this._library = null
-        this.showImageLayers()
+        this.showImageView()
     }
 
     clickImage() {
@@ -1732,11 +1797,11 @@ class AarloGlance extends LitElement {
     controlPauseVideo(  ) {
         const video = this.shadowRoot.getElementById( this._mid( 'video-player' ) )
         video.pause();
-        this.showVideoElements('paused')
+        this.updateVideoView('paused')
     }
 
     controlPlayVideo( ) {
-        this.showVideoElements('playing')
+        this.updateVideoView('playing')
         const video = this.shadowRoot.getElementById( this._mid( 'video-player' ) )
         video.play();
     }
