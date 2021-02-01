@@ -146,7 +146,7 @@ class AarloGlance extends LitElement {
                 }
                 .aarlo-modal-video {
                     position: absolute;
-                    top: -2px;
+                    top: -8px;
                     left: 0;
                 }
                 .aarlo-modal-video-background {
@@ -835,7 +835,7 @@ class AarloGlance extends LitElement {
         const captured = this.getState(this._s.captureId, 0).state;
         const last = this.getState(this._s.lastId, 0).state;
         this._s.capturedText = 'Captured: ' + ( captured === "0" ? 'nothing today' : captured + ' clips today, last at ' + last );
-        this._s.capturedIcon = this._video ? 'mdi:stop' : 'mdi:file-video';
+        this._s.capturedIcon = 'mdi:file-video'
         this._s.capturedOn   = captured !== "0" ? 'state-update' : ''
 
         // OPTIONAL DOORS
@@ -946,13 +946,14 @@ class AarloGlance extends LitElement {
             prefix = config.prefix;
         }
 
-        // save new config and reset decoration properties
+        // save then check new config
         this._config = config
         this.checkConfig()
 
         // config
         // aspect ratio
         this._c.aspectRatio = config.aspect_ratio === 'square' ? '1x1' : '16x9';
+        this._s.aspectRatio = config.aspect_ratio === 'square' ? 1 : 0.5625
  
         // on click
         this._c.imageClick = config.image_click ? config.image_click : '';
@@ -1037,26 +1038,17 @@ class AarloGlance extends LitElement {
     }
 
     getModalDimensions() {
-        // calculate dimensions?
         let width  = window.innerWidth * this._c.modalMultiplier
         let height = window.innerHeight * this._c.modalMultiplier
-        if ( this._c.aspectRatio === '1x1' ) {
-            height = Math.min(width,height)
-            // noinspection JSSuspiciousNameCombination
-            width  = height
-        } else {
-            let width_height = (width / 16) * 9; // height that will fit in width
-            let height_width = (height / 9) * 16; // width that will fit in height
-            if ( width_height < height ) {
-                height = width_height;
-                width = (height / 9) * 16;
-            } else {
-                width = height_width;
-                height = (width / 16) * 9;
-            }
+        const ratio = this._s.aspectRatio
+        if( height / width > ratio ) {
+            height = width * ratio
+        } else if( height / width < ratio ) {
+            width = height * (1/ratio)
         }
         this._s.width = Math.round(width)
         this._s.height = Math.round(height)
+
         let topOffset = window.pageYOffset
         if( topOffset !== 0 ) {
             this._s.top = Math.round( topOffset + ( (window.innerHeight - height) / 2 ) )
@@ -1073,8 +1065,8 @@ class AarloGlance extends LitElement {
     setModalElementData() {
         this.getModalDimensions()
         this._paddingTop( "modal-viewer", this._s.top )
-        this._widthHeight("modal-content", this._s.width - 4, null, "important")
-        this._widthHeight("modal-video-wrapper", this._s.width - 4, this._s.height - 4)
+        this._widthHeight("modal-content", this._s.width - 16, null, "important")
+        this._widthHeight("modal-video-wrapper", this._s.width, this._s.height - 16)
         this._widthHeight("modal-video-background", this._s.width, this._s.height)
         this._widthHeight("modal-video-player", this._s.width, this._s.height)
         this._widthHeight("modal-stream-player", this._s.width, this._s.height)
@@ -1088,13 +1080,18 @@ class AarloGlance extends LitElement {
     }
 
     showModal( show = true ) {
-        const modal = this.shadowRoot.getElementById( this._id('modal-viewer') )
-        modal.style.display =  show ? 'block' : 'none'
+        if( this._modalViewer ) {
+            this.setModalElementData()
+            const modal = this.shadowRoot.getElementById( this._id('modal-viewer') )
+            modal.style.display =  show ? 'block' : 'none'
+        }
     }
 
     hideModal() {
-        const modal = this.shadowRoot.getElementById( this._id('modal-viewer') )
-        modal.style.display = 'none'
+        if( this._modalViewer ) {
+            const modal = this.shadowRoot.getElementById( this._id('modal-viewer') )
+            modal.style.display = 'none'
+        }
     }
 
 
@@ -1218,12 +1215,9 @@ class AarloGlance extends LitElement {
         }
         this._show('top-bar', this._v.topTitle || this._v.topDate || this._v.topStatus )
         this._show('bottom-bar')
-        this._hide("stream-player")
-        this._hide("video-player")
-        this._hide("video-controls")
-        this._hide("modal-video-controls")
-        this._hide("library-viewer")
-        this._hide("library-controls")
+        this.hideVideoView()
+        this.hideStreamView()
+        this.hideLibraryView()
         this.hideModal()
     }
 
@@ -1285,14 +1279,9 @@ class AarloGlance extends LitElement {
     showLibraryView() {
         this._show("library-viewer")
         this._show("library-controls")
-        this._hide('top-bar')
-        this._hide('bottom-bar')
-        this._hide("image-viewer")
-        this._hide("stream-player")
-        this._hide("video-player")
-        this._hide("video-controls")
-        this._hide("modal-video-controls")
-        this._hide("broken-image")
+        this.hideVideoView()
+        this.hideStreamView()
+        this.hideImageView()
         this.hideModal()
     }
 
@@ -1337,28 +1326,18 @@ class AarloGlance extends LitElement {
     }
 
     showVideoView() {
+        this.hideStreamView()
         this._mshow("video-player")
         this._mshow("video-controls")
-        if( this._modalViewer ) {
-            this.setModalElementData()
-            this.showModal()
-        }
-        this._hide('top-bar')
-        this._hide('bottom-bar')
-        this._hide("image-viewer")
-        this._hide("stream-player")
-        this._hide("modal-video-controls")
-        this._hide("library-viewer")
-        this._hide("library-controls")
-        this._hide("broken-image")
+        this.showModal()
+        this.hideLibraryView()
+        this.hideImageView()
     }
 
     hideVideoView() {
         this._mhide("video-player")
         this._mhide("video-controls")
-        if( this._modalViewer ) {
-            this.hideModal()
-        }
+        this.hideModal()
     }
 
     showVideo() {
@@ -1426,27 +1405,18 @@ class AarloGlance extends LitElement {
     }
 
     showStreamView() {
+        this.hideVideoView()
         this._mshow("stream-player")
         this._mshow("video-controls")
-        if( this._modalViewer ) {
-            this.setModalElementData()
-            this.showModal()
-        }
-        this._hide("video-player")
-        this._hide('top-bar')
-        this._hide('bottom-bar')
-        this._hide("image-viewer")
-        this._hide("library-viewer")
-        this._hide("library-controls")
-        this._hide("broken-image")
+        this.showModal()
+        this.hideLibraryView()
+        this.hideImageView()
     }
 
     hideStreamView() {
         this._mhide("stream-player")
         this._mhide("video-controls")
-        if( this._modalViewer ) {
-            this.hideModal()
-        }
+        this.hideModal()
     }
 
     showStream() {
@@ -1645,6 +1615,7 @@ class AarloGlance extends LitElement {
     }
 
     openLibrary(base) {
+        this.getModalDimensions()
         this.asyncLoadLibrary().then( () => {
             this._libraryOffset = base
             this.updateLibraryView()
