@@ -1400,8 +1400,15 @@ class AarloGlance extends LitElement {
     }
 
     setupVideoView() {
-        this._mshow("video-stop")
-        this._mshow("video-full-screen")
+        this._show("video-stop")
+        this._show("video-full-screen")
+        this._show("modal-video-stop")
+        this._show("modal-video-full-screen")
+
+        this._show("video-door-lock", this._v.doorLock === '')
+        this._show("video-door-lock", this._v.light === '')
+        this._show("modal-video-door-lock", this._v.doorLock === '')
+        this._show("modal-video-door-lock", this._v.light === '')
     }
 
     updateVideoView( state = '' ) {
@@ -1746,12 +1753,7 @@ class AarloGlance extends LitElement {
             this._video       = this._library[index].url;
             this._videoPoster = this._library[index].thumbnail;
             this.showVideo()
-            //this.showVideo2( this._c.libraryClick === 'modal', this._library[index].url, this._library[index].thumbnail )
-        } else {
-            this._modalViewer = false
-            this._video       = null;
-            this._videoPoster = null
-        }
+        } 
     }
 
     setLibraryBase(base) {
