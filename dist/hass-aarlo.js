@@ -1516,20 +1516,24 @@ class AarloGlance extends LitElement {
             } else {
                 this.setHLSStreamElementData()
             }
+            this._mhide("video-play")
+            this._mhide("video-pause")
             this._mhide("video-seek")
             this.showVideoControls(4);
         }
-        this.setModalElementData()
     }
 
     showStreamView() {
         this._mshow("stream-player")
         this._mshow("video-controls")
+        if( this._modalViewer ) {
+            this.setModalElementData()
+            this.showModal()
+        }
         this._hide("video-player")
         this._hide('top-bar')
         this._hide('bottom-bar')
         this._hide("image-viewer")
-        this._hide("modal-video-controls")
         this._hide("library-viewer")
         this._hide("library-controls")
         this._hide("broken-image")
