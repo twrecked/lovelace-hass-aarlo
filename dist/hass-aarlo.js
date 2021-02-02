@@ -50,6 +50,8 @@ class AarloGlance extends LitElement {
 
         // config
         this._c = {}
+        // library state
+        this._l = {}
         // states
         this._s = {}
         // visibility
@@ -155,11 +157,11 @@ class AarloGlance extends LitElement {
                     left: 0;
                     background-color: darkgrey;
                 }
-                .lrow {
+                .aarlo-library-row {
                     display: flex;
                     margin: 6px 2px 6px 2px;
                 }
-                .lcolumn {
+                .aarlo-library-column {
                     flex: 32%;
                     padding: 2px;
                 }
@@ -300,41 +302,6 @@ class AarloGlance extends LitElement {
                     <div class="aarlo-image"
                          id="${this._id('library-viewer')}"
                          style="display:none">
-                        <div class="lrow">
-                            <div class="lcolumn">
-                                <img class="aarlo-library"
-                                     id="${this._id('library-0')}"
-                                     @click="${() => { this.playLibraryVideo(0); }}">
-                                <img class="aarlo-library"
-                                     id="${this._id('library-3')}"
-                                     @click="${() => { this.playLibraryVideo(3); }}">
-                                <img class="aarlo-library"
-                                     id="${this._id('library-6')}"
-                                     @click="${() => { this.playLibraryVideo(6); }}">
-                            </div>
-                            <div class="lcolumn">
-                                <img class="aarlo-library"
-                                     id="${this._id('library-1')}"
-                                     @click="${() => { this.playLibraryVideo(1); }}">
-                                <img class="aarlo-library"
-                                     id="${this._id('library-4')}"
-                                     @click="${() => { this.playLibraryVideo(4); }}">
-                                <img class="aarlo-library"
-                                     id="${this._id('library-7')}"
-                                     @click="${() => { this.playLibraryVideo(7); }}">
-                            </div>
-                            <div class="lcolumn">
-                                <img class="aarlo-library"
-                                     id="${this._id('library-2')}"
-                                     @click="${() => { this.playLibraryVideo(2); }}">
-                                <img class="aarlo-library"
-                                     id="${this._id('library-5')}"
-                                     @click="${() => { this.playLibraryVideo(5); }}">
-                                <img class="aarlo-library"
-                                     id="${this._id('library-8')}"
-                                     @click="${() => { this.playLibraryVideo(8); }}">
-                            </div>
-                        </div>
                     </div>
                     <div class="aarlo-image aarlo-broken-image" 
                          id="${this._id('broken-image')}"
@@ -425,23 +392,33 @@ class AarloGlance extends LitElement {
                      id="${this._id('library-controls')}"
                      style="display:none">
                     <div>
-                        <ha-icon class="state-on" 
-                                 id="${this._id('library-control-previous')}"
-                                 icon="mdi:chevron-left" title="previous"
-                                 @click="${() => { this.setLibraryBase(this._libraryOffset - 9); }}">
+                        <ha-icon id="${this._id('library-control-first')}"
+                                 icon="mdi:page-first" title="first page"
+                                 @click="${() => { this.firstLibraryPage(); }}">
+                        </ha-icon>
+                        <ha-icon id="${this._id('library-control-previous')}"
+                                 icon="mdi:chevron-left" title="previous page"
+                                 @click="${() => { this.previousLibraryPage(); }}">
                         </ha-icon>
                     </div>
-                    <div>
-                        <ha-icon class="state-on" 
+                    <div style="margin-left: auto; margin-right: auto">
+                        <ha-icon id="${this._id('library-control-resize')}"
+                                 icon="mdi:resize" title="next grid size"
+                                 @click="${() => { this.resizeLibrary() }}">
+                        </ha-icon>
+                        <ha-icon id="${this._id('library-control-close')}"
                                  icon="mdi:close" title="close library"
-                                 @click="${() => { this.closeLibrary(); }}">
+                                 @click="${() => { this.closeLibrary() }}">
                         </ha-icon>
                     </div>
                     <div>
-                        <ha-icon class="state-on"
-                                 id="${this._id('library-control-next')}"
-                                 icon="mdi:chevron-right" title="next"
-                                 @click="${() => { this.setLibraryBase(this._libraryOffset + 9); }}">
+                        <ha-icon id="${this._id('library-control-next')}"
+                                 icon="mdi:chevron-right" title="next page"
+                                 @click="${() => { this.nextLibraryPage() }}">
+                        </ha-icon>
+                        <ha-icon id="${this._id('library-control-last')}"
+                                 icon="mdi:page-last" title="last page"
+                                 @click="${() => { this.lastLibraryPage(); }}">
                         </ha-icon>
                     </div>
                 </div>
@@ -662,6 +639,9 @@ class AarloGlance extends LitElement {
             case "state-update":
                 color = "#cccccc"
                 break
+            case "state-off":
+                color = "#505050"
+                break
         }
         if ( element ) {
             element.style.color = color
@@ -672,6 +652,23 @@ class AarloGlance extends LitElement {
     }
     _mstate( id, state ) {
         this.__state( this._melement(id), state )
+    }
+
+    /**
+     * @brief set title, icon and state in one go
+     *
+     * It gets called a lot.
+     */
+    __tis( element, title, icon, state ) {
+        if ( title ) { this.__title( element, title ) }
+        if ( icon )  { this.__icon ( element, icon ) }
+        if ( state ) { this.__state( element, state ) }
+    }
+    _tis( id, title, icon, state ) {
+        this.__tis( this._element(id), title, icon, state )
+    }
+    _mtis( id, title, icon, state ) {
+        this.__tis( this._melement(id), title, icon, state )
     }
 
     _widthHeight(id, width, height, width_suffix = '' ) {
@@ -883,8 +880,8 @@ class AarloGlance extends LitElement {
             this._s.lightOn   = lightState.state === 'on' ? 'state-on' : '';
             this._s.lightText = lightState.attributes.friendly_name + ': ' + (this._s.lightOn === 'state-on' ? 'on!' : 'off');
             this._s.lightIcon = 'mdi:lightbulb';
-            this._v.lightLeft = this._s.lightLeft ? '' : 'hidden';
-            this._v.lightRight = this._s.lightLeft ? 'hidden' : '';
+            this._v.lightLeft = this._s.lightLeft
+            this._v.lightRight = !this._s.lightLeft
         }
     }
 
@@ -957,7 +954,12 @@ class AarloGlance extends LitElement {
  
         // on click
         this._c.imageClick = config.image_click ? config.image_click : '';
-        this._c.libraryClick = config.library_click ? config.library_click : '';
+
+        // library config
+        this._c.libraryClick = config.library_click ? config.library_click : ''
+        this._c.librarySizes = config.library_sizes ? config.library_sizes : [ 3 ]
+        this._l.sizeIndex = 0
+        this._l.gridCount  = -1
 
         // modal window multiplier
         this._c.modalMultiplier = config.modal_multiplier ? parseFloat(config.modal_multiplier) : 0.8;
@@ -1107,14 +1109,15 @@ class AarloGlance extends LitElement {
 
         this._show('camera-on-off', this._v.onOff )
         this._show('camera-captured', this._v.captured )
+        this._show('camera-light-left', this._v.lightLeft )
 
         this._show("externals-door", this._v.door )
-        this._show("externals-door-bell", this._v.doorLock )
-        this._show("externals-door-lock", this._v.doorBell )
+        this._show("externals-door-lock", this._v.doorLock )
+        this._show("externals-door-bell", this._v.doorBell )
         this._show("externals-door-2", this._v.door2 )
-        this._show("externals-door-bell-2", this._v.door2Lock )
-        this._show("externals-door-lock-2", this._v.door2Bell )
-        this._show("externals-light", this._v.light )
+        this._show("externals-door-lock-2", this._v.door2Lock )
+        this._show("externals-door-bell-2", this._v.door2Bell )
+        this._show("externals-light", this._v.lightRight )
     }
 
     updateImageView() {
@@ -1148,9 +1151,10 @@ class AarloGlance extends LitElement {
         this._text ("bottom-bar-date",this._s.imageDate)
         this._text ("bottom-bar-status",this._s.cameraState)
 
-        this._title("camera-on-off", this._s.onOffText)
-        this._icon ("camera-on-off", this._s.onOffIcon)
-        this._state("camera-on-off", this._s.onOffOn)
+        this._tis("camera-on-off", this._s.onOffText, this._s.onOffIcon, this._s.onOffOn)
+        // this._title("camera-on-off", this._s.onOffText)
+        // this._icon ("camera-on-off", this._s.onOffIcon)
+        // this._state("camera-on-off", this._s.onOffOn)
         this._title("camera-motion", this._s.motionText)
         this._icon ("camera-motion", "mdi:run-fast")
         this._state("camera-motion", this._s.motionOn)
@@ -1229,49 +1233,108 @@ class AarloGlance extends LitElement {
     }
 
     setupLibraryView() {
+        this._show("library-control-first" )
+        this._show("library-control-previous" )
+        this._show("library-control-next" )
+        this._show("library-control-last" )
+        this._show('library-control-resize',this._c.librarySizes.length > 1 )
+        this._state("library-control-resize","state-on"  )
+        this._state("library-control-close","state-on" )
+    }
+
+    _updateLibraryHTML() {
+
+        // create horizontal DIV
+        const library_size = this._c.librarySizes[this._l.sizeIndex]
+        let row = document.createElement("div")
+        row.classList.add("aarlo-library-row")
+        for( let i = 0; i < library_size; ++i ) {
+
+            // create verical DIV with image
+            let col = document.createElement("div")
+            col.classList.add("aarlo-library-column")
+
+            for( let j = 0; j < library_size; ++j ) {
+                let id = (library_size * j) + i
+                let img = document.createElement("img")
+                img.classList.add("aarlo-library")
+                img.id = this._id(`library-${id}`)
+                img.addEventListener("click", () => { this.playLibraryVideo(id) } )
+                col.appendChild(img)
+            }
+
+            // add vertical to horizontal
+            row.appendChild(col)
+        }
+
+        // replace.
+        let container = this._element('library-viewer')
+        container.innerHTML = ''
+        container.appendChild(row)
     }
 
     _updateLibraryView() {
         let i = 0;
-        let j= this._libraryOffset;
-        const last = Math.min(j + 9, this._library.length)
+        let j= this._l.offset;
+        const last = Math.min(j + this._l.gridCount, this._l.videos.length)
         for( ; j < last; i++, j++ ) {
             let id = `library-${i}`
-            let captured_text = 'captured: ' + this._library[j].created_at_pretty;
-            if ( this._library[j].trigger && this._library[j].trigger !== '' ) {
-                captured_text += ' (' + this._library[j].trigger.toLowerCase() + ')'
+            let captured_text = 'captured: ' + this._l.videos[j].created_at_pretty;
+            if ( this._l.videos[j].trigger && this._l.videos[j].trigger !== '' ) {
+                captured_text += ' (' + this._l.videos[j].trigger.toLowerCase() + ')'
             }
             this._title(id, captured_text)
             this._alt  (id, captured_text)
-            this._src  (id, this._library[j].thumbnail)
+            this._src  (id, this._l.videos[j].thumbnail)
             this._show (id)
         }
-        for( ; i < 9; i++ ) {
+        for( ; i < this._l.gridCount; i++ ) {
             this._hide(`library-${i}`)
         }
 
-        this._libraryLastOffset = this._libraryOffset
-        this._libraryLastCapture = this._s.capturedText
+        this._l.lastOffset = this._l.offset
+        this._l.lastCapture = this._s.capturedText
 
-        this._show("library-control-previous", this._libraryOffset !== 0)
-        this._show("library-control-next", this._libraryOffset + 9 < this._library.length )
+        this._tis("library-control-first",null,null,
+            this._l.offset !== 0 ? "state-on" : "state-off" )
+        this._tis("library-control-previous",null,null,
+            this._l.offset !== 0 ? "state-on" : "state-off" )
+        this._tis("library-control-next",null,null,
+            this._l.offset + this._l.gridCount < this._l.videos.length ? "state-on" : "state-off" )
+        this._tis("library-control-last",null,null,
+            this._l.offset + this._l.gridCount < this._l.videos.length ? "state-on" : "state-off" )
     }
 
     updateLibraryView() {
 
         // No library, do nothing
-        if ( !this._library ) {
+        if ( !this._l.videos ) {
             return
         }
 
+        // Resized? Rebuild grid and force reload of images.
+        const size = this._c.librarySizes[this._l.sizeIndex] * this._c.librarySizes[this._l.sizeIndex]
+        if ( size !== this._l.gridCount ) {
+            this._updateLibraryHTML()
+            this._l.gridCount = size
+            this._l.lastOffset = -1
+        }
+
+        // Massage offset so it fits in library.
+        if( this._l.offset + this._l.gridCount > this._l.videos.length ) {
+            this._l.offset = Math.max(this._l.videos.length - this._l.gridCount, 0)
+        } else if( this._l.offset < 0 ) {
+            this._l.offset = 0
+        }
+
         // If capture changed reload library
-        if ( this._libraryLastCapture !== this._s.capturedText ) {
+        if ( this._l.lastCapture !== this._s.capturedText ) {
             this.asyncLoadLibrary().then( () => {
                 this._updateLibraryView()
             })
 
         // If offset has changed then reload images
-        } else if ( this._libraryLastOffset !== this._libraryOffset ) {
+        } else if ( this._l.lastOffset !== this._l.offset ) {
             this._updateLibraryView()
         }
     }
@@ -1295,11 +1358,6 @@ class AarloGlance extends LitElement {
         this._show("video-full-screen")
         this._show("modal-video-stop")
         this._show("modal-video-full-screen")
-
-        this._show("video-door-lock", this._v.doorLock )
-        this._show("video-door-lock", this._v.light )
-        this._show("modal-video-door-lock", this._v.doorLock )
-        this._show("modal-video-door-lock", this._v.light )
     }
 
     updateVideoView( state = '' ) {
@@ -1308,18 +1366,13 @@ class AarloGlance extends LitElement {
             this._mposter('video-player', this._videoPoster )
             this._videoState = 'playing'
             this._mshow("video-seek")
+            this._mhide("video-door-lock", this._v.doorLock )
+            this._mhide("video-light-on", this._v.light )
             this.setUpSeekBar();
             this.showVideoControls(4);
         } else if( state !== '' ) {
             this._videoState = state
         }
-
-        this._mstate ("video-door-lock", this._s.doorLockOn)
-        this._mtext  ("video-door-lock", this._s.doorLockText)
-        this._micon  ("video-door-lock", this._s.doorLockIcon)
-        this._mtitle ("video-door-light", this._s.lightText)
-        this._mstate ("video-door-light", this._s.lightOn)
-        this._micon  ("video-door-light", this._s.lightIcon)
 
         this._mshow("video-play", this._videoState === 'paused')
         this._mshow("video-pause", this._videoState === 'playing')
@@ -1397,11 +1450,20 @@ class AarloGlance extends LitElement {
             } else {
                 this.setHLSStreamElementData()
             }
+            this._mshow("video-door-lock", this._v.doorLock )
+            this._mshow("video-light-on", this._v.light )
             this._mhide("video-play")
             this._mhide("video-pause")
             this._mhide("video-seek")
             this.showVideoControls(4);
         }
+
+        this._mstate ("video-door-lock", this._s.doorLockOn)
+        this._mtext  ("video-door-lock", this._s.doorLockText)
+        this._micon  ("video-door-lock", this._s.doorLockIcon)
+        this._mtitle ("video-light-on", this._s.lightText)
+        this._mstate ("video-light-on", this._s.lightOn)
+        this._micon  ("video-light-on", this._s.lightIcon)
     }
 
     showStreamView() {
@@ -1444,7 +1506,7 @@ class AarloGlance extends LitElement {
     }
 
     resetView() {
-        if ( this._library ) {
+        if ( this._l.videos ) {
             this.showLibraryView()
         } else {
             this.showImageView()
@@ -1610,37 +1672,61 @@ class AarloGlance extends LitElement {
 
     async asyncLoadLibrary() {
         this._video = null;
-        this._library = await this.wsLoadLibrary(99);
-        this._libraryLastCapture = this._s.capturedText
+        this._l.videos = await this.wsLoadLibrary(99);
+        this._l.offset = 0
+        this._l.lastCapture = this._s.capturedText
     }
 
-    openLibrary(base) {
+    openLibrary() {
         this.getModalDimensions()
         this.asyncLoadLibrary().then( () => {
-            this._libraryOffset = base
             this.updateLibraryView()
             this.showLibraryView()
         })
     }
 
     playLibraryVideo(index) {
-        index += this._libraryOffset;
-        if (this._library && index < this._library.length) {
+        index += this._l.offset;
+        if (this._l.videos && index < this._l.videos.length) {
             this._modalViewer = this._c.libraryClick === 'modal'
-            this._video       = this._library[index].url;
-            this._videoPoster = this._library[index].thumbnail;
+            this._video       = this._l.videos[index].url;
+            this._videoPoster = this._l.videos[index].thumbnail;
             this.showVideo()
         } 
     }
 
-    setLibraryBase(base) {
-        this._libraryOffset = base
+    firstLibraryPage() {
+        this._l.offset = 0
+        this.updateLibraryView()
+    }
+
+    previousLibraryPage() {
+        this._l.offset = Math.max(this._l.offset - this._l.gridCount, 0)
+        this.updateLibraryView()
+    }
+
+    nextLibraryPage() {
+        const last = Math.max(this._l.videos.length - this._l.gridCount, 0)
+        this._l.offset = Math.min(this._l.offset + this._l.gridCount, last)
+        this.updateLibraryView()
+    }
+
+    lastLibraryPage() {
+        this._l.offset = Math.max(this._l.videos.length - this._l.gridCount, 0)
+        this.updateLibraryView()
+    }
+
+    resizeLibrary() {
+        this._l.sizeIndex += 1
+        if( this._l.sizeIndex === this._c.librarySizes.length ) {
+            this._l.sizeIndex = 0
+        }
         this.updateLibraryView()
     }
 
     closeLibrary() {
         this.stopVideo()
-        this._library = null
+        this._l.videos = null
         this.showImageView()
     }
 
