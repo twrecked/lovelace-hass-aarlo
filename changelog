@@ -1,3 +1,5 @@
+0.2-alpha.1: support different sized library grid
+       much internal code change
 0.2-alpha.0: rewrite to provide more interactive experience
 
 0.1.6: experimental modal window support

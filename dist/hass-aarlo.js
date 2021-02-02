@@ -468,14 +468,14 @@ class AarloGlance extends LitElement {
     }
 
     updated(_changedProperties) {
-        this.updateImageView();
-        if ( this._stream === null ) {
-            if( this._c.autoPlay ) {
-                setTimeout(() => {
-                    this.playStream(false)
-                }, 5 * 1000);
-            }
-        }
+        // this.updateImageView();
+        // if ( this._stream === null ) {
+        //     if( this._c.autoPlay ) {
+        //         setTimeout(() => {
+        //             this.playStream(false)
+        //         }, 5 * 1000);
+        //     }
+        // }
     }
 
     set hass( hass ) {
@@ -931,7 +931,8 @@ class AarloGlance extends LitElement {
         // auto play
         this._c.autoPlayMaster = config.auto_play ? config.auto_play : false
         this._c.autoPlay = this._c.autoPlayMaster
-        
+        this._c.autoPlayTimer = null
+
         // camera and sensors
         this._s.cameraId  = config.camera_id ? config.camera_id : 'camera.' + prefix + camera;
         this._s.motionId  = config.motion_id ? config.motion_id : 'binary_sensor.' + prefix + 'motion_' + camera;
@@ -1362,6 +1363,17 @@ class AarloGlance extends LitElement {
     }
 
     updateStreamView( state = '' ) {
+
+        // Autostart?
+        if ( state === '' && this._stream === null ) {
+            if( this._c.autoPlay && this._c.autoPlayTimer === null ) {
+                this._c.autoPlayTimer = setTimeout( () => {
+                    this.playStream( false )
+                },5 * 1000 )
+            }
+            return
+        }
+
         if ( state === 'starting' ) {
             if ( this._c.playDirect ) {
                 this.setMPEGStreamElementData()
@@ -1539,6 +1551,7 @@ class AarloGlance extends LitElement {
     }
 
     playStream( modal ) {
+        this._c.autoPlayTimer = null
         if ( this._stream === null ) {
             if( this._c.autoPlayMaster ) {
                 this._c.autoPlay = this._c.autoPlayMaster
@@ -1551,14 +1564,14 @@ class AarloGlance extends LitElement {
 
     async asyncStopStream() {
         if( this._stream ) {
-            const stream = this.shadowRoot.getElementById( this._mid('stream-player' ) )
-            stream.pause();
             await this.wsStopStream();
         }
     }
 
     stopStream() {
         this.resetView()
+        const stream = this.shadowRoot.getElementById( this._mid('stream-player' ) )
+        stream.pause();
 
         this.asyncStopStream().then( () => {
             this._c.autoPlay = false
