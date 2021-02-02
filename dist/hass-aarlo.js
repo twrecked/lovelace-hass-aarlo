@@ -567,78 +567,41 @@ class AarloGlance extends LitElement {
     __title( element, title ) {
         if ( element ) { element.title = title }
     }
-    _title( id, title ) {
-        this.__title( this._element(id), title )
-    }
-    _mtitle( id, title ) {
-        this.__title( this._melement(id), title )
-    }
-
     __text( element, text ) {
         if ( element ) { element.innerText = text }
     }
-    _text( id, text ) {
-        this.__text( this._element(id), text )
-    }
-    _mtext( id, text ) {
-        this.__text( this._melement(id), text )
-    }
-
     __alt( element, alt ) {
         if ( element ) { element.alt = alt }
     }
-    _alt( id, alt ) {
-        this.__alt( this._element(id), alt )
-    }
-    _malt( id, alt ) {
-        this.__alt( this._melement(id), alt )
-    }
-
     __src( element, src ) {
         if ( element ) { element.src = src }
     }
-    _src( id, src ) {
-        this.__src( this._element(id), src )
-    }
-    _msrc( id, src ) {
-        this.__src( this._melement(id), src )
-    }
-
     __poster( element, poster ) {
         if ( element ) { element.poster = poster }
     }
-    _poster( id, poster ) {
-        this.__poster( this._element(id), poster )
-    }
-    _mposter( id, poster ) {
-        this.__poster( this._melement(id), poster )
-    }
-
     __icon( element, icon ) {
         if ( element ) { element.icon = icon }
     }
-    _icon( id, icon ) {
-        this.__icon( this._element(id), icon )
-    }
-    _micon( id, icon ) {
-        this.__icon( this._melement(id), icon )
-    }
-
     __state( element, state ) {
         let color = ""
         switch( state ) {
+            case "on":
             case "state-on":
                 color = "white"
                 break
+            case "warn":
             case "state-warn":
                 color = "orange"
                 break
+            case "error":
             case "state-error":
                 color = "red"
                 break
+            case "update":
             case "state-update":
                 color = "#cccccc"
                 break
+            case "off":
             case "state-off":
                 color = "#505050"
                 break
@@ -647,28 +610,26 @@ class AarloGlance extends LitElement {
             element.style.color = color
         }
     }
-    _state( id, state ) {
-        this.__state( this._element(id), state )
-    }
-    _mstate( id, state ) {
-        this.__state( this._melement(id), state )
-    }
 
     /**
-     * @brief set title, icon and state in one go
+     * @brief set a variety of element values
      *
      * It gets called a lot.
      */
-    __tis( element, title, icon, state ) {
-        if ( title ) { this.__title( element, title ) }
-        if ( icon )  { this.__icon ( element, icon ) }
-        if ( state ) { this.__state( element, state ) }
+    __set( element, title, text, icon, state, src, alt, poster ) {
+        if ( title )  { this.__title( element, title ) }
+        if ( text )   { this.__text ( element, text ) }
+        if ( icon )   { this.__icon ( element, icon ) }
+        if ( state )  { this.__state( element, state ) }
+        if ( src )    { this.__src( element, src ) }
+        if ( alt )    { this.__alt( element, alt ) }
+        if ( poster ) { this.__poster( element, poster ) }
     }
-    _tis( id, title, icon, state ) {
-        this.__tis( this._element(id), title, icon, state )
+    _set( id, { title, text, icon, state, src, alt, poster } = {} ) {
+        this.__set( this._element(id), title, text, icon, state, src, alt, poster )
     }
-    _mtis( id, title, icon, state ) {
-        this.__tis( this._melement(id), title, icon, state )
+    _mset( id, { title, text, icon, state, src, alt, poster } = {} ) {
+        this.__set( this._melement(id), title, text, icon, state, src, alt, poster )
     }
 
     _widthHeight(id, width, height, width_suffix = '' ) {
@@ -1138,75 +1099,39 @@ class AarloGlance extends LitElement {
             this._s.imageDate = ''
         }
 
-        this._title("image-viewer",this._s.imageFullDate)
-        this._alt  ("image-viewer",this._s.imageFullDate)
-        this._src  ("image-viewer",this._image)
+        this._set("image-viewer",{title: this._s.imageFullDate, alt: this._s.imageFullDate, src: this._image})
 
-        this._text ("top-bar-title",this._s.cameraName)
-        this._title("top-bar-date",this._s.imageFullDate)
-        this._text ("top-bar-date",this._s.imageDate)
-        this._text ("top-bar-status",this._s.cameraState)
-        this._text ("bottom-bar-title",this._s.cameraName)
-        this._title("bottom-bar-date",this._s.imageFullDate)
-        this._text ("bottom-bar-date",this._s.imageDate)
-        this._text ("bottom-bar-status",this._s.cameraState)
+        this._set("top-bar-title",{text: this._s.cameraName})
+        this._set("top-bar-date",{title: this._s.imageFullDate, text: this._s.imageDate})
+        this._set("top-bar-status",{text: this._s.cameraState })
+        this._set("bottom-bar-title", {text: this._s.cameraName})
+        this._set("bottom-bar-date",{title: this._s.imageFullDate, text: this._s.imageDate})
+        this._set("bottom-bar-date",{text: this._s.imageDate})
+        this._set("bottom-bar-status",{text: this._s.cameraState})
 
-        this._tis("camera-on-off", this._s.onOffText, this._s.onOffIcon, this._s.onOffOn)
-        // this._title("camera-on-off", this._s.onOffText)
-        // this._icon ("camera-on-off", this._s.onOffIcon)
-        // this._state("camera-on-off", this._s.onOffOn)
-        this._title("camera-motion", this._s.motionText)
-        this._icon ("camera-motion", "mdi:run-fast")
-        this._state("camera-motion", this._s.motionOn)
-        this._show ('camera-motion', this._v.motion && this._v.cameraOn )
-        this._title("camera-sound", this._s.soundText)
-        this._icon ("camera-sound", "mdi:ear-hearing")
-        this._state("camera-sound", this._s.soundOn)
-        this._show ('camera-sound', this._v.sound && this._v.cameraOn )
-        this._title("camera-captured", this._s.capturedText)
-        this._icon ("camera-captured", this._s.capturedIcon)
-        this._state("camera-captured", this._s.capturedOn)
-        this._title("camera-play", this._s.playText)
-        this._icon ("camera-play", this._s.playIcon)
-        this._state("camera-play", this._s.playOn)
-        this._show ('camera-play', this._v.play && this._v.cameraOn )
-        this._title("camera-snapshot", this._s.snapshotText)
-        this._icon ("camera-snapshot", this._s.snapshotIcon)
-        this._state("camera-snapshot", this._s.snapshotOn)
-        this._show ('camera-snapshot', this._v.snapshot && this._v.cameraOn )
-        this._title("camera-battery", this._s.batteryText)
-        this._icon ("camera-battery", `mdi:${this._s.batteryIcon}`)
-        this._state("camera-battery", this._s.batteryOn)
-        this._show ('camera-battery', this._v.battery && this._v.cameraOn )
-        this._title("camera-wifi-signal", this._s.signalText)
-        this._icon ("camera-wifi-signal", this._s.signalIcon)
-        this._state("camera-wifi-signal", 'state-update')
-        this._show ('camera-wifi-signal', this._v.signal && this._v.cameraOn )
-        this._title("camera-light-left", this._s.lightText)
-        this._icon ("camera-light-left", this._s.lightIcon)
-        this._state("camera-light-left", this._s.lightOn)
+        this._set ("camera-on-off", {title: this._s.onOffText, icon: this._s.onOffIcon, state: this._s.onOffOn})
+        this._set ("camera-motion", {title: this._s.motionText, icon: "mdi:run-fast", state: this._s.motionOn})
+        this._show('camera-motion', this._v.motion && this._v.cameraOn )
+        this._set ("camera-sound", {title: this._s.soundText, icon: "mdi:ear-hearing", state: this._s.soundOn})
+        this._show('camera-sound', this._v.sound && this._v.cameraOn )
+        this._set ("camera-captured", {title: this._s.capturedText, icon: this._s.capturedIcon, state: this._s.capturedOn})
+        this._set ("camera-play", {title: this._s.playText, icon: this._s.playIcon, state: this._s.playOn})
+        this._show('camera-play', this._v.play && this._v.cameraOn )
+        this._set ("camera-snapshot", {title: this._s.snapshotText, icon: this._s.snapshotIcon, state: this._s.snapshotOn})
+        this._show('camera-snapshot', this._v.snapshot && this._v.cameraOn )
+        this._set ("camera-battery", {title: this._s.batteryText, icon: `mdi:${this._s.batteryIcon}`, state: this._s.batteryOn})
+        this._show('camera-battery', this._v.battery && this._v.cameraOn )
+        this._set ("camera-wifi-signal", {title: this._s.signalText, icon: this._s.signalIcon, state: 'state-update'})
+        this._show('camera-wifi-signal', this._v.signal && this._v.cameraOn )
+        this._set ("camera-light-left", {title: this._s.lightText, icon: this._s.lightIcon, state: this._s.lightOn})
 
-        this._title("externals-door", this._s.doorText)
-        this._state("externals-door", this._s.doorOn)
-        this._icon ("externals-door", this._s.doorIcon)
-        this._title("externals-door-bell", this._s.doorBellText)
-        this._state("externals-door-bell", this._s.doorBellOn)
-        this._icon ("externals-door-bell", this._s.doorBellIcon)
-        this._title("externals-door-lock", this._s.doorLockText)
-        this._state("externals-door-lock", this._s.doorLockOn)
-        this._icon ("externals-door-lock", this._s.doorLockIcon)
-        this._title("externals-door-2", this._s.door2Text)
-        this._state("externals-door-2", this._s.door2On)
-        this._icon ("externals-door-2", this._s.door2Icon)
-        this._title("externals-door-bell-2", this._s.door2BellText)
-        this._state("externals-door-bell-2", this._s.door2BellOn)
-        this._icon ("externals-door-bell-2", this._s.door2BellIcon)
-        this._title("externals-door-lock-2", this._s.door2LockText)
-        this._state("externals-door-lock-2", this._s.door2LockOn)
-        this._icon ("externals-door-lock-2", this._s.door2LockIcon)
-        this._title("externals-light", this._s.lightText)
-        this._state("externals-light", this._s.lightOn)
-        this._icon ("externals-light", this._s.lightIcon)
+        this._set("externals-door", {title: this._s.doorText, icon: this._s.doorIcon, state: this._s.doorOn})
+        this._set("externals-door-bell", {title: this._s.doorBellText, icon: this._s.doorBellIcon, state: this._s.doorBellOn})
+        this._set("externals-door-lock", {title: this._s.doorLockText, icon: this._s.doorLockIcon, state: this._s.doorLockOn})
+        this._set("externals-door-2", {title: this._s.door2Text, icon: this._s.door2Icon, state: this._s.door2On})
+        this._set("externals-door-bell-2",{title: this._s.door2BellText, icon: this._s.door2BellIcon, state: this._s.door2BellOn})
+        this._set("externals-door-lock-2", {title: this._s.door2LockText, icon: this._s.door2LockIcon, state: this._s.door2LockOn})
+        this._set("externals-light", {title: this._s.lightText, icon: this._s.lightIcon, state: this._s.lightOn})
     }
 
     showImageView() {
@@ -1238,8 +1163,8 @@ class AarloGlance extends LitElement {
         this._show("library-control-next" )
         this._show("library-control-last" )
         this._show('library-control-resize',this._c.librarySizes.length > 1 )
-        this._state("library-control-resize","state-on"  )
-        this._state("library-control-close","state-on" )
+        this._set("library-control-resize",{ state: "on"} )
+        this._set("library-control-close",{ state: "on"} )
     }
 
     _updateLibraryHTML() {
@@ -1283,10 +1208,8 @@ class AarloGlance extends LitElement {
             if ( this._l.videos[j].trigger && this._l.videos[j].trigger !== '' ) {
                 captured_text += ' (' + this._l.videos[j].trigger.toLowerCase() + ')'
             }
-            this._title(id, captured_text)
-            this._alt  (id, captured_text)
-            this._src  (id, this._l.videos[j].thumbnail)
-            this._show (id)
+            this._set( id,{title: captured_text, alt: captured_text, src: this._l.videos[j].thumbnail} )
+            this._show( id )
         }
         for( ; i < this._l.gridCount; i++ ) {
             this._hide(`library-${i}`)
@@ -1295,14 +1218,10 @@ class AarloGlance extends LitElement {
         this._l.lastOffset = this._l.offset
         this._l.lastCapture = this._s.capturedText
 
-        this._tis("library-control-first",null,null,
-            this._l.offset !== 0 ? "state-on" : "state-off" )
-        this._tis("library-control-previous",null,null,
-            this._l.offset !== 0 ? "state-on" : "state-off" )
-        this._tis("library-control-next",null,null,
-            this._l.offset + this._l.gridCount < this._l.videos.length ? "state-on" : "state-off" )
-        this._tis("library-control-last",null,null,
-            this._l.offset + this._l.gridCount < this._l.videos.length ? "state-on" : "state-off" )
+        this._set( "library-control-first",{state: this._l.offset !== 0 ? "on" : "off"} )
+        this._set( "library-control-previous",{state: this._l.offset !== 0 ? "on" : "off"} )
+        this._set( "library-control-next",{state: this._l.offset + this._l.gridCount < this._l.videos.length ? "on" : "off"} )
+        this._set( "library-control-last",{state: this._l.offset + this._l.gridCount < this._l.videos.length ? "on" : "off"} )
     }
 
     updateLibraryView() {
@@ -1362,12 +1281,11 @@ class AarloGlance extends LitElement {
 
     updateVideoView( state = '' ) {
         if( state === 'starting' ) {
-            this._msrc   ('video-player', this._video )
-            this._mposter('video-player', this._videoPoster )
-            this._videoState = 'playing'
+            this._mset( 'video-player',{src: this._video, poster: this._videoPoster} )
             this._mshow("video-seek")
             this._mhide("video-door-lock", this._v.doorLock )
             this._mhide("video-light-on", this._v.light )
+            this._videoState = 'playing'
             this.setUpSeekBar();
             this.showVideoControls(4);
         } else if( state !== '' ) {
@@ -1458,12 +1376,8 @@ class AarloGlance extends LitElement {
             this.showVideoControls(4);
         }
 
-        this._mstate ("video-door-lock", this._s.doorLockOn)
-        this._mtext  ("video-door-lock", this._s.doorLockText)
-        this._micon  ("video-door-lock", this._s.doorLockIcon)
-        this._mtitle ("video-light-on", this._s.lightText)
-        this._mstate ("video-light-on", this._s.lightOn)
-        this._micon  ("video-light-on", this._s.lightIcon)
+        this._mset( "video-door-lock", {title: this._s.doorLockText, icon: this._s.doorLockIcon, state: this._s.doorLockOn} )
+        this._mset( "video-light-on", {title: this._s.lightText, icon: this._s.lightIcon, state: this._s.lightOn} )
     }
 
     showStreamView() {
