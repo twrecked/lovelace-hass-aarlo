@@ -911,7 +911,7 @@ class AarloGlance extends LitElement {
 
         // library config
         this._c.libraryClick = config.library_click ? config.library_click : ''
-        this._c.librarySizes = config.library_sizes ? config.library_sizes : [ 2 ]
+        this._c.librarySizes = config.library_sizes ? config.library_sizes : [ 3 ]
         this._c.libraryRegions = config.library_regions ? config.library_regions : this._c.librarySizes
         this._c.libraryColors = {
             "Animal"  : config.library_animal ? config.library_animal : 'orangered',
@@ -1169,15 +1169,18 @@ class AarloGlance extends LitElement {
 
     _updateLibraryHTML() {
 
-        const library_size = this._c.librarySizes[this._l.sizeIndex]
+        // update library state to reflect the new layout
+        this._l.size = this._c.librarySizes[this._l.sizeIndex]
+        this._l.gridCount = this._l.size * this._l.size
+
         let grid = document.createElement("div")
         grid.style.display = "grid"
-        grid.style['grid-template-columns'] = `repeat(${library_size},1fr)`
-        grid.style['grid-template-rows'] = `repeat(${library_size},1fr)`
+        grid.style['grid-template-columns'] = `repeat(${this._l.size},1fr)`
+        grid.style['grid-template-rows'] = `repeat(${this._l.size},1fr)`
         grid.style['grid-gap'] = '1px'
         grid.style.padding= '2px'
 
-        for( let i = 0; i < library_size * library_size; ++i ) {
+        for( let i = 0; i < this._l.size * this._l.size; ++i ) {
 
             let img = document.createElement("img")
             img.id = this._id(`library-${i}`)
@@ -1194,8 +1197,8 @@ class AarloGlance extends LitElement {
             box.style.top = "0"
             img.addEventListener("click", () => { this.playLibraryVideo(i) } )
 
-            const column = Math.floor((i % library_size) + 1)
-            const row = Math.floor((i / library_size) + 1)
+            const column = Math.floor((i % this._l.size) + 1)
+            const row = Math.floor((i / this._l.size) + 1)
             let div = document.createElement("div")
             div.style.position= 'relative'
             div.style.gridColumn = `${column}`
@@ -1214,8 +1217,7 @@ class AarloGlance extends LitElement {
     _updateLibraryView() {
         let i = 0;
         let j= this._l.offset;
-        const library_size = this._c.librarySizes[this._l.sizeIndex]
-        const show_triggers = this._c.libraryRegions.includes(library_size)
+        const show_triggers = this._c.libraryRegions.includes(this._l.size)
         const last = Math.min(j + this._l.gridCount, this._l.videos.length)
         for( ; j < last; i++, j++ ) {
             const id = `library-${i}`
@@ -1269,10 +1271,8 @@ class AarloGlance extends LitElement {
         }
 
         // Resized? Rebuild grid and force reload of images.
-        const size = this._c.librarySizes[this._l.sizeIndex] * this._c.librarySizes[this._l.sizeIndex]
-        if ( size !== this._l.gridCount ) {
+        if ( this._l.size != this._c.librarySizes[this._l.sizeIndex] ) {
             this._updateLibraryHTML()
-            this._l.gridCount = size
             this._l.lastOffset = -1
         }
 
