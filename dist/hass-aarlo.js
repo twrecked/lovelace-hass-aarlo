@@ -463,19 +463,12 @@ class AarloGlance extends LitElement {
 
     static get properties() {
         return {
-            // we don't need to re-render
+            // All handle internally
         }
     }
 
     updated(_changedProperties) {
-        // this.updateImageView();
-        // if ( this._stream === null ) {
-        //     if( this._c.autoPlay ) {
-        //         setTimeout(() => {
-        //             this.playStream(false)
-        //         }, 5 * 1000);
-        //     }
-        // }
+        // All handle internally
     }
 
     set hass( hass ) {
@@ -518,7 +511,7 @@ class AarloGlance extends LitElement {
     }
 
     /**
-     * @brief Look for card element in shadown domain.
+     * @brief Look for card element in shadow dom.
      *
      * @param id The element or `null`
     */
@@ -527,7 +520,7 @@ class AarloGlance extends LitElement {
     }
 
     /**
-     * @brief Look for modal card element in shadown domain.
+     * @brief Look for modal card element in shadow dom.
      *
      * Automatically chooses modal name if modal window open.
      *
@@ -919,6 +912,12 @@ class AarloGlance extends LitElement {
         // library config
         this._c.libraryClick = config.library_click ? config.library_click : ''
         this._c.librarySizes = config.library_sizes ? config.library_sizes : [ 3 ]
+        this._c.libraryRegions = config.library_regions ? config.library_regions : this._c.librarySizes
+        this._c.libraryColors = {
+            "Animal"  : config.library_animal ? config.library_animal : 'orangered',
+            "Vehicle" : config.library_vehicle ? config.library_vehicle : 'yellow',
+            "Person"  : config.library_person ? config.library_person : 'lime'
+        }
         this._l.sizeIndex = 0
         this._l.gridCount  = -1
 
@@ -1170,47 +1169,86 @@ class AarloGlance extends LitElement {
 
     _updateLibraryHTML() {
 
-        // create horizontal DIV
-        const library_size = this._c.librarySizes[this._l.sizeIndex]
-        let row = document.createElement("div")
-        row.classList.add("aarlo-library-row")
-        for( let i = 0; i < library_size; ++i ) {
+        // update library state to reflect the new layout
+        this._l.size = this._c.librarySizes[this._l.sizeIndex]
+        this._l.gridCount = this._l.size * this._l.size
 
-            // create verical DIV with image
-            let col = document.createElement("div")
-            col.classList.add("aarlo-library-column")
+        let grid = document.createElement("div")
+        grid.style.display = "grid"
+        grid.style['grid-template-columns'] = `repeat(${this._l.size},1fr)`
+        grid.style['grid-template-rows'] = `repeat(${this._l.size},1fr)`
+        grid.style['grid-gap'] = '1px'
+        grid.style.padding= '2px'
 
-            for( let j = 0; j < library_size; ++j ) {
-                let id = (library_size * j) + i
-                let img = document.createElement("img")
-                img.classList.add("aarlo-library")
-                img.id = this._id(`library-${id}`)
-                img.addEventListener("click", () => { this.playLibraryVideo(id) } )
-                col.appendChild(img)
-            }
+        for( let i = 0; i < this._l.size * this._l.size; ++i ) {
 
-            // add vertical to horizontal
-            row.appendChild(col)
+            let img = document.createElement("img")
+            img.id = this._id(`library-${i}`)
+            img.style.width = "100%"
+            img.style.height = "100%"
+            img.style.objectFit = "cover"
+            img.addEventListener("click", () => { this.playLibraryVideo(i) } )
+
+            let box = document.createElement("div")
+            box.id = this._id(`library-box-${i}`)
+            box.style.width = "100%"
+            box.style.height = "100%"
+            box.style.position = "absolute"
+            box.style.top = "0"
+            img.addEventListener("click", () => { this.playLibraryVideo(i) } )
+
+            const column = Math.floor((i % this._l.size) + 1)
+            const row = Math.floor((i / this._l.size) + 1)
+            let div = document.createElement("div")
+            div.style.position= 'relative'
+            div.style.gridColumn = `${column}`
+            div.style.gridRow    = `${row}`
+            div.appendChild(img)
+            div.appendChild(box)
+            grid.appendChild(div)
         }
 
         // replace.
         let container = this._element('library-viewer')
         container.innerHTML = ''
-        container.appendChild(row)
+        container.appendChild(grid)
     }
 
     _updateLibraryView() {
         let i = 0;
         let j= this._l.offset;
+        const show_triggers = this._c.libraryRegions.includes(this._l.size)
         const last = Math.min(j + this._l.gridCount, this._l.videos.length)
         for( ; j < last; i++, j++ ) {
-            let id = `library-${i}`
-            let captured_text = 'captured: ' + this._l.videos[j].created_at_pretty;
-            if ( this._l.videos[j].trigger && this._l.videos[j].trigger !== '' ) {
-                captured_text += ' (' + this._l.videos[j].trigger.toLowerCase() + ')'
+            const id = `library-${i}`
+            const bid = `library-box-${i}`
+            const video = this._l.videos[j]
+            let captured_text = 'captured: ' + video.created_at_pretty;
+            if ( video.trigger && video.trigger !== '' ) {
+                captured_text += ' (' + video.trigger.toLowerCase() + ')'
             }
-            this._set( id,{title: captured_text, alt: captured_text, src: this._l.videos[j].thumbnail} )
+            this._set( id,{title: captured_text, alt: captured_text, src: video.thumbnail} )
             this._show( id )
+
+            // highlight is on at this level and we have something?
+            if( show_triggers && video.trigger !== null ) {
+                const coords = video.trigger_region.split(",")
+
+                let box = this._element( bid )
+                box.style.left = `${parseFloat(coords[0]) * 100}%`
+                box.style.top = `${parseFloat(coords[1]) * 100}%`
+                box.style.width = `${(parseFloat(coords[2]) - parseFloat(coords[0])) * 100}%`
+                box.style.height = `${(parseFloat(coords[3]) - parseFloat(coords[1])) * 100}%`
+                box.style.borderStyle = "solid"
+                box.style.borderWidth = "thin"
+                box.style.borderColor = video.trigger in this._c.libraryColors ?
+                                               this._c.libraryColors[video.trigger] : "cyan"
+                this._set( bid,{title: captured_text, alt: captured_text } )
+                this._show( bid )
+            } else {
+                this._hide( bid )
+            }
+
         }
         for( ; i < this._l.gridCount; i++ ) {
             this._hide(`library-${i}`)
@@ -1233,10 +1271,8 @@ class AarloGlance extends LitElement {
         }
 
         // Resized? Rebuild grid and force reload of images.
-        const size = this._c.librarySizes[this._l.sizeIndex] * this._c.librarySizes[this._l.sizeIndex]
-        if ( size !== this._l.gridCount ) {
+        if ( this._l.size != this._c.librarySizes[this._l.sizeIndex] ) {
             this._updateLibraryHTML()
-            this._l.gridCount = size
             this._l.lastOffset = -1
         }
 
