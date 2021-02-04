@@ -947,6 +947,7 @@ class AarloGlance extends LitElement {
         // library config
         this._c.libraryClick = config.library_click ? config.library_click : ''
         this._c.librarySizes = config.library_sizes ? config.library_sizes : [ 3 ]
+        this._c.libraryRecordings = config.max_recordings ? parseInt(config.max_recordings) : 99
         this._c.libraryRegions = config.library_regions ? config.library_regions : this._c.librarySizes
         this._c.libraryColors = {
             "Animal"  : config.library_animal ? config.library_animal : 'orangered',
@@ -1694,7 +1695,7 @@ class AarloGlance extends LitElement {
 
     async asyncLoadLibrary() {
         this._video = null;
-        this._l.videos = await this.wsLoadLibrary(99);
+        this._l.videos = await this.wsLoadLibrary(this._c.libraryRecordings);
         this._l.offset = 0
         this._l.lastCapture = this._s.capturedText
     }

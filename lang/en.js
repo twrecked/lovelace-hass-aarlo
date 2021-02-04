@@ -1,6 +1,11 @@
 
 export var messages = {
 
+	// maintainer
+	author: {
+		name: "twrecked",
+	},
+
 	// image viewer
 	image: {
 		turn_camera_on: 'turn the camera on',
