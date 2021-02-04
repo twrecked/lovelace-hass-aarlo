@@ -224,7 +224,7 @@ all goes will see a card that looks like this:
 
 <a name="how-it-looks"></a>
 ## How it looks
-![Aarlo Glance](https://github.com/twrecked/hass-aarlo/blob/master/images/aarlo-glance-02.png)
+![Aarlo Glance](images/aarlo-glance-01.png)
 
 Reading from left to right you have the camera name, motion detection indicator,
 captured clip indicator, battery levels, signal level and current state. If you
@@ -239,7 +239,7 @@ videos. If you move your mouse over a thumbnail it will show you time of capture
 and, if you have a Smart subscription, a reason for the capture. **>** takes you
 to the next page, **<** to the previous and **X** closes the window.
 
-![Aarlo Thumbnails](https://github.com/twrecked/hass-aarlo/blob/master/images/thumbnails.png)
+![Aarlo Thumbnails](images/aarlo-glance-02.png)
 
 
 <a name="further-documentation"></a>
