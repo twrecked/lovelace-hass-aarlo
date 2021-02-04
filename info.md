@@ -29,7 +29,7 @@ It provides:
 * Highlighting what caused the event.
 
 ## Example
-![Aarlo Glance](https://github.com/twrecked/hass-aarlo/blob/master/images/aarlo-glance-02.png)
+![The Image Window](/images/arlo-glance-01.png)
 
 ## Documentation
 See [hass-aarlo](https://github.com/twrecked/hass-aarlo/blob/master/README.md) for full documentation.
