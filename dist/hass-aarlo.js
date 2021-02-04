@@ -818,14 +818,14 @@ class AarloGlance extends LitElement {
             const doorState = this.getState(this._s.doorId, 'off');
             this._s.doorOn   = doorState.state === 'on' ? 'state-on' : '';
             this._s.doorText = doorState.attributes.friendly_name + ': ' +
-                    ( this._s.doorOn === '' ? _.status.door_closed : _i.status.door_open )
+                    ( this._s.doorOn === '' ? _i.status.door_closed : _i.status.door_open )
             this._s.doorIcon = this._s.doorOn === '' ? 'mdi:door' : 'mdi:door-open';
         }
         if( this._v.door2 ) {
             const door2State = this.getState(this._s.door2Id, 'off');
             this._s.door2On   = door2State.state === 'on' ? 'state-on' : '';
             this._s.door2Text = door2State.attributes.friendly_name + ': ' +
-                    ( this._s.door2On === '' ? _.status.door_closed : _i.status.door_open )
+                    ( this._s.door2On === '' ? _i.status.door_closed : _i.status.door_open )
             this._s.door2Icon = this._s.door2On === '' ? 'mdi:door' : 'mdi:door-open';
         }
 
