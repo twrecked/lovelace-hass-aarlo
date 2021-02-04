@@ -224,7 +224,7 @@ all goes will see a card that looks like this:
 
 <a name="how-it-looks"></a>
 ## How it looks
-![Aarlo Glance](images/aarlo-glance-01.png)
+![Aarlo Glance](/images/aarlo-glance-01.png?raw=true)
 
 Reading from left to right you have the camera name, motion detection indicator,
 captured clip indicator, battery levels, signal level and current state. If you
