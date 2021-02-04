@@ -682,10 +682,10 @@ class AarloGlance extends LitElement {
             };
     }
 
-    loadLanguage( lang ) {
+    _updateLanguages( lang ) {
         // TODO use cdn eventually
         // import(`https://cdn.jsdelivr.net/gh/twrecked/lovelace-hass-aarlo@i18n/lang/{lang}.js`)
-        if( lang !== _lang ) {
+        if( !lang.startsWith(_lang) ) {
             import(`https://twrecked.github.io/lang/${lang}.js?t=${new Date().getTime()}`)
                 .then( module => {
                     _lang = lang
@@ -694,10 +694,14 @@ class AarloGlance extends LitElement {
                 }, (_reason) => {
                     const lang_pieces = lang.split('-')
                     if( lang_pieces.length > 1 ) {
-                        this.loadLanguage( lang_pieces[0] )
+                        this._updateLanguages( lang_pieces[0] )
                     }
                 })
-            }
+        }
+    }
+
+    updateLanguages( ) {
+        this._updateLanguages( this._c.lang ? this._c.lang : this._hass.language )
     }
 
     updateStatuses() {
@@ -929,7 +933,8 @@ class AarloGlance extends LitElement {
         this.checkConfig()
 
         // language?
-        this.loadLanguage( config.lang ? config.lang : 'en' )
+        this._c.lang = config.lang
+        // this.loadLanguage( config.lang ? config.lang : 'en' )
  
         // config
         // aspect ratio
@@ -1494,6 +1499,7 @@ class AarloGlance extends LitElement {
     }
 
     updateView() {
+        this.updateLanguages()
         this.updateStatuses()
         this.updateImageView()
         this.updateLibraryView()
