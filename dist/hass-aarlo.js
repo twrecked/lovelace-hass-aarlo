@@ -720,31 +720,33 @@ class AarloGlance extends LitElement {
             this._s.cameraName = this._config.name ? this._config.name : camera.attributes.friendly_name;
         }
 
-        // See if:
-        //  - camera state has changed
-        //  - underlying entity pictures has changed
-        // If so then queue an image update
-        if ( camera.state !== this._s.cameraState ||
-                this._image_base !== camera.attributes.entity_picture ) {
+        // Image changed? See if:
+        //  - camera has changed state then do an update
+        //  - camera has changed state and was taking a snapshot then queue up some updates
+        //  - auth (base name) has changed then do an update
+        //  - image source has changed then do an update
+        if ( camera.state !== this._s.cameraState ) {
+            console.log( `state-update: ${this._s.cameraName}: ${this._s.cameraState} --> ${camera.state}` )
+            this.updateImageURL()
             if ( this._s.cameraState === 'taking snapshot' ) {
-                // console.log( 'snapshot ' + this._s.cameraName + ':' + this._s.cameraState + '-->' + camera.state );
-                this.updateCameraImageSrc()
-                this.updateCameraImageSourceLater(5)
-                this.updateCameraImageSourceLater(10)
-            } else {
-                // console.log( 'updating2 ' + this._s.cameraName + ':' + this._s.cameraState + '-->' + camera.state );
-                this.updateCameraImageSrc()
+                this._c.snapshotRetries.forEach( (seconds) => {
+                    this.updateImageURLLater( seconds )
+                })
             }
         }
-
-        // Save out current state for later.
-        this._s.cameraState = camera.state;
-
-        if ( this._s.imageSource !== camera.attributes.image_source ) {
-            // console.log( 'updating3 ' + this._s.cameraName + ':' + this._s.imageSource + '-->' + camera.attributes.image_source );
-            this._s.imageSource = camera.attributes.image_source
-            this.updateCameraImageSrc()
+        else if ( this._image_base !== camera.attributes.entity_picture ) {
+            console.log( `auth-update: ${this._s.cameraName}: ${this._image_base} --> ${camera.attributes.entity_picture}` )
+            this.updateImageURL()
         }
+        else if ( this._s.imageSource !== camera.attributes.image_source ) {
+            console.log( `source-update: ${this._s.cameraName}: ${this._s.imageSource} --> ${camera.attributes.image_source}` )
+            this.updateImageURL()
+        }
+
+        // Save camera state.
+        this._s.cameraState = camera.state
+        this._s.imageSource = camera.attributes.image_source
+        this._s.lastVideo = camera.attributes.last_video
 
         // FUNCTIONS
         if( this._v.play ) {
@@ -771,7 +773,7 @@ class AarloGlance extends LitElement {
                 this._v.cameraOn  = true
             }
         } else {
-            this._v.cameraOn  = true
+            this._v.cameraOn = true
         }
 
         if( this._v.snapshot ) {
@@ -941,9 +943,8 @@ class AarloGlance extends LitElement {
         this._config = config
         this.checkConfig()
 
-        // language?
+        // Language override?
         this._c.lang = config.lang
-        // this.loadLanguage( config.lang ? config.lang : 'en' )
  
         // config
         // aspect ratio
@@ -968,6 +969,9 @@ class AarloGlance extends LitElement {
         }
         this._l.sizeIndex = 0
         this._l.gridCount  = -1
+
+        // snapshot updates
+        this._c.snapshotRetries = config.snapshot_retry ? config.snapshot_retry : [ 2, 5 ]
 
         // modal window multiplier
         this._c.modalMultiplier = config.modal_multiplier ? parseFloat(config.modal_multiplier) : 0.8;
@@ -1131,6 +1135,11 @@ class AarloGlance extends LitElement {
 
     updateImageView() {
 
+        // Nothing there yet...
+        if( !this.isViewReady() ) {
+            return
+        }
+
         if( this._image !== '' ) {
             const camera = this.getState(this._s.cameraId,'unknown');
             this._s.imageFullDate = camera.attributes.image_source ? camera.attributes.image_source : '';
@@ -1180,6 +1189,19 @@ class AarloGlance extends LitElement {
         this._set("externals-door-bell-2",{title: this._s.door2BellText, icon: this._s.door2BellIcon, state: this._s.door2BellOn})
         this._set("externals-door-lock-2", {title: this._s.door2LockText, icon: this._s.door2LockIcon, state: this._s.door2LockOn})
         this._set("externals-light", {title: this._s.lightText, icon: this._s.lightIcon, state: this._s.lightOn})
+    }
+
+    updateImageURL() {
+        const camera = this.getState(this._s.cameraId,'unknown');
+        this._image_base = camera.attributes.entity_picture
+        this._image = camera.attributes.entity_picture + "&t=" + new Date().getTime()
+    }
+
+    updateImageURLLater(seconds = 2) {
+        setTimeout(() => {
+            this.updateImageURL()
+            this.updateImageView()
+        }, seconds * 1000);
     }
 
     showImageView() {
@@ -1263,6 +1285,14 @@ class AarloGlance extends LitElement {
     }
 
     _updateLibraryView() {
+   
+        // Massage offset so it fits in library.
+        if( this._l.offset + this._l.gridCount > this._l.videos.length ) {
+            this._l.offset = Math.max(this._l.videos.length - this._l.gridCount, 0)
+        } else if( this._l.offset < 0 ) {
+            this._l.offset = 0
+        }
+
         let i = 0;
         let j= this._l.offset;
         const show_triggers = this._c.libraryRegions.includes(this._l.size)
@@ -1303,7 +1333,6 @@ class AarloGlance extends LitElement {
         }
 
         this._l.lastOffset = this._l.offset
-        this._l.lastCapture = this._s.capturedText
 
         const not_at_start = this._l.offset !== 0
         this._set( "library-control-first",{
@@ -1328,8 +1357,8 @@ class AarloGlance extends LitElement {
 
     updateLibraryView() {
 
-        // No library, do nothing
-        if ( !this._l.videos ) {
+        // Nothing there yet...
+        if( !this.isViewReady() ) {
             return
         }
 
@@ -1339,21 +1368,24 @@ class AarloGlance extends LitElement {
             this._l.lastOffset = -1
         }
 
-        // Massage offset so it fits in library.
-        if( this._l.offset + this._l.gridCount > this._l.videos.length ) {
-            this._l.offset = Math.max(this._l.videos.length - this._l.gridCount, 0)
-        } else if( this._l.offset < 0 ) {
-            this._l.offset = 0
-        }
-
-        // If capture changed reload library
-        if ( this._l.lastCapture !== this._s.capturedText ) {
+        // If no library then load it.
+        if ( !this._l.videos ) {
+            console.log( `library-load: ${this._s.cameraName}:`)
+            this.asyncLoadLibrary().then( () => {
+                this._updateLibraryView()
+            })
+ 
+        // If last video changed then reload library.
+        } else if ( this._l.lastVideo !== this._s.lastVideo ) {
+            console.log( `library-video-update: ${this._s.cameraName}: ${this._l.lastVideo} --> ${this._s.lastVideo}` )
+            this._l.lastVideo = this._s.lastVideo
             this.asyncLoadLibrary().then( () => {
                 this._updateLibraryView()
             })
 
         // If offset has changed then reload images
         } else if ( this._l.lastOffset !== this._l.offset ) {
+            console.log( `library-view-update: ${this._s.cameraName}` )
             this._updateLibraryView()
         }
     }
@@ -1380,6 +1412,12 @@ class AarloGlance extends LitElement {
     }
 
     updateVideoView( state = '' ) {
+
+        // Nothing there yet...
+        if( !this.isViewReady() ) {
+            return
+        }
+
         if( state === 'starting' ) {
             this._mset( 'video-player',{src: this._video, poster: this._videoPoster} )
             this._mshow("video-seek")
@@ -1431,11 +1469,6 @@ class AarloGlance extends LitElement {
             };
         }, true);
         this._dash.initialize(video, this._stream, true);
-        // this._dash.updateSettings({
-            // 'debug': {
-                // 'logLevel': dashjs.Debug.LOG_LEVEL_DEBUG
-            // }
-        // });
     }
 
     setHLSStreamElementData() {
@@ -1470,6 +1503,11 @@ class AarloGlance extends LitElement {
                     this.playStream( false )
                 },5 * 1000 )
             }
+            return
+        }
+
+        // Nothing there yet...
+        if( !this.isViewReady() ) {
             return
         }
 
@@ -1511,6 +1549,10 @@ class AarloGlance extends LitElement {
         this.showStreamView()
     }
 
+    isViewReady() {
+        return this._element('image-viewer') !== null 
+    }
+
     updateView() {
         this.updateLanguages()
         this.updateStatuses()
@@ -1523,7 +1565,7 @@ class AarloGlance extends LitElement {
     initialView() {
 
         // Keep trying until it appears
-        if( !this.shadowRoot.getElementById( this._id('image-viewer') ) ) {
+        if( !this.isViewReady() ) {
             setTimeout( () => {
                 this.initialView()
             }, 100);
@@ -1536,6 +1578,7 @@ class AarloGlance extends LitElement {
         this.setupStreamView()
 
         this.updateImageView()
+        this.updateLibraryView()
         this.showImageView()
     }
 
@@ -1595,18 +1638,6 @@ class AarloGlance extends LitElement {
 
     wsUpdateSnapshot() {
         this.asyncWSUpdateSnapshot().then()
-    }
-
-    updateCameraImageSrc() {
-        const camera = this.getState(this._s.cameraId,'unknown');
-        if ( camera.state !== 'unknown' ) {
-            this._image_base = camera.attributes.entity_picture
-            this._image = camera.attributes.entity_picture + "&t=" + new Date().getTime()
-            //this._image = camera.attributes.last_thumbnail+ "&t=" + new Date().getTime()
-        } else {
-            this._image = '';
-        }
-        this.updateImageView()
     }
 
     async asyncLoadLatestVideo(modal) {
@@ -1711,7 +1742,6 @@ class AarloGlance extends LitElement {
         this._video = null;
         this._l.videos = await this.wsLoadLibrary(this._c.libraryRecordings);
         this._l.offset = 0
-        this._l.lastCapture = this._s.capturedText
     }
 
     openLibrary() {
@@ -1893,12 +1923,6 @@ class AarloGlance extends LitElement {
             clearTimeout( this._s.controlTimeout );
             this._s.controlTimeout = null
         }
-    }
-
-    updateCameraImageSourceLater(seconds = 2) {
-        setTimeout(() => {
-            this.updateCameraImageSrc()
-        }, seconds * 1000);
     }
 
 }
