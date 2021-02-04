@@ -1,5 +1,5 @@
 /**
- * @fileoverview Lovelace class for accessing Arlo camera through the AArlo
+ * @module Lovelace class for accessing Arlo camera through the AArlo
  * module.
  *
  * Startup Notes:
@@ -516,7 +516,7 @@ class AarloGlance extends LitElement {
     }
 
     /**
-     * @brief Look for card element in shadow dom.
+     * Look for card element in shadow dom.
      *
      * @param id The element or `null`
     */
@@ -525,7 +525,7 @@ class AarloGlance extends LitElement {
     }
 
     /**
-     * @brief Look for modal card element in shadow dom.
+     * Look for modal card element in shadow dom.
      *
      * Automatically chooses modal name if modal window open.
      *
@@ -610,7 +610,7 @@ class AarloGlance extends LitElement {
     }
 
     /**
-     * @brief set a variety of element values
+     * Set a variety of element values.
      *
      * It gets called a lot.
      */
@@ -623,9 +623,24 @@ class AarloGlance extends LitElement {
         if ( alt !== undefined )    { this.__alt( element, alt ) }
         if ( poster !== undefined ) { this.__poster( element, poster ) }
     }
+
+    /**
+     * Set a variety pieces of element data.
+     *
+     * @param id - ID of element to change
+     * @param object {} - Object containing changes
+     */
     _set( id, { title, text, icon, state, src, alt, poster } = {} ) {
         this.__set( this._element(id), title, text, icon, state, src, alt, poster )
     }
+    /**
+     * Set a variety pieces of element data.
+     *
+     * This uses the modal version when a modal window is open.
+     *
+     * @param id - ID of element to change
+     * @param object {} - Object containing changes
+     */
     _mset( id, { title, text, icon, state, src, alt, poster } = {} ) {
         this.__set( this._melement(id), title, text, icon, state, src, alt, poster )
     }
@@ -1191,6 +1206,15 @@ class AarloGlance extends LitElement {
         this._set("externals-light", {title: this._s.lightText, icon: this._s.lightIcon, state: this._s.lightOn})
     }
 
+    /**
+     * Generate a new image URL.
+     *
+     * This is done when Arlo changes the image or Home Assistance changes
+     * the authentication token. We always add the current time to the end to
+     * force the browser to reload.
+     *
+     * It makes no attempt to reload the image.
+     */
     updateImageURL() {
         const camera = this.getState(this._s.cameraId,'unknown');
         this._image_base = camera.attributes.entity_picture
