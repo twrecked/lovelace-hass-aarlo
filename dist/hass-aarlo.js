@@ -482,7 +482,7 @@ class AarloGlance extends LitElement {
     }
 
     getCardSize() {
-        return 3;
+        return this._c.cardSize
     }
 
     moreInfo( id ) {
@@ -940,7 +940,10 @@ class AarloGlance extends LitElement {
         // aspect ratio
         this._c.aspectRatio = config.aspect_ratio === 'square' ? '1x1' : '16x9';
         this._s.aspectRatio = config.aspect_ratio === 'square' ? 1 : 0.5625
- 
+
+        // lovelace card size
+        this._c.cardSize = config.card_size ? parseInt(config.card_size) : 3
+
         // on click
         this._c.imageClick = config.image_click ? config.image_click : '';
 
