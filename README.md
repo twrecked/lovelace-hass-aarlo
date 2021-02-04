@@ -10,6 +10,8 @@ version 0.1 if things go wrong.
 I've put it out there so people can try it if they want. The underlying
 architecture is very different and (I hope) a lot more efficient.
 
+The `library_sizes` config is a good place to start.
+
 The card now supports localisation but only English is provided at the
 moment. If anybody fancies translating look at `en.js`
 [here](https://github.com/twrecked/lovelace-hass-aarlo/tree/master/lang), you
