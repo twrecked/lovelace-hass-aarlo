@@ -43,7 +43,13 @@ class AarloGlance extends LitElement {
         this._hass = null;
         this._config = null;
 
+        // The current image URL.
         this._image = ''
+
+        // The current image URL has a timestamp suffix added, this is the URL without it.
+        // This way we can check for token changes.
+        this._image_base = ''
+
         this._hls = null;
         this._dash = null;
         this._video = null
@@ -714,9 +720,12 @@ class AarloGlance extends LitElement {
             this._s.cameraName = this._config.name ? this._config.name : camera.attributes.friendly_name;
         }
 
-        // See if camera has changed. Update on the off chance something useful
-        // has happened.
-        if ( camera.state !== this._s.cameraState ) {
+        // See if:
+        //  - camera state has changed
+        //  - underlying entity pictures has changed
+        // If so then queue an image update
+        if ( camera.state !== this._s.cameraState ||
+                this._image_base !== camera.attributes.entity_picture ) {
             if ( this._s.cameraState === 'taking snapshot' ) {
                 // console.log( 'snapshot ' + this._s.cameraName + ':' + this._s.cameraState + '-->' + camera.state );
                 this.updateCameraImageSrc()
@@ -1591,8 +1600,9 @@ class AarloGlance extends LitElement {
     updateCameraImageSrc() {
         const camera = this.getState(this._s.cameraId,'unknown');
         if ( camera.state !== 'unknown' ) {
-            // this._image = camera.attributes.entity_picture + "&t=" + new Date().getTime()
-            this._image = camera.attributes.last_thumbnail+ "&t=" + new Date().getTime()
+            this._image_base = camera.attributes.entity_picture
+            this._image = camera.attributes.entity_picture + "&t=" + new Date().getTime()
+            //this._image = camera.attributes.last_thumbnail+ "&t=" + new Date().getTime()
         } else {
             this._image = '';
         }
@@ -1618,6 +1628,7 @@ class AarloGlance extends LitElement {
         this._video       = camera.attributes.last_video
         this._videoPoster = camera.attributes.last_thumbnail
         this.showVideo()
+        // TODO maybe resurrect this one...
         // if ( this._video === null ) {
             // this.asyncLoadLatestVideo(modal).then( () => {
                 // this.showVideo()
