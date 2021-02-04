@@ -691,7 +691,7 @@ class AarloGlance extends LitElement {
                     _lang = lang
                     _i = module.messages
                     this.updateView()
-                }, reason => {
+                }, (_reason) => {
                     const lang_pieces = lang.split('-')
                     if( lang_pieces.length > 1 ) {
                         this.loadLanguage( lang_pieces[0] )
@@ -791,12 +791,14 @@ class AarloGlance extends LitElement {
 
         if( this._v.motion ) {
             this._s.motionOn   = this.getState(this._s.motionId,'off').state === 'on' ? 'state-on' : '';
-            this._s.motionText = `${_i.status.motion}: ` + this._s.motionOn !== '' ? _i.status.detected : _i.status.clear;
+            this._s.motionText = `${_i.status.motion}: ` +
+                    ( this._s.motionOn !== '' ? _i.status.detected : _i.status.clear )
         }
 
         if( this._v.sound ) {
             this._s.soundOn   = this.getState(this._s.soundId,'off').state === 'on' ? 'state-on' : '';
-            this._s.soundText = `${_i.status.sound}: ` + this._s.soundOn !== '' ? _i.status.detected : _i.status.clear;
+            this._s.soundText = `${_i.status.sound}: ` +
+                    ( this._s.soundOn !== '' ? _i.status.detected : _i.status.clear )
         }
 
         // We always save this, used by library code to check for updates
@@ -812,14 +814,14 @@ class AarloGlance extends LitElement {
             const doorState = this.getState(this._s.doorId, 'off');
             this._s.doorOn   = doorState.state === 'on' ? 'state-on' : '';
             this._s.doorText = doorState.attributes.friendly_name + ': ' +
-                    (this._s.doorOn === '' ? _.status.door_closed : _i.status.door_open )
+                    ( this._s.doorOn === '' ? _.status.door_closed : _i.status.door_open )
             this._s.doorIcon = this._s.doorOn === '' ? 'mdi:door' : 'mdi:door-open';
         }
         if( this._v.door2 ) {
             const door2State = this.getState(this._s.door2Id, 'off');
             this._s.door2On   = door2State.state === 'on' ? 'state-on' : '';
             this._s.door2Text = door2State.attributes.friendly_name + ': ' +
-                    (this._s.door2On === '' ? _.status.door_closed : _i.status.door_open )
+                    ( this._s.door2On === '' ? _.status.door_closed : _i.status.door_open )
             this._s.door2Icon = this._s.door2On === '' ? 'mdi:door' : 'mdi:door-open';
         }
 
@@ -827,14 +829,14 @@ class AarloGlance extends LitElement {
             const doorLockState = this.getState(this._s.doorLockId, 'locked');
             this._s.doorLockOn   = doorLockState.state === 'locked' ? 'state-on' : 'state-warn';
             this._s.doorLockText = doorLockState.attributes.friendly_name + ': ' +
-                    (this._s.doorLockOn === 'state-on' ? _i.status.lock_locked : _i.status.lock_unlocked)
+                    ( this._s.doorLockOn === 'state-on' ? _i.status.lock_locked : _i.status.lock_unlocked )
             this._s.doorLockIcon = this._s.doorLockOn === 'state-on' ? 'mdi:lock' : 'mdi:lock-open';
         }
         if( this._v.door2Lock ) {
             const door2LockState = this.getState(this._s.door2LockId, 'locked');
             this._s.door2LockOn   = door2LockState.state === 'locked' ? 'state-on' : 'state-warn';
             this._s.door2LockText = door2LockState.attributes.friendly_name + ': ' + 
-                    (this._s.door2LockOn === 'state-on' ? _i.status.lock_locked : _i.status.lock_unlocked)
+                    ( this._s.door2LockOn === 'state-on' ? _i.status.lock_locked : _i.status.lock_unlocked )
             this._s.door2LockIcon = this._s.door2LockOn === 'state-on' ? 'mdi:lock' : 'mdi:lock-open';
         }
 
@@ -842,14 +844,14 @@ class AarloGlance extends LitElement {
             const doorBellState = this.getState(this._s.doorBellId, 'off');
             this._s.doorBellOn   = doorBellState.state === 'on' ? 'state-on' : '';
             this._s.doorBellText = doorBellState.attributes.friendly_name + ': ' +
-                    (this._s.doorBellOn === 'state-on' ?  _i.status.doorbell_pressed : _i.status.doorbell_idle)
+                    ( this._s.doorBellOn === 'state-on' ?  _i.status.doorbell_pressed : _i.status.doorbell_idle )
             this._s.doorBellIcon = 'mdi:doorbell-video';
         }
         if( this._v.door2Bell ) {
             const door2BellState = this.getState(this._s.door2BellId, 'off');
             this._s.door2BellOn   = door2BellState.state === 'on' ? 'state-on' : '';
             this._s.door2BellText = door2BellState.attributes.friendly_name + ': ' +
-                    (this._s.door2BellOn === 'state-on' ?  _i.status.doorbell_pressed : _i.status.doorbell_idle)
+                    ( this._s.door2BellOn === 'state-on' ?  _i.status.doorbell_pressed : _i.status.doorbell_idle )
             this._s.door2BellIcon = 'mdi:doorbell-video';
         }
 
@@ -857,7 +859,7 @@ class AarloGlance extends LitElement {
             const lightState = this.getState(this._s.lightId, 'off');
             this._s.lightOn   = lightState.state === 'on' ? 'state-on' : '';
             this._s.lightText = lightState.attributes.friendly_name + ': ' +
-                    (this._s.lightOn === 'state-on' ?   _i.status.light_on : _i.status.light_off)
+                    ( this._s.lightOn === 'state-on' ?   _i.status.light_on : _i.status.light_off )
             this._s.lightIcon = 'mdi:lightbulb';
             this._v.lightLeft = this._s.lightLeft
             this._v.lightRight = !this._s.lightLeft
