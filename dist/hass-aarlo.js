@@ -682,6 +682,24 @@ class AarloGlance extends LitElement {
             };
     }
 
+    loadLanguage( lang ) {
+        // TODO use cdn eventually
+        // import(`https://cdn.jsdelivr.net/gh/twrecked/lovelace-hass-aarlo@i18n/lang/{lang}.js`)
+        if( lang !== _lang ) {
+            import(`https://twrecked.github.io/lang/${lang}.js?t=${new Date().getTime()}`)
+                .then( module => {
+                    _lang = lang
+                    _i = module.messages
+                    this.updateView()
+                }, reason => {
+                    const lang_pieces = lang.split('-')
+                    if( lang_pieces.length > 1 ) {
+                        this.loadLanguage( lang_pieces[0] )
+                    }
+                })
+            }
+    }
+
     updateStatuses() {
 
         // CAMERA
@@ -909,17 +927,7 @@ class AarloGlance extends LitElement {
         this.checkConfig()
 
         // language?
-        const lang = config.lang ? config.lang : 'en'
-        if( lang !== _lang ) {
-            // TODO use cdn eventually
-            // import('https://cdn.jsdelivr.net/gh/twrecked/lovelace-hass-aarlo@i18n/lang/en2.js')
-            import(`https://twrecked.github.io/lang/${lang}.js?t=${new Date().getTime()}`)
-                .then( module => {
-                    _lang = lang
-                    _i = module.messages
-                    this.updateView()
-                })
-        }
+        this.loadLanguage( config.lang ? config.lang : 'en' )
  
         // config
         // aspect ratio
