@@ -628,7 +628,8 @@ class AarloGlance extends LitElement {
      * Set a variety pieces of element data.
      *
      * @param id - ID of element to change
-     * @param object {} - Object containing changes
+     * @param dictionary - Object containing changes. Not all entries need to
+     *     be set.
      */
     _set( id, { title, text, icon, state, src, alt, poster } = {} ) {
         this.__set( this._element(id), title, text, icon, state, src, alt, poster )
@@ -639,7 +640,8 @@ class AarloGlance extends LitElement {
      * This uses the modal version when a modal window is open.
      *
      * @param id - ID of element to change
-     * @param object {} - Object containing changes
+     * @param dictionary - Object containing changes. Not all entries need to
+     *     be set.
      */
     _mset( id, { title, text, icon, state, src, alt, poster } = {} ) {
         this.__set( this._melement(id), title, text, icon, state, src, alt, poster )
@@ -663,6 +665,25 @@ class AarloGlance extends LitElement {
             if ( top !== null ) {
                 element.style.paddingTop=`${top}px`
             }
+        }
+    }
+
+    /**
+     * Replace all of `from` with `to` and return the new string.
+     *
+     * @param old_string string we are converting
+     * @param from what to replace
+     * @param to what to replace it with
+     * @returns {*} the new string
+     * @private
+     */
+    _replaceAll( old_string, from, to ) {
+        while( true ) {
+            const new_string = old_string.replace( from,to )
+            if( new_string === old_string ) {
+                return new_string
+            }
+            old_string = new_string
         }
     }
 
@@ -1064,7 +1085,9 @@ class AarloGlance extends LitElement {
                                     this._v.light )
 
         // web item id suffix
-        this._s.idSuffix = this._s.cameraId.replaceAll('.','-').replaceAll('_','-')
+        //this._s.idSuffix = this._s.cameraId.replaceAll('.','-').replaceAll('_','-')
+        this._s.idSuffix = this._replaceAll( this._s.cameraId,'.','-' )
+        this._s.idSuffix = this._replaceAll( this._s.idSuffix,'_','-' )
     }
 
     getModalDimensions() {
