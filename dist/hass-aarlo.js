@@ -26,16 +26,21 @@
  * - hide(Image|Video|Stream)View; don't show layers for this card
  *
  * What's what:
- * - this._cg; current global card configuration
+ * - this._cg; global card configuration
  * - this._cc; cameras configurations
  * - this._lc; libraries configurations
- * - this._cs; current camara statuses
- * - this._ls; current library statuses
- * - this._cv; current camera visibilities
- * - this._lv; current library visibilities
+ * - this._cs; all camara statuses
+ * - this._ls; all library statuses
+ * - this._cv; all camera visibilities
+ * - this._lv; all library visibilities
  *
- *   this._c; current camera
- *   this._l; current library
+ * Getters:
+ *   this.cc; current camera config
+ *   this.cs; current camera state
+ *   this.cv; current camera visibilities
+ *   this.lc; current library config
+ *   this.ls; current library state
+ *   this.lv; current library visibilities
  */
 
 const LitElement = Object.getPrototypeOf(
