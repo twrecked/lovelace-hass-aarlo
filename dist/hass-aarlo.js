@@ -24,6 +24,12 @@
  *   do change
  * - show(Image|Video|Stream)View; show layers for this card
  * - hide(Image|Video|Stream)View; don't show layers for this card
+ *
+ * What's what:
+ * - this._c; current card configuration
+ * - this._l; current library statuses
+ * - this._s; current camara statuses
+ * - this._v; current visibilities
  */
 
 const LitElement = Object.getPrototypeOf(
@@ -31,8 +37,13 @@ const LitElement = Object.getPrototypeOf(
     );
 const html = LitElement.prototype.html;
 
+
+/**
+ * Internationalisation
+ */
 let _lang = null
 let _i = null
+
 
 // noinspection JSUnresolvedVariable,CssUnknownTarget,CssUnresolvedCustomProperty,HtmlRequiredAltAttribute,RequiredAttributes,JSFileReferences
 class AarloGlance extends LitElement {
@@ -990,6 +1001,9 @@ class AarloGlance extends LitElement {
         // lovelace card size
         this._c.cardSize = config.card_size ? parseInt(config.card_size) : 3
 
+        // swipe threshold
+        this._c.swipeThreshold = config.swipe_threshold ? parseInt(config.swipe_threshold) : 150
+
         // on click
         this._c.imageClick = config.image_click ? config.image_click : '';
 
@@ -1282,6 +1296,26 @@ class AarloGlance extends LitElement {
         this._show('library-control-resize',this._c.librarySizes.length > 1 )
         this._set("library-control-resize",{ state: "on"} )
         this._set("library-control-close",{ state: "on"} )
+
+        // rudementary swipe support
+        let viewer = this._element("library-viewer")
+        viewer.addEventListener('touchstart', (e) => {
+            this._l.xDown = e.touches[0].clientX
+            this._l.xUp = null
+        })
+        viewer.addEventListener('touchmove', (e) => {
+            this._l.xUp = e.touches[0].clientX
+        })
+        viewer.addEventListener('touchend', () => {
+            if( this._l.xDown && this._l.xUp ) {
+                const xDiff = this._l.xDown - this._l.xUp;
+                if( xDiff > this._c.swipeThreshold ) {
+                    this.nextLibraryPage()
+                } else if( xDiff < (0 - this._c.swipeThreshold) ) {
+                    this.previousLibraryPage()
+                }
+            }
+        })
     }
 
     _updateLibraryHTML() {
@@ -1974,24 +2008,29 @@ class AarloGlance extends LitElement {
 
 }
 
-
-const s = document.createElement("script")
-s.src = 'https://cdn.jsdelivr.net/npm/hls.js@latest'
-s.onload = function() {
-    const s2 = document.createElement("script")
-    s2.src = 'https://cdn.dashjs.org/v3.1.1/dash.all.min.js'
-    s2.onload = function() {
+// Bring in our custom scripts
+const scripts = [
+    "https://cdn.jsdelivr.net/npm/hls.js@latest",
+    "https://cdn.dashjs.org/v3.1.1/dash.all.min.js",
+]
+function load_script( number ) {
+    if ( number < scripts.length ) {
+        const script = document.createElement("script")
+        script.src = scripts[ number ]
+        script.onload = () => {
+            load_script( number + 1 )
+        }
+        document.head.appendChild(script)
+    } else {
         // TODO use cdn eventually
         // import('https://cdn.jsdelivr.net/gh/twrecked/lovelace-hass-aarlo@i18n/lang/en2.js')
-        import('https://twrecked.github.io/lang/en.js?t=' + new Date().getTime())
-            .then( module => {
+        import('https://twrecked.github.io/lang/en.js?t=' + new Date().getTime()).then( module => {
                 _lang = "en"
                 _i = module.messages
                 customElements.define('aarlo-glance', AarloGlance)
             })
     }
-    document.head.appendChild(s2)
 }
-document.head.appendChild(s)
+load_script( 0 )
 
 // vim: set expandtab:ts=4:sw=4
