@@ -762,7 +762,7 @@ class AarloGlance extends LitElement {
         //  - auth (base name) has changed then do an update
         //  - image source has changed then do an update
         if ( camera.state !== this._s.cameraState ) {
-            console.log( `state-update: ${this._s.cameraName}: ${this._s.cameraState} --> ${camera.state}` )
+            //console.log( `state-update: ${this._s.cameraName}: ${this._s.cameraState} --> ${camera.state}` )
             this.updateImageURL()
             if ( this._s.cameraState === 'taking snapshot' ) {
                 this._c.snapshotRetries.forEach( (seconds) => {
@@ -771,11 +771,11 @@ class AarloGlance extends LitElement {
             }
         }
         else if ( this._image_base !== camera.attributes.entity_picture ) {
-            console.log( `auth-update: ${this._s.cameraName}: ${this._image_base} --> ${camera.attributes.entity_picture}` )
+            // console.log( `auth-update: ${this._s.cameraName}: ${this._image_base} --> ${camera.attributes.entity_picture}` )
             this.updateImageURL()
         }
         else if ( this._s.imageSource !== camera.attributes.image_source ) {
-            console.log( `source-update: ${this._s.cameraName}: ${this._s.imageSource} --> ${camera.attributes.image_source}` )
+            // console.log( `source-update: ${this._s.cameraName}: ${this._s.imageSource} --> ${camera.attributes.image_source}` )
             this.updateImageURL()
         }
 
@@ -1417,14 +1417,14 @@ class AarloGlance extends LitElement {
 
         // If no library then load it.
         if ( !this._l.videos ) {
-            console.log( `library-load: ${this._s.cameraName}:`)
+            // console.log( `library-load: ${this._s.cameraName}:`)
             this.asyncLoadLibrary().then( () => {
                 this._updateLibraryView()
             })
  
         // If last video changed then reload library.
         } else if ( this._l.lastVideo !== this._s.lastVideo ) {
-            console.log( `library-video-update: ${this._s.cameraName}: ${this._l.lastVideo} --> ${this._s.lastVideo}` )
+            // console.log( `library-video-update: ${this._s.cameraName}: ${this._l.lastVideo} --> ${this._s.lastVideo}` )
             this._l.lastVideo = this._s.lastVideo
             this.asyncLoadLibrary().then( () => {
                 this._updateLibraryView()
@@ -1432,7 +1432,7 @@ class AarloGlance extends LitElement {
 
         // If offset has changed then reload images
         } else if ( this._l.lastOffset !== this._l.offset ) {
-            console.log( `library-view-update: ${this._s.cameraName}` )
+            // console.log( `library-view-update: ${this._s.cameraName}` )
             this._updateLibraryView()
         }
     }
