@@ -1155,15 +1155,13 @@ class AarloGlance extends LitElement {
     showModal( show = true ) {
         if( this._modalViewer ) {
             this.setModalElementData()
-            const modal = this.shadowRoot.getElementById( this._id('modal-viewer') )
-            modal.style.display =  show ? 'block' : 'none'
+            this._element('modal-viewer').style.display =  show ? 'block' : 'none'
         }
     }
 
     hideModal() {
         if( this._modalViewer ) {
-            const modal = this.shadowRoot.getElementById( this._id('modal-viewer') )
-            modal.style.display = 'none'
+            this._element('modal-viewer').style.display = 'none'
         }
     }
 
@@ -1322,6 +1320,9 @@ class AarloGlance extends LitElement {
                 }
             }
         }, { passive: true })
+
+        // set state
+        this._l.offset = -1
     }
 
     _updateLibraryHTML() {
@@ -1542,11 +1543,11 @@ class AarloGlance extends LitElement {
     }
  
     setMPEGStreamElementData() {
-        const video = this.shadowRoot.getElementById( this._mid('stream-player') )
-        const et = this._findEgressToken(this._stream);
+        const video = this._melement('stream-player')
+        const et = this._findEgressToken( this._stream );
 
         this._dash = dashjs.MediaPlayer().create();
-        this._dash.extend("RequestModifier", function () {
+        this._dash.extend("RequestModifier", () => {
             return {
                 modifyRequestHeader: function (xhr) {
                     xhr.setRequestHeader('Egress-Token',et);
@@ -1554,11 +1555,11 @@ class AarloGlance extends LitElement {
                 }
             };
         }, true);
-        this._dash.initialize(video, this._stream, true);
+        this._dash.initialize( video, this._stream, true )
     }
 
     setHLSStreamElementData() {
-        const video = this.shadowRoot.getElementById( this._mid('stream-player') )
+        const video = this._melement('stream-player')
         if (Hls.isSupported()) {
             this._hls = new Hls();
             this._hls.attachMedia(video);
@@ -1669,7 +1670,7 @@ class AarloGlance extends LitElement {
     }
 
     resetView() {
-        if ( this._l.videos ) {
+        if ( this._l.showing ) {
             this.showLibraryView()
         } else {
             this.showImageView()
@@ -1761,8 +1762,7 @@ class AarloGlance extends LitElement {
 
     stopVideo() {
         if ( this._video ) {
-            const video = this.shadowRoot.getElementById( this._mid('video-player' ) )
-            video.pause()
+            this._melement('video-player' ).pause()
             this.hideModal()
             this.resetView()
             this._video = null
@@ -1803,9 +1803,7 @@ class AarloGlance extends LitElement {
 
     stopStream() {
         this.resetView()
-        const stream = this.shadowRoot.getElementById( this._mid('stream-player' ) )
-        stream.pause();
-
+        this._melement('stream-player' ).pause()
         this.asyncStopStream().then( () => {
             this._c.autoPlay = false
             this._stream = null;
@@ -1833,15 +1831,14 @@ class AarloGlance extends LitElement {
     async asyncLoadLibrary() {
         this._video = null;
         this._l.videos = await this.wsLoadLibrary(this._c.libraryRecordings);
-        this._l.offset = 0
+        // this._l.offset = 0
     }
 
     openLibrary() {
+        this._l.showing = true
         this.getModalDimensions()
-        this.asyncLoadLibrary().then( () => {
-            this.updateLibraryView()
-            this.showLibraryView()
-        })
+        this.updateLibraryView()
+        this.showLibraryView()
     }
 
     playLibraryVideo(index) {
@@ -1884,8 +1881,8 @@ class AarloGlance extends LitElement {
     }
 
     closeLibrary() {
+        this._l.showing = false
         this.stopVideo()
-        this._l.videos = null
         this.showImageView()
     }
 
@@ -1919,20 +1916,17 @@ class AarloGlance extends LitElement {
     }
 
     controlPauseVideo(  ) {
-        const video = this.shadowRoot.getElementById( this._mid( 'video-player' ) )
-        video.pause();
+        this._melement( 'video-player' ).pause()
         this.updateVideoView('paused')
     }
 
     controlPlayVideo( ) {
         this.updateVideoView('playing')
-        const video = this.shadowRoot.getElementById( this._mid( 'video-player' ) )
-        video.play();
+        this._melement( 'video-player' ).play()
     }
 
     controlFullScreen() {
-        const prefix = this._stream ? 'stream-player' : 'video-player';
-        let video = this.shadowRoot.getElementById( this._mid( prefix ) )
+        let video = this._melement( this._stream ? 'stream-player' : 'video-player' )
         if (video.requestFullscreen) {
             video.requestFullscreen().then()
         } else if (video.mozRequestFullScreen) {
@@ -1967,23 +1961,20 @@ class AarloGlance extends LitElement {
     }
 
     setUpSeekBar() {
+        let video = this._melement('video-player')
+        let seekBar = this._melement('video-seek')
 
-        let video = this.shadowRoot.getElementById( this._mid('video-player') )
-        let seekBar = this.shadowRoot.getElementById( this._mid('video-seek') )
-
-        seekBar.value = 1
-        video.addEventListener("timeupdate", function() {
+        video.addEventListener( "timeupdate", () => {
             seekBar.value = (100 / video.duration) * video.currentTime;
         });
-
-        seekBar.addEventListener("change", function() {
+        seekBar.addEventListener( "change", () => {
             video.currentTime = video.duration * (seekBar.value / 100);
         });
-        seekBar.addEventListener("mousedown", () => {
+        seekBar.addEventListener( "mousedown", () => {
             this.showVideoControls(0);
             video.pause();
         });
-        seekBar.addEventListener("mouseup", () => {
+        seekBar.addEventListener( "mouseup", () => {
             video.play();
             this.hideVideoControlsLater()
         });
