@@ -256,7 +256,8 @@ class AarloGlance extends LitElement {
                         </video>
                         <video class="aarlo-modal-video"
                                id="${this._id('modal-video-player')}"
-                               autoplay playsinline
+                               playsinline
+                               @canplay="${() => { this.startVideo() }}"
                                @ended="${() => { this.stopVideo(); }}"
                                @mouseover="${() => { this.mouseOverVideo(); }}"
                                @click="${() => { this.clickVideo(); }}">
@@ -315,7 +316,8 @@ class AarloGlance extends LitElement {
                     <video class="aarlo-video"
                            id="${this._id('video-player')}"
                            style="display:none"
-                           autoplay playsinline
+                           playsinline
+                           @canplay="${() => { this.startVideo() }}"
                            @ended="${() => { this.stopVideo(); }}"
                            @mouseover="${() => { this.mouseOverVideo(); }}"
                            @click="${() => { this.clickVideo(); }}">
@@ -1749,6 +1751,12 @@ class AarloGlance extends LitElement {
                 // this.showVideo()
             // })
         // }
+    }
+
+    startVideo() {
+        if( this._video ) {
+            this._melement( 'video-player' ).play()
+        }
     }
 
     stopVideo() {
