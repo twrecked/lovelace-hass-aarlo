@@ -45,7 +45,7 @@ const html = LitElement.prototype.html;
  */
 let _lang = null
 let _i = null
-
+let lang_date = new Date().getTime()
 
 // noinspection JSUnresolvedVariable,CssUnknownTarget,CssUnresolvedCustomProperty,HtmlRequiredAltAttribute,RequiredAttributes,JSFileReferences
 class AarloGlance extends LitElement {
@@ -55,6 +55,7 @@ class AarloGlance extends LitElement {
 
         this._hass = null;
         this._config = null;
+        this._ready = false
 
         // The current image URL.
         this._image = ''
@@ -267,15 +268,12 @@ class AarloGlance extends LitElement {
                                          @click="${() => { this.toggleLight(this.cc.lightId); }}">
                                 </ha-icon>
                                 <ha-icon id="${this._id('modal-video-stop')}"
-                                         icon="mdi:stop" title="${_i.video.stop}"
                                          @click="${() => { this.controlStopVideoOrStream(); }}">
                                 </ha-icon>
                                 <ha-icon id="${this._id('modal-video-play')}"
-                                         icon="mdi:play" title="${_i.video.stop}"
                                          @click="${() => { this.controlPlayVideo(); }}">
                                 </ha-icon>
                                 <ha-icon id="${this._id('modal-video-pause')}"
-                                         icon="mdi:pause" title="${_i.video.stop}"
                                          @click="${() => { this.controlPauseVideo(); }}">
                                 </ha-icon>
                             </div>
@@ -286,7 +284,6 @@ class AarloGlance extends LitElement {
                             </div>
                             <div>
                                 <ha-icon id="${this._id('modal-video-full-screen')}"
-                                         icon="mdi:fullscreen" title="${_i.video.fullscreen}"
                                          @click="${() => { this.controlFullScreen(); }}">
                                 </ha-icon>
                             </div>
@@ -448,15 +445,12 @@ class AarloGlance extends LitElement {
                                  @click="${() => { this.toggleLight(this.cc.lightId); }}">
                         </ha-icon>
                         <ha-icon id="${this._id('video-stop')}"
-                                 icon="mdi:stop" title="${_i.video.stop}"
                                  @click="${() => { this.controlStopVideoOrStream(); }}">
                         </ha-icon>
                         <ha-icon id="${this._id('video-play')}"
-                                 icon="mdi:play" title="${_i.video.play}"
                                  @click="${() => { this.controlPlayVideo(); }}">
                         </ha-icon>
                         <ha-icon id="${this._id('video-pause')}"
-                                 icon="mdi:pause" title="${_i.video.pause}"
                                  @click="${() => { this.controlPauseVideo(); }}">
                         </ha-icon>
                     </div>
@@ -468,7 +462,6 @@ class AarloGlance extends LitElement {
                     <div>
                         <ha-icon 
                                  id="${this._id('video-full-screen')}"
-                                 icon="mdi:fullscreen" title="${_i.video.fullscreen}"
                                  @click="${() => { this.controlFullScreen(); }}">
                         </ha-icon>
                     </div>
@@ -488,7 +481,7 @@ class AarloGlance extends LitElement {
 
     set hass( hass ) {
         this._hass = hass;
-        if ( this._hass !== null && this._config !== null ) {
+        if ( this._ready ) {
             this.updateView()
         }
     }
@@ -756,28 +749,6 @@ class AarloGlance extends LitElement {
             };
     }
 
-    _updateLanguages( lang ) {
-        // TODO use cdn eventually
-        // import(`https://cdn.jsdelivr.net/gh/twrecked/lovelace-hass-aarlo@i18n/lang/{lang}.js`)
-        if( !lang.startsWith(_lang) ) {
-            import(`https://twrecked.github.io/lang/${lang}.js?t=${new Date().getTime()}`)
-                .then( module => {
-                    _lang = lang
-                    _i = module.messages
-                    this.updateView()
-                }, (_reason) => {
-                    const lang_pieces = lang.split('-')
-                    if( lang_pieces.length > 1 ) {
-                        this._updateLanguages( lang_pieces[0] )
-                    }
-                })
-        }
-    }
-
-    updateLanguages( ) {
-        this._updateLanguages( this.gc.lang ? this.gc.lang : this._hass.language )
-    }
-
     updateStatuses() {
 
         // CAMERA
@@ -976,6 +947,19 @@ class AarloGlance extends LitElement {
             this.throwError( 'unknown door lock (#2)' )
         }
     }
+
+    getGlobalCameraConfig( config ) {
+    }
+
+    getGlobalLibraryConfig( config ) {
+    }
+
+    getCameraConfig( config ) {
+    }
+
+    getLibraryConfig( config ) {
+    }
+
 
     setConfig(config) {
 
@@ -1528,6 +1512,16 @@ class AarloGlance extends LitElement {
         this._show("video-full-screen")
         this._show("modal-video-stop")
         this._show("modal-video-full-screen")
+
+        this._set ("video-stop", {title: _i.video.stop, icon: "mdi:stop"} )
+        this._set ("video-play", {title: _i.video.play, icon: "mdi:play"} )
+        this._set ("video-pause", {title: _i.video.pause, icon: "mdi:pause"} )
+        this._set ("video-full-screen", {title: _i.video.fullscreen, icon: "mdi:fullscreen"} )
+
+        this._set ("modal-video-stop", {title: _i.video.stop, icon: "mdi:stop"} )
+        this._set ("modal-video-play", {title: _i.video.play, icon: "mdi:play"} )
+        this._set ("modal-video-pause", {title: _i.video.pause, icon: "mdi:pause"} )
+        this._set ("modal-video-full-screen", {title: _i.video.fullscreen, icon: "mdi:fullscreen"} )
     }
 
     updateVideoView( state = '' ) {
@@ -1672,7 +1666,6 @@ class AarloGlance extends LitElement {
     }
 
     updateView() {
-        this.updateLanguages()
         this.updateStatuses()
         this.updateImageView()
         this.updateLibraryView()
@@ -1680,21 +1673,53 @@ class AarloGlance extends LitElement {
         this.updateStreamView()
     }
 
-    initialView() {
+    initialView( lang = null ) {
 
-        // Keep trying until it appears
+        // No language, pick one.
+        if ( lang === null ) {
+            console.log( 'setting default language' )
+            lang = this.gc.lang ? this.gc.lang : this._hass.language
+        }
+
+        // Load language pack. Try less specific before reverting to en.
+        // TODO use cdn eventually; import(`https://cdn.jsdelivr.net/gh/twrecked/lovelace-hass-aarlo@master/lang/{lang}.js`)
+        // testing: import(`https://twrecked.github.io/lang/${lang}.js?t=${lang_date}`)
+        if( !lang.startsWith(_lang) ) {
+            console.log( `importing ${lang} language` )
+            import(`https://cdn.jsdelivr.net/gh/twrecked/lovelace-hass-aarlo@master/lang/${lang}.js`)
+                .then( module => {
+                    _lang = lang
+                    _i = module.messages
+                    this.initialView( lang )
+                }, (_reason) => {
+                    const lang_pieces = lang.split('-')
+                    if( lang_pieces.length > 1 ) {
+                        this.initialView( lang_pieces[0] )
+                    } else {
+                        this.initialView( "en" )
+                    }
+                })
+            return
+        }
+
+        // Now wait for the elements to be added to the shadown DOM.
         if( !this.isViewReady() ) {
+            console.log( 'waiting for an element ' )
             setTimeout( () => {
-                this.initialView()
+                this.initialView( lang )
             }, 100);
             return
         }
 
+        // Install the static stuff.
         this.setupImageView()
         this.setupLibraryView()
         this.setupVideoView()
         this.setupStreamView()
 
+        // And go...
+        this._ready = true
+        this.updateStatuses()
         this.updateImageView()
         this.updateLibraryView()
         this.showImageView()
@@ -2055,13 +2080,7 @@ function load_script( number ) {
         }
         document.head.appendChild(script)
     } else {
-        // TODO use cdn eventually
-        // import('https://cdn.jsdelivr.net/gh/twrecked/lovelace-hass-aarlo@i18n/lang/en2.js')
-        import('https://twrecked.github.io/lang/en.js?t=' + new Date().getTime()).then( module => {
-                _lang = "en"
-                _i = module.messages
-                customElements.define('aarlo-glance', AarloGlance)
-            })
+        customElements.define('aarlo-glance', AarloGlance)
     }
 }
 load_script( 0 )
