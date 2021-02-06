@@ -2050,16 +2050,16 @@ class AarloGlance extends LitElement {
 
     hideVideoControlsLater(seconds = 2) {
         this.hideVideoControlsCancel();
-        this.__STATUS__.controlTimeout = setTimeout(() => {
-            this.__STATUS__.controlTimeout = null;
+        this.cs.controlTimeout = setTimeout(() => {
+            this.cs.controlTimeout = null;
             this.hideVideoControls()
         }, seconds * 1000);
     }
 
     hideVideoControlsCancel() {
-        if ( this.__STATUS__.controlTimeout !== null ) {
-            clearTimeout( this.__STATUS__.controlTimeout );
-            this.__STATUS__.controlTimeout = null
+        if ( this.cs.controlTimeout !== null ) {
+            clearTimeout( this.cs.controlTimeout );
+            this.cs.controlTimeout = null
         }
     }
 
