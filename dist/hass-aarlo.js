@@ -1013,8 +1013,7 @@ class AarloGlance extends LitElement {
         // GLOBAL config
         // Language override?
         this.gc.lang = config.lang
-        this.updateLanguages()
- 
+
         // aspect ratio
         this.gc.aspectRatio = config.aspect_ratio === 'square' ? '1x1' : '16x9';
         this.gc.aspectRatioMultiplier = config.aspect_ratio === 'square' ? 1 : 0.5625
@@ -1673,6 +1672,7 @@ class AarloGlance extends LitElement {
     }
 
     updateView() {
+        this.updateLanguages()
         this.updateStatuses()
         this.updateImageView()
         this.updateLibraryView()
