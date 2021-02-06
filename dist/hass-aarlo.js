@@ -40,24 +40,23 @@ const LitElement = Object.getPrototypeOf(
 const html = LitElement.prototype.html;
 
 
-/**
- * Internationalisation
- */
-let _lang = null
-let _i = null
-
-
 // noinspection JSUnresolvedVariable,CssUnknownTarget,CssUnresolvedCustomProperty,HtmlRequiredAltAttribute,RequiredAttributes,JSFileReferences
 class AarloGlance extends LitElement {
 
     constructor() {
         super();
 
+        // State and config.
         this._hass = null;
         this._config = null;
+        this._ready = false
 
         // The current image URL.
         this._image = ''
+
+        // Internationalisation.
+        this._i = null
+        this._lang = null
 
         // The current image URL has a timestamp suffix added, this is the URL without it.
         // This way we can check for token changes.
@@ -267,15 +266,12 @@ class AarloGlance extends LitElement {
                                          @click="${() => { this.toggleLight(this.cc.lightId); }}">
                                 </ha-icon>
                                 <ha-icon id="${this._id('modal-video-stop')}"
-                                         icon="mdi:stop" title="${_i.video.stop}"
                                          @click="${() => { this.controlStopVideoOrStream(); }}">
                                 </ha-icon>
                                 <ha-icon id="${this._id('modal-video-play')}"
-                                         icon="mdi:play" title="${_i.video.stop}"
                                          @click="${() => { this.controlPlayVideo(); }}">
                                 </ha-icon>
                                 <ha-icon id="${this._id('modal-video-pause')}"
-                                         icon="mdi:pause" title="${_i.video.stop}"
                                          @click="${() => { this.controlPauseVideo(); }}">
                                 </ha-icon>
                             </div>
@@ -286,7 +282,6 @@ class AarloGlance extends LitElement {
                             </div>
                             <div>
                                 <ha-icon id="${this._id('modal-video-full-screen')}"
-                                         icon="mdi:fullscreen" title="${_i.video.fullscreen}"
                                          @click="${() => { this.controlFullScreen(); }}">
                                 </ha-icon>
                             </div>
@@ -448,15 +443,12 @@ class AarloGlance extends LitElement {
                                  @click="${() => { this.toggleLight(this.cc.lightId); }}">
                         </ha-icon>
                         <ha-icon id="${this._id('video-stop')}"
-                                 icon="mdi:stop" title="${_i.video.stop}"
                                  @click="${() => { this.controlStopVideoOrStream(); }}">
                         </ha-icon>
                         <ha-icon id="${this._id('video-play')}"
-                                 icon="mdi:play" title="${_i.video.play}"
                                  @click="${() => { this.controlPlayVideo(); }}">
                         </ha-icon>
                         <ha-icon id="${this._id('video-pause')}"
-                                 icon="mdi:pause" title="${_i.video.pause}"
                                  @click="${() => { this.controlPauseVideo(); }}">
                         </ha-icon>
                     </div>
@@ -468,7 +460,6 @@ class AarloGlance extends LitElement {
                     <div>
                         <ha-icon 
                                  id="${this._id('video-full-screen')}"
-                                 icon="mdi:fullscreen" title="${_i.video.fullscreen}"
                                  @click="${() => { this.controlFullScreen(); }}">
                         </ha-icon>
                     </div>
@@ -488,7 +479,7 @@ class AarloGlance extends LitElement {
 
     set hass( hass ) {
         this._hass = hass;
-        if ( this._hass !== null && this._config !== null ) {
+        if ( this._ready ) {
             this.updateView()
         }
     }
@@ -756,28 +747,6 @@ class AarloGlance extends LitElement {
             };
     }
 
-    _updateLanguages( lang ) {
-        // TODO use cdn eventually
-        // import(`https://cdn.jsdelivr.net/gh/twrecked/lovelace-hass-aarlo@i18n/lang/{lang}.js`)
-        if( !lang.startsWith(_lang) ) {
-            import(`https://twrecked.github.io/lang/${lang}.js?t=${new Date().getTime()}`)
-                .then( module => {
-                    _lang = lang
-                    _i = module.messages
-                    this.updateView()
-                }, (_reason) => {
-                    const lang_pieces = lang.split('-')
-                    if( lang_pieces.length > 1 ) {
-                        this._updateLanguages( lang_pieces[0] )
-                    }
-                })
-        }
-    }
-
-    updateLanguages( ) {
-        this._updateLanguages( this.gc.lang ? this.gc.lang : this._hass.language )
-    }
-
     updateStatuses() {
 
         // CAMERA
@@ -821,10 +790,10 @@ class AarloGlance extends LitElement {
         if( this.cc.showPlay ) {
             this.cs.playState = 'state-on';
             if ( camera.state !== 'streaming' ) {
-                this.cs.playText = _i.image.start_stream
+                this.cs.playText = this._i.image.start_stream
                 this.cs.playIcon = 'mdi:play'
             } else {
-                this.cs.playText = _i.image.stop_stream
+                this.cs.playText = this._i.image.stop_stream
                 this.cs.playIcon = 'mdi:stop'
             }
         }
@@ -832,12 +801,12 @@ class AarloGlance extends LitElement {
         if( this.cc.showCameraOnOff ) {
             if ( this.cs.state === 'off' ) {
                 this.cs.onOffState = 'state-on';
-                this.cs.onOffText  = _i.image.turn_camera_on
+                this.cs.onOffText  = this._i.image.turn_camera_on
                 this.cs.onOffIcon  = 'mdi:camera'
                 this.cs.showCameraControls = false
             } else {
                 this.cs.onOffState = '';
-                this.cs.onOffText  = _i.image.turn_camera_off
+                this.cs.onOffText  = this._i.image.turn_camera_off
                 this.cs.onOffIcon  = 'mdi:camera-off'
                 this.cs.showCameraControls = true
             }
@@ -847,7 +816,7 @@ class AarloGlance extends LitElement {
 
         if( this.cc.showSnapshot ) {
             this.cs.snapshotState = '';
-            this.cs.snapshotText  = _i.image.take_a_snapshot
+            this.cs.snapshotText  = this._i.image.take_a_snapshot
             this.cs.snapshotIcon  = 'mdi:camera'
         }
 
@@ -855,13 +824,13 @@ class AarloGlance extends LitElement {
         if( this.cc.showBattery ) {
             if ( camera.attributes.wired_only ) {
                 this.cs.batteryState = 'state-update';
-                this.cs.batteryText  = _i.status.plugged_in
+                this.cs.batteryText  = this._i.status.plugged_in
                 this.cs.batteryIcon  = 'power-plug';
             } else {
                 const battery = this._getState(this.cc.batteryId, 0);
                 const prefix = camera.attributes.charging ? 'battery-charging' : 'battery';
                 this.cs.batteryState = battery.state < 25 ? 'state-warn' : ( battery.state < 15 ? 'state-error' : 'state-update' );
-                this.cs.batteryText  = `${_i.status.battery_strength}: ${battery.state}%`;
+                this.cs.batteryText  = `${this._i.status.battery_strength}: ${battery.state}%`;
                 this.cs.batteryIcon  = prefix + ( battery.state < 10 ? '-outline' :
                                                     ( battery.state > 90 ? '' : '-' + Math.round(battery.state/10) + '0' ) );
             }
@@ -869,27 +838,27 @@ class AarloGlance extends LitElement {
 
         if( this.cc.showSignal ) {
             const signal = this._getState(this.cc.signalId, 0);
-            this.cs.signalText = `${_i.status.signal_strength}: ${signal.state}`
+            this.cs.signalText = `${this._i.status.signal_strength}: ${signal.state}`
             this.cs.signalIcon = signal.state === "0" ? 'mdi:wifi-outline' : 'mdi:wifi-strength-' + signal.state;
         }
 
         if( this.cc.showMotion ) {
             this.cs.motionState = this._getState(this.cc.motionId,'off').state === 'on' ? 'state-on' : '';
-            this.cs.motionText  = `${_i.status.motion}: ` +
-                    ( this.cs.motionState !== '' ? _i.status.detected : _i.status.clear )
+            this.cs.motionText  = `${this._i.status.motion}: ` +
+                    ( this.cs.motionState !== '' ? this._i.status.detected : this._i.status.clear )
         }
 
         if( this.cc.showSound ) {
             this.cs.soundState = this._getState(this.cc.soundId,'off').state === 'on' ? 'state-on' : '';
-            this.cs.soundText  = `${_i.status.sound}: ` +
-                    ( this.cs.soundState !== '' ? _i.status.detected : _i.status.clear )
+            this.cs.soundText  = `${this._i.status.sound}: ` +
+                    ( this.cs.soundState !== '' ? this._i.status.detected : this._i.status.clear )
         }
 
         // We always save this, used by library code to check for updates
         const captured = this._getState(this.cc.capturedTodayId, 0).state;
         const last = this._getState(this.cc.lastCaptureId, 0).state;
-        this.cs.capturedText = `${_i.status.captured}: ` + 
-                ( captured === "0" ? _i.status.captured_nothing : `${captured} ${_i.status.captured_something} ${last}` );
+        this.cs.capturedText = `${this._i.status.captured}: ` + 
+                ( captured === "0" ? this._i.status.captured_nothing : `${captured} ${this._i.status.captured_something} ${last}` );
         this.cs.capturedIcon  = 'mdi:file-video'
         this.cs.capturedState = captured !== "0" ? 'state-update' : ''
 
@@ -898,14 +867,14 @@ class AarloGlance extends LitElement {
             const doorState = this._getState(this.cc.doorId, 'off');
             this.cs.doorState = doorState.state === 'on' ? 'state-on' : '';
             this.cs.doorText  = doorState.attributes.friendly_name + ': ' +
-                    ( this.cs.doorState === '' ? _i.status.door_closed : _i.status.door_open )
+                    ( this.cs.doorState === '' ? this._i.status.door_closed : this._i.status.door_open )
             this.cs.doorIcon  = this.cs.doorState === '' ? 'mdi:door' : 'mdi:door-open';
         }
         if( this.cc.showDoor2 ) {
             const door2State = this._getState(this.cc.door2Id, 'off');
             this.cs.door2State = door2State.state === 'on' ? 'state-on' : '';
             this.cs.door2Text  = door2State.attributes.friendly_name + ': ' +
-                    ( this.cs.door2State === '' ? _i.status.door_closed : _i.status.door_open )
+                    ( this.cs.door2State === '' ? this._i.status.door_closed : this._i.status.door_open )
             this.cs.door2Icon  = this.cs.door2State === '' ? 'mdi:door' : 'mdi:door-open';
         }
 
@@ -913,14 +882,14 @@ class AarloGlance extends LitElement {
             const doorLockState = this._getState(this.cc.doorLockId, 'locked');
             this.cs.doorLockState = doorLockState.state === 'locked' ? 'state-on' : 'state-warn';
             this.cs.doorLockText  = doorLockState.attributes.friendly_name + ': ' +
-                    ( this.cs.doorLockState === 'state-on' ? _i.status.lock_locked : _i.status.lock_unlocked )
+                    ( this.cs.doorLockState === 'state-on' ? this._i.status.lock_locked : this._i.status.lock_unlocked )
             this.cs.doorLockIcon  = this.cs.doorLockState === 'state-on' ? 'mdi:lock' : 'mdi:lock-open';
         }
         if( this.cc.showDoor2Lock ) {
             const door2LockState = this._getState(this.cc.door2LockId, 'locked');
             this.cs.door2LockState = door2LockState.state === 'locked' ? 'state-on' : 'state-warn';
             this.cs.door2LockText  = door2LockState.attributes.friendly_name + ': ' + 
-                    ( this.cs.door2LockState === 'state-on' ? _i.status.lock_locked : _i.status.lock_unlocked )
+                    ( this.cs.door2LockState === 'state-on' ? this._i.status.lock_locked : this._i.status.lock_unlocked )
             this.cs.door2LockIcon  = this.cs.door2LockState === 'state-on' ? 'mdi:lock' : 'mdi:lock-open';
         }
 
@@ -928,14 +897,14 @@ class AarloGlance extends LitElement {
             const doorBellState = this._getState(this.cc.doorBellId, 'off');
             this.cs.doorBellState = doorBellState.state === 'on' ? 'state-on' : '';
             this.cs.doorBellText  = doorBellState.attributes.friendly_name + ': ' +
-                    ( this.cs.doorBellState === 'state-on' ?  _i.status.doorbell_pressed : _i.status.doorbell_idle )
+                    ( this.cs.doorBellState === 'state-on' ?  this._i.status.doorbell_pressed : this._i.status.doorbell_idle )
             this.cs.doorBellIcon  = 'mdi:doorbell-video';
         }
         if( this.cc.showDoor2Bell ) {
             const door2BellState = this._getState(this.cc.door2BellId, 'off');
             this.cs.door2BellState = door2BellState.state === 'on' ? 'state-on' : '';
             this.cs.door2BellText  = door2BellState.attributes.friendly_name + ': ' +
-                    ( this.cs.door2BellState === 'state-on' ?  _i.status.doorbell_pressed : _i.status.doorbell_idle )
+                    ( this.cs.door2BellState === 'state-on' ?  this._i.status.doorbell_pressed : this._i.status.doorbell_idle )
             this.cs.door2BellIcon  = 'mdi:doorbell-video';
         }
 
@@ -943,7 +912,7 @@ class AarloGlance extends LitElement {
             const lightState = this._getState(this.cc.lightId, 'off');
             this.cs.lightState = lightState.state === 'on' ? 'state-on' : '';
             this.cs.lightText  = lightState.attributes.friendly_name + ': ' +
-                    ( this.cs.lightState === 'state-on' ?   _i.status.light_on : _i.status.light_off )
+                    ( this.cs.lightState === 'state-on' ?   this._i.status.light_on : this._i.status.light_off )
             this.cs.lightIcon  = 'mdi:lightbulb';
         }
     }
@@ -975,6 +944,18 @@ class AarloGlance extends LitElement {
         if ( this.cc.door2LockId && !(this.cc.door2LockId in this._hass.states) ) {
             this.throwError( 'unknown door lock (#2)' )
         }
+    }
+
+    getGlobalCameraConfig( config ) {
+    }
+
+    getGlobalLibraryConfig( config ) {
+    }
+
+    getCameraConfig( config ) {
+    }
+
+    getLibraryConfig( config ) {
     }
 
     setConfig(config) {
@@ -1212,6 +1193,9 @@ class AarloGlance extends LitElement {
         this._show("externals-door-lock-2", this.cc.showDoor2Lock )
         this._show("externals-door-bell-2", this.cc.showDoor2Bell )
         this._show("externals-light", this.cc.showLightRight )
+
+        this._set("top-bar-title", {text: this.cc.name})
+        this._set("bottom-bar-title", {text: this.cc.name})
     }
 
     updateImageView() {
@@ -1226,10 +1210,10 @@ class AarloGlance extends LitElement {
             this.cs.imageFullDate = this.cs.imageSource ? this.cs.imageSource : ''
             if( this.cs.imageFullDate.startsWith('capture/') ) { 
                 this.cs.imageDate     = this.cs.imageFullDate.substr(8);
-                this.cs.imageFullDate = `${_i.image.automatic_capture} ${this.cs.imageDate}`
+                this.cs.imageFullDate = `${this._i.image.automatic_capture} ${this.cs.imageDate}`
             } else if( this.cs.imageFullDate.startsWith('snapshot/') ) { 
                 this.cs.imageDate     = this.cs.imageFullDate.substr(9);
-                this.cs.imageFullDate = `${_i.image.snapshot_capture} ${this.cs.imageDate}`
+                this.cs.imageFullDate = `${this._i.image.snapshot_capture} ${this.cs.imageDate}`
             }
         } else {
             this.cs.imageFullDate = ''
@@ -1238,10 +1222,8 @@ class AarloGlance extends LitElement {
 
         this._set("image-viewer", {title: this.cs.imageFullDate, alt: this.cs.imageFullDate, src: this._image})
 
-        this._set("top-bar-title", {text: this.cc.name})
         this._set("top-bar-date", {title: this.cs.imageFullDate, text: this.cs.imageDate})
         this._set("top-bar-status", {text: this.cs.state })
-        this._set("bottom-bar-title", {text: this.cc.name})
         this._set("bottom-bar-date", {title: this.cs.imageFullDate, text: this.cs.imageDate})
         this._set("bottom-bar-date", {text: this.cs.imageDate})
         this._set("bottom-bar-status", {text: this.cs.state})
@@ -1413,9 +1395,9 @@ class AarloGlance extends LitElement {
             const id = `library-${i}`
             const bid = `library-box-${i}`
             const video = this.ls.videos[j]
-            let captured_text = `${_i.library.captured}: ${video.created_at_pretty}`
+            let captured_text = `${this._i.library.captured}: ${video.created_at_pretty}`
             if ( video.trigger && video.trigger !== '' ) {
-                captured_text += ` (${_i.trigger[video.trigger.toLowerCase()]})`
+                captured_text += ` (${this._i.trigger[video.trigger.toLowerCase()]})`
             }
             this._set( id,{title: captured_text, alt: captured_text, src: video.thumbnail} )
             this._show( id )
@@ -1448,27 +1430,27 @@ class AarloGlance extends LitElement {
 
         const not_at_start = this.ls.offset !== 0
         this._set( "library-control-first",{
-            title: not_at_start ? _i.library.first_page : "",
+            title: not_at_start ? this._i.library.first_page : "",
             icon: 'mdi:page-first',
             state: not_at_start ? "on" : "off"
         })
         this._set( "library-control-previous",{
-            title: not_at_start ? _i.library.previous_page : "",
+            title: not_at_start ? this._i.library.previous_page : "",
             icon: 'mdi:chevron-left',
             state: not_at_start ? "on" : "off"
         })
 
-        this._set( "library-control-resize",{ title: _i.library.next_size, icon: 'mdi:resize', state: "on" })
-        this._set( "library-control-close",{ title: _i.library.close, icon: 'mdi:close', state: "on" })
+        this._set( "library-control-resize",{ title: this._i.library.next_size, icon: 'mdi:resize', state: "on" })
+        this._set( "library-control-close",{ title: this._i.library.close, icon: 'mdi:close', state: "on" })
 
         const not_at_end = this.ls.offset + this.ls.gridCount < this.ls.videos.length
         this._set( "library-control-next",{
-            title: not_at_end ? _i.library.next_page : "",
+            title: not_at_end ? this._i.library.next_page : "",
             icon: 'mdi:chevron-right',
             state: not_at_end ? "on" : "off"
         })
         this._set( "library-control-last",{
-            title: not_at_end ? _i.library.last_page : "",
+            title: not_at_end ? this._i.library.last_page : "",
             icon: 'mdi:page-last',
             state: not_at_end ? "on" : "off"
         })
@@ -1526,8 +1508,22 @@ class AarloGlance extends LitElement {
     setupVideoView() {
         this._show("video-stop")
         this._show("video-full-screen")
+        this._show("video-door-lock", this.cc.showDoorLock )
+        this._show("video-light-on", this.cc.showLight )
         this._show("modal-video-stop")
         this._show("modal-video-full-screen")
+        this._show("modal-video-door-lock", this.cc.showDoorLock )
+        this._show("modal-video-light-on", this.cc.showLight )
+
+        this._set ("video-stop", {title: this._i.video.stop, icon: "mdi:stop"} )
+        this._set ("video-play", {title: this._i.video.play, icon: "mdi:play"} )
+        this._set ("video-pause", {title: this._i.video.pause, icon: "mdi:pause"} )
+        this._set ("video-full-screen", {title: this._i.video.fullscreen, icon: "mdi:fullscreen"} )
+
+        this._set ("modal-video-stop", {title: this._i.video.stop, icon: "mdi:stop"} )
+        this._set ("modal-video-play", {title: this._i.video.play, icon: "mdi:play"} )
+        this._set ("modal-video-pause", {title: this._i.video.pause, icon: "mdi:pause"} )
+        this._set ("modal-video-full-screen", {title: this._i.video.fullscreen, icon: "mdi:fullscreen"} )
     }
 
     updateVideoView( state = '' ) {
@@ -1540,8 +1536,6 @@ class AarloGlance extends LitElement {
         if( state === 'starting' ) {
             this._mset( 'video-player',{src: this._video, poster: this._videoPoster} )
             this._mshow("video-seek")
-            this._mshow("video-door-lock", this.cc.showDoorLock )
-            this._mshow("video-light-on", this.cc.showLight )
             this._videoState = 'playing'
             this.setUpSeekBar();
             this.showVideoControls(4);
@@ -1635,8 +1629,6 @@ class AarloGlance extends LitElement {
             } else {
                 this.setHLSStreamElementData()
             }
-            this._mshow("video-door-lock", this.cc.showDoorLock )
-            this._mshow("video-light-on", this.cc.showLight )
             this._mhide("video-play")
             this._mhide("video-pause")
             this._mhide("video-seek")
@@ -1672,7 +1664,6 @@ class AarloGlance extends LitElement {
     }
 
     updateView() {
-        this.updateLanguages()
         this.updateStatuses()
         this.updateImageView()
         this.updateLibraryView()
@@ -1680,21 +1671,54 @@ class AarloGlance extends LitElement {
         this.updateStreamView()
     }
 
-    initialView() {
+    initialView( lang = null ) {
 
-        // Keep trying until it appears
+        // No language, pick one.
+        if ( lang === null ) {
+            console.log( 'setting default language' )
+            lang = this.gc.lang ? this.gc.lang : this._hass.language
+        }
+
+        // Load language pack. Try less specific before reverting to en.
+        // testing: import(`https://twrecked.github.io/lang/${lang}.js?t=${lang_date}`)
+        if( !lang.startsWith(this._lang) ) {
+            console.log( `importing ${lang} language` )
+            import(`https://cdn.jsdelivr.net/gh/twrecked/lovelace-hass-aarlo@master/lang/${lang}.js`)
+                .then( module => {
+                    this._lang = lang
+                    this._i = module.messages
+                    this.initialView( lang )
+                }, (_reason) => {
+                    const lang_pieces = lang.split('-')
+                    if( lang_pieces.length > 1 ) {
+                        this.initialView( lang_pieces[0] )
+                    } else {
+                        this.initialView( "en" )
+                    }
+                })
+            return
+        }
+
+        // Now wait for the elements to be added to the shadown DOM.
         if( !this.isViewReady() ) {
+            console.log( 'waiting for an element ' )
             setTimeout( () => {
-                this.initialView()
+                this.initialView( lang )
             }, 100);
             return
         }
 
+        // Set initial state
+        this._ready = true
+        this.updateStatuses()
+
+        // Install the static stuff.
         this.setupImageView()
         this.setupLibraryView()
         this.setupVideoView()
         this.setupStreamView()
 
+        // And go...
         this.updateImageView()
         this.updateLibraryView()
         this.showImageView()
@@ -2026,16 +2050,16 @@ class AarloGlance extends LitElement {
 
     hideVideoControlsLater(seconds = 2) {
         this.hideVideoControlsCancel();
-        this.__STATUS__.controlTimeout = setTimeout(() => {
-            this.__STATUS__.controlTimeout = null;
+        this.cs.controlTimeout = setTimeout(() => {
+            this.cs.controlTimeout = null;
             this.hideVideoControls()
         }, seconds * 1000);
     }
 
     hideVideoControlsCancel() {
-        if ( this.__STATUS__.controlTimeout !== null ) {
-            clearTimeout( this.__STATUS__.controlTimeout );
-            this.__STATUS__.controlTimeout = null
+        if ( this.cs.controlTimeout !== null ) {
+            clearTimeout( this.cs.controlTimeout );
+            this.cs.controlTimeout = null
         }
     }
 
@@ -2055,13 +2079,7 @@ function load_script( number ) {
         }
         document.head.appendChild(script)
     } else {
-        // TODO use cdn eventually
-        // import('https://cdn.jsdelivr.net/gh/twrecked/lovelace-hass-aarlo@i18n/lang/en2.js')
-        import('https://twrecked.github.io/lang/en.js?t=' + new Date().getTime()).then( module => {
-                _lang = "en"
-                _i = module.messages
-                customElements.define('aarlo-glance', AarloGlance)
-            })
+        customElements.define('aarlo-glance', AarloGlance)
     }
 }
 load_script( 0 )
