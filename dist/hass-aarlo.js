@@ -1235,6 +1235,21 @@ class AarloGlance extends LitElement {
 
         this._set("top-bar-title", {text: this.cc.name})
         this._set("bottom-bar-title", {text: this.cc.name})
+
+        this._element("externals-door-bell").addEventListener('click', () => {
+            if ( this.cc.doorBellMuteId ) {
+                this.toggleSwitch( this.cc.doorBellMuteId )
+            } else {
+                this.moreInfo( this.cc.doorBellId )
+            }
+        })
+        this._element("externals-door-bell-2").addEventListener('click', () => {
+            if ( this.cc.door2BellMuteId ) {
+                this.toggleSwitch( this.cc.door2BellMuteId )
+            } else {
+                this.moreInfo( this.cc.door2BellId )
+            }
+        })
     }
 
     updateImageView() {
@@ -1290,21 +1305,6 @@ class AarloGlance extends LitElement {
         this._set("externals-door-bell-2", {title: this.cs.door2BellText, icon: this.cs.door2BellIcon, state: this.cs.door2BellState})
         this._set("externals-door-lock-2", {title: this.cs.door2LockText, icon: this.cs.door2LockIcon, state: this.cs.door2LockState})
         this._set("externals-light", {title: this.cs.lightText, icon: this.cs.lightIcon, state: this.cs.lightState})
-
-        this._element("externals-door-bell").addEventListener('click', () => {
-            if ( this.cc.doorBellMuteId ) {
-                this.toggleSwitch( this.cc.doorBellMuteId )
-            } else {
-                this.moreInfo( this.cc.doorBellId )
-            }
-        })
-        this._element("externals-door-bell-2").addEventListener('click', () => {
-            if ( this.cc.door2BellMuteId ) {
-                this.toggleSwitch( this.cc.door2BellMuteId )
-            } else {
-                this.moreInfo( this.cc.door2BellId )
-            }
-        })
     }
 
     /**
@@ -1318,8 +1318,8 @@ class AarloGlance extends LitElement {
      */
     updateImageURL() {
         const camera = this._getState(this.cc.id,'unknown');
-        this.cs.image_base = camera.attributes.entity_picture
         this.cs.image = camera.attributes.entity_picture + "&t=" + new Date().getTime()
+        this.cs.imageBase = camera.attributes.entity_picture
     }
 
     updateImageURLLater(seconds = 2) {
