@@ -50,6 +50,8 @@ export var messages = {
 		lock_unlocked:      'déverrouillée. appuyer pour verrouiller',
 		doorbell_pressed:   'Dring-dring!',
 		doorbell_idle:      'en attente',
+		doorbell_mute:      'click to mute',
+		doorbell_muted:     'muted, click to unmute',
 		light_on:           'allumé',
 		light_off:          'éteint',
 	},

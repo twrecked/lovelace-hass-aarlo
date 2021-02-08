@@ -380,8 +380,7 @@ class AarloGlance extends LitElement {
                         <ha-icon id="${this._id('externals-door')}"
                                  @click="${() => { this.moreInfo(this.cc.doorId); }}">
                         </ha-icon>
-                        <ha-icon id="${this._id('externals-door-bell')}"
-                                 @click="${() => { this.moreInfo(this.cc.doorBellId); }}">
+                        <ha-icon id="${this._id('externals-door-bell')}">
                         </ha-icon>
                         <ha-icon id="${this._id('externals-door-lock')}"
                                  @click="${() => { this.toggleLock(this.cc.doorLockId); }}">
@@ -389,8 +388,7 @@ class AarloGlance extends LitElement {
                         <ha-icon id="${this._id('externals-door-2')}"
                                  @click="${() => { this.moreInfo(this.cc.door2Id); }}">
                         </ha-icon>
-                        <ha-icon id="${this._id('externals-door-bell-2')}"
-                                 @click="${() => { this.moreInfo(this.cc.door2BellId); }}">
+                        <ha-icon id="${this._id('externals-door-bell-2')}">
                         </ha-icon>
                         <ha-icon id="${this._id('externals-door-lock-2')}"
                                  @click="${() => { this.toggleLock(this.cc.door2LockId); }}">
@@ -893,18 +891,41 @@ class AarloGlance extends LitElement {
         }
 
         if( this.cc.showDoorBell ) {
-            const doorBellState = this._getState(this.cc.doorBellId, 'off');
-            this.cs.doorBellState = doorBellState.state === 'on' ? 'state-on' : '';
-            this.cs.doorBellText  = doorBellState.attributes.friendly_name + ': ' +
-                    ( this.cs.doorBellState === 'state-on' ?  this._i.status.doorbell_pressed : this._i.status.doorbell_idle )
-            this.cs.doorBellIcon  = 'mdi:doorbell-video';
+            const bell = this._getState(this.cc.doorBellId, 'off');
+            const mute = this._getState(this.cc.doorBellMuteId, 'unknown');
+            const name = bell.attributes.friendly_name
+            if ( mute.state === 'on' ) {
+                this.cs.doorBellState = 'warn'
+                this.cs.doorBellText  = `${name}: ${this._i.status.doorbell_muted}`
+                this.cs.doorBellIcon  = 'mdi:bell-off'
+            } else if ( bell.state === 'off' ) {
+                this.cs.doorBellState = 'off'
+                this.cs.doorBellText  = `${name}: ${mute.state === 'off' ? this._i.status.doorbell_mute : this._i.status.doorbell_idle}`
+                this.cs.doorBellIcon  = 'mdi:bell'
+            } else {
+                this.cs.doorBellState = 'on'
+                this.cs.doorBellText  = `${name}: ${this._i.status.doorbell_pressed}`
+                this.cs.doorBellIcon  = 'mdi:bell-ring'
+            }
         }
+
         if( this.cc.showDoor2Bell ) {
-            const door2BellState = this._getState(this.cc.door2BellId, 'off');
-            this.cs.door2BellState = door2BellState.state === 'on' ? 'state-on' : '';
-            this.cs.door2BellText  = door2BellState.attributes.friendly_name + ': ' +
-                    ( this.cs.door2BellState === 'state-on' ?  this._i.status.doorbell_pressed : this._i.status.doorbell_idle )
-            this.cs.door2BellIcon  = 'mdi:doorbell-video';
+            const bell = this._getState(this.cc.door2BellId, 'off');
+            const mute = this._getState(this.cc.door2BellMuteId, 'unknown');
+            const name = bell.attributes.friendly_name
+            if ( mute.state === 'on' ) {
+                this.cs.door2BellState = 'warn'
+                this.cs.door2BellText  = `${name}: ${this._i.status.doorbell_mute}`
+                this.cs.door2BellIcon  = 'mdi:bell-off'
+            } else if ( bell.state === 'off' ) {
+                this.cs.door2BellState = 'off'
+                this.cs.door2BellText  = `${name}: ${mute.state === 'off' ? this._i.status.doorbell_mute : this._i.status.doorbell_idle}`
+                this.cs.door2BellIcon  = 'mdi:bell'
+            } else {
+                this.cs.door2BellState = 'on'
+                this.cs.door2BellText  = `${name}: ${this._i.status.doorbell_pressed}`
+                this.cs.door2BellIcon  = 'mdi:bell-ring'
+            }
         }
 
         if( this.cc.showLight ) {
@@ -1017,7 +1038,11 @@ class AarloGlance extends LitElement {
         this._cameraIndex = 0
 
         // library config
-        this.lc.onClick = config.library_click ? config.library_click : ''
+        const library_click = config.image_click ? config.image_click : ""
+        this.lc.imageClickModal  = library_click.includes("modal")
+        this.lc.imageClickSmart  = library_click.includes("smart")
+        this.lc.imageAutoPlay    = library_click.includes("autoplay")
+        this.lc.onClick = library_click
         this.lc.sizes = config.library_sizes ? config.library_sizes : [ 3 ]
         this.lc.recordings = config.max_recordings ? parseInt(config.max_recordings) : 99
         this.lc.regions = config.library_regions ? config.library_regions : this.lc.sizes
@@ -1031,7 +1056,15 @@ class AarloGlance extends LitElement {
         this.ls.gridCount = -1
 
         // on click
-        this.cc.imageClick = config.image_click ? config.image_click : '';
+        // click on image
+        const image_click = config.image_click ? config.image_click : ""
+        this.cc.imageClickStream = image_click.includes("live") ||
+            image_click.includes("play") ||
+            image_click.includes("stream")
+        this.cc.imageClickModal  = image_click.includes("modal")
+        this.cc.imageClickSmart  = image_click.includes("smart")
+        this.cc.imageAutoPlay    = image_click.includes("autoplay")
+        this.cc.imageClick       = image_click
 
         // snapshot updates
         this.cc.snapshotTimeouts = config.snapshot_retry ? config.snapshot_retry : [ 2, 5 ]
@@ -1057,14 +1090,16 @@ class AarloGlance extends LitElement {
         this.cc.lastCaptureId   = config.last_id ? config.last_id : 'sensor.' + prefix + 'last_' + camera;
 
         // door definition
-        this.cc.doorId     = config.door ? config.door: null;
-        this.cc.doorBellId = config.door_bell ? config.door_bell : null;
-        this.cc.doorLockId = config.door_lock ? config.door_lock : null;
+        this.cc.doorId         = config.door ? config.door: null;
+        this.cc.doorBellId     = config.door_bell ? config.door_bell : null;
+        this.cc.doorBellMuteId = config.door_bell_mute ? config.door_bell_mute : null;
+        this.cc.doorLockId     = config.door_lock ? config.door_lock : null;
 
         // door2 definition
-        this.cc.door2Id     = config.door2 ? config.door2: null;
-        this.cc.door2BellId = config.door2_bell ? config.door2_bell : null;
-        this.cc.door2LockId = config.door2_lock ? config.door2_lock : null;
+        this.cc.door2Id         = config.door2 ? config.door2: null;
+        this.cc.door2BellId     = config.door2_bell ? config.door2_bell : null;
+        this.cc.door2BellMuteId = config.door2_bell_mute ? config.door2_bell_mute : null;
+        this.cc.door2LockId     = config.door2_lock ? config.door2_lock : null;
 
         // light definition
         this.cc.lightId     = config.light ? config.light: null;
@@ -1253,6 +1288,21 @@ class AarloGlance extends LitElement {
         this._set("externals-door-bell-2", {title: this.cs.door2BellText, icon: this.cs.door2BellIcon, state: this.cs.door2BellState})
         this._set("externals-door-lock-2", {title: this.cs.door2LockText, icon: this.cs.door2LockIcon, state: this.cs.door2LockState})
         this._set("externals-light", {title: this.cs.lightText, icon: this.cs.lightIcon, state: this.cs.lightState})
+
+        this._element("externals-door-bell").addEventListener('click', () => {
+            if ( this.cc.doorBellMuteId ) {
+                this.toggleSwitch( this.cc.doorBellMuteId )
+            } else {
+                this.moreInfo( this.cc.doorBellId )
+            }
+        })
+        this._element("externals-door-bell-2").addEventListener('click', () => {
+            if ( this.cc.door2BellMuteId ) {
+                this.toggleSwitch( this.cc.door2BellMuteId )
+            } else {
+                this.moreInfo( this.cc.door2BellId )
+            }
+        })
     }
 
     /**
@@ -1683,9 +1733,10 @@ class AarloGlance extends LitElement {
 
         // Load language pack. Try less specific before reverting to en.
         // testing: import(`https://twrecked.github.io/lang/${lang}.js?t=${lang_date}`)
+        // final: import(`https://cdn.jsdelivr.net/gh/twrecked/lovelace-hass-aarlo@master/lang/${lang}.js`)
         if( !lang.startsWith(this._lang) ) {
             console.log( `importing ${lang} language` )
-            import(`https://cdn.jsdelivr.net/gh/twrecked/lovelace-hass-aarlo@master/lang/${lang}.js`)
+            import(`https://twrecked.github.io/lang/${lang.toLowerCase()}.js?t=${new Date().getTime()}`)
                 .then( module => {
                     this._lang = lang
                     this._i = module.messages
@@ -2013,6 +2064,14 @@ class AarloGlance extends LitElement {
             this._hass.callService( 'light','turn_off', { entity_id:id } )
         } else {
             this._hass.callService( 'light','turn_on', { entity_id:id } )
+        }
+    }
+
+    toggleSwitch( id ) {
+        if ( this._getState(id,'on').state === 'on' ) {
+            this._hass.callService( 'switch','turn_off', { entity_id:id } )
+        } else {
+            this._hass.callService( 'switch','turn_on', { entity_id:id } )
         }
     }
 
