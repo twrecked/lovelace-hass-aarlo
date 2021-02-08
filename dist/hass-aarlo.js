@@ -892,39 +892,41 @@ class AarloGlance extends LitElement {
 
         if( this.cc.showDoorBell ) {
             const bell = this._getState(this.cc.doorBellId, 'off');
-            const mute = this._getState(this.cc.doorBellMuteId, 'unknown');
             const name = bell.attributes.friendly_name
-            if ( mute.state === 'on' ) {
-                this.cs.doorBellState = 'warn'
-                this.cs.doorBellText  = `${name}: ${this._i.status.doorbell_muted}`
-                this.cs.doorBellIcon  = 'mdi:bell-off'
-            } else if ( bell.state === 'off' ) {
-                this.cs.doorBellState = 'off'
-                this.cs.doorBellText  = `${name}: ${mute.state === 'off' ? this._i.status.doorbell_mute : this._i.status.doorbell_idle}`
-                this.cs.doorBellIcon  = 'mdi:bell'
-            } else {
+            const mute = bell.attributes.chimes_silenced || bell.attributes.calls_silenced
+            if ( bell.state === 'on' ) {
                 this.cs.doorBellState = 'on'
                 this.cs.doorBellText  = `${name}: ${this._i.status.doorbell_pressed}`
                 this.cs.doorBellIcon  = 'mdi:bell-ring'
+            }
+            else if ( mute ) {
+                this.cs.doorBellState = 'warn'
+                this.cs.doorBellText  = `${name}: ${this._i.status.doorbell_muted}`
+                this.cs.doorBellIcon  = 'mdi:bell-off'
+            } else {
+                this.cs.doorBellState = 'off'
+                this.cs.doorBellText  = `${name}: ${mute.state === 'off' ? this._i.status.doorbell_mute : this._i.status.doorbell_idle}`
+                this.cs.doorBellIcon  = 'mdi:bell'
             }
         }
 
         if( this.cc.showDoor2Bell ) {
             const bell = this._getState(this.cc.door2BellId, 'off');
-            const mute = this._getState(this.cc.door2BellMuteId, 'unknown');
             const name = bell.attributes.friendly_name
-            if ( mute.state === 'on' ) {
-                this.cs.door2BellState = 'warn'
-                this.cs.door2BellText  = `${name}: ${this._i.status.doorbell_mute}`
-                this.cs.door2BellIcon  = 'mdi:bell-off'
-            } else if ( bell.state === 'off' ) {
-                this.cs.door2BellState = 'off'
-                this.cs.door2BellText  = `${name}: ${mute.state === 'off' ? this._i.status.doorbell_mute : this._i.status.doorbell_idle}`
-                this.cs.door2BellIcon  = 'mdi:bell'
-            } else {
+            const mute = bell.attributes.chimes_silenced || bell.attributes.calls_silenced
+            if ( bell.state === 'on' ) {
                 this.cs.door2BellState = 'on'
                 this.cs.door2BellText  = `${name}: ${this._i.status.doorbell_pressed}`
                 this.cs.door2BellIcon  = 'mdi:bell-ring'
+            }
+            else if ( mute ) {
+                this.cs.door2BellState = 'warn'
+                this.cs.door2BellText  = `${name}: ${this._i.status.doorbell_muted}`
+                this.cs.door2BellIcon  = 'mdi:bell-off'
+            } else {
+                this.cs.door2BellState = 'off'
+                this.cs.door2BellText  = `${name}: ${mute.state === 'off' ? this._i.status.doorbell_mute : this._i.status.doorbell_idle}`
+                this.cs.door2BellIcon  = 'mdi:bell'
             }
         }
 
@@ -1752,7 +1754,7 @@ class AarloGlance extends LitElement {
             return
         }
 
-        // Now wait for the elements to be added to the shadown DOM.
+        // Now wait for the elements to be added to the shadow DOM.
         if( !this.isViewReady() ) {
             console.log( 'waiting for an element ' )
             setTimeout( () => {
