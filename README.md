@@ -104,8 +104,8 @@ The card supports the following configuration items:
 | top_title        | boolean       | false          |                                                                                               | Show the title at the top of the card                                                                                |
 | top_status       | boolean       | false          |                                                                                               | Show the status at the top of the card                                                                               |
 | top_date         | boolean       | false          |                                                                                               | Show the date at the top of the card                                                                                 |
-| image_click      | string        | play           | ['play', 'modal-play','modal-last']                                                           | Action to perform when image is clicked. Remove attribute to play last recorded video when image is clicked.         |
-| library_click    | string        |                | ['modal']                                                                                     | Action to perform when library image is clicked. Remove attribute to play last recorded video when image is clicked. |
+| image_click      | string        | play           | ['modal','smart','stream','recording']                                                        | Action to perform when image is clicked. Remove attribute to play last recorded video when image is clicked.         |
+| library_click    | string        |                | ['modal','smart']                                                                             | Action to perform when library image is clicked. Remove attribute to play last recorded video when image is clicked. |
 | library_sizes    | integer list  | [3]            |                                                                                               | List of grid sizes for the library to use.                                                                           |
 | library_regions  | integer list  | library_sizes  |                                                                                               | List of grid sizes to show trigger item in colored box.                                                              |
 | library_animal   | css color     | orangered      | Any valid CSS color                                                                           | Color box to use when an animal triggered the recording.                                                             |
@@ -166,7 +166,6 @@ provide the full device name to get motion, sound, battery, signal, capture or
 last capture notifications to work. See the corresponding `*_id` configuration
 item.
 
-
 ### `show` options
 * `motion`: an icon that indicates when motion is detected
 * `sound`: an icon that indicates when sound is detected
@@ -178,6 +177,15 @@ item.
 * `image_date`: an icon with descriptive text showing when the last image was
   taken
 * `on_off`: a switch allowing the camera to be turned off and on
+
+### `image_click` and `library_click`
+These are comma separated lists that describe how to handle a click on the
+image or library window.
+* `stream`: play the live stream, does nothing on library click
+* `recording`: play the last recording, does nothing on library click which
+  always plays the selected recording
+* `modal`: force a modal window, might not work well on mobile devices
+* `smart`: use a `modal` window on desktops and `non-modal` on mobile devices.
 
 #### Notes
 To get the first four `show` items to work correctly you need to enable the
