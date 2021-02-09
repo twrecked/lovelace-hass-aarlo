@@ -27,6 +27,7 @@
  *
  * What's what:
  * - this._gc; global configuration
+ * - this._gs; global state
  * - this._cc; all cameras configurations
  * - this._cs; all camara states
  * - this._lc; all library configurations
@@ -47,29 +48,25 @@ class AarloGlance extends LitElement {
         super();
 
         // State and config.
+        this._ready = false
         this._hass = null;
         this._config = null;
-        this._ready = false
-
-        // The current image URL.
-        this._image = ''
 
         // Internationalisation.
         this._i = null
         this._lang = null
 
-        // The current image URL has a timestamp suffix added, this is the URL without it.
-        // This way we can check for token changes.
-        this._image_base = ''
-
-        this._hls = null;
-        this._dash = null;
-        this._video = null
-        this._videoState = ''
-        this._stream = null
-        this._modalViewer = false
-
+        // Maybe gs should be cs/ls; think about multiple videos going...
         this._gc = {}
+        this._gs = {
+            dash: null,
+            hls: null,
+            stream: null,
+            streamPoster: '',
+            video: null,
+            videoState: '',
+            videoPoster: '',
+        }
         this._cc = {}
         this._cs = {}
         this._lc = {}
@@ -295,7 +292,6 @@ class AarloGlance extends LitElement {
                     <video class="aarlo-video"
                            id="${this._id('stream-player')}"
                            style="display:none"
-                           poster="${this._streamPoster}"
                            @ended="${() => { this.stopStream() }}"
                            @mouseover="${() => { this.mouseOverVideo(); }}"
                            @click="${() => { this.clickVideo(); }}">
@@ -381,8 +377,7 @@ class AarloGlance extends LitElement {
                         <ha-icon id="${this._id('externals-door')}"
                                  @click="${() => { this.moreInfo(this.cc.doorId); }}">
                         </ha-icon>
-                        <ha-icon id="${this._id('externals-door-bell')}"
-                                 @click="${() => { this.moreInfo(this.cc.doorBellId); }}">
+                        <ha-icon id="${this._id('externals-door-bell')}">
                         </ha-icon>
                         <ha-icon id="${this._id('externals-door-lock')}"
                                  @click="${() => { this.toggleLock(this.cc.doorLockId); }}">
@@ -390,8 +385,7 @@ class AarloGlance extends LitElement {
                         <ha-icon id="${this._id('externals-door-2')}"
                                  @click="${() => { this.moreInfo(this.cc.door2Id); }}">
                         </ha-icon>
-                        <ha-icon id="${this._id('externals-door-bell-2')}"
-                                 @click="${() => { this.moreInfo(this.cc.door2BellId); }}">
+                        <ha-icon id="${this._id('externals-door-bell-2')}">
                         </ha-icon>
                         <ha-icon id="${this._id('externals-door-lock-2')}"
                                  @click="${() => { this.toggleLock(this.cc.door2LockId); }}">
@@ -515,7 +509,7 @@ class AarloGlance extends LitElement {
     }
 
     _mid( id ) {
-        return (this._modalViewer ? "modal-" : "") + this._id(id)
+        return (this.gs.viewer === "modal" ? "modal-" : "") + this._id(id)
     }
 
     /**
@@ -706,8 +700,8 @@ class AarloGlance extends LitElement {
     get gc() {
         return this._gc
     }
-    get gl() {
-        return this._gl
+    get gs() {
+        return this._gs
     }
     get cc() {
         if( !(`${this._cameraIndex}` in this._cc) ) {
@@ -772,8 +766,8 @@ class AarloGlance extends LitElement {
                 })
             }
         }
-        else if ( this._image_base !== camera.attributes.entity_picture ) {
-            this._log( `auth-update: ${this._image_base} --> ${camera.attributes.entity_picture}` )
+        else if ( this.cs.imageBase !== camera.attributes.entity_picture ) {
+            this._log( `auth-update: ${this.cs.imageBase} --> ${camera.attributes.entity_picture}` )
             this.updateImageURL()
         }
         else if ( this.cs.imageSource !== camera.attributes.image_source ) {
@@ -894,18 +888,43 @@ class AarloGlance extends LitElement {
         }
 
         if( this.cc.showDoorBell ) {
-            const doorBellState = this._getState(this.cc.doorBellId, 'off');
-            this.cs.doorBellState = doorBellState.state === 'on' ? 'state-on' : '';
-            this.cs.doorBellText  = doorBellState.attributes.friendly_name + ': ' +
-                    ( this.cs.doorBellState === 'state-on' ?  this._i.status.doorbell_pressed : this._i.status.doorbell_idle )
-            this.cs.doorBellIcon  = 'mdi:doorbell-video';
+            const bell = this._getState(this.cc.doorBellId, 'off');
+            const name = bell.attributes.friendly_name
+            const mute = bell.attributes.chimes_silenced || bell.attributes.calls_silenced
+            if ( bell.state === 'on' ) {
+                this.cs.doorBellState = 'on'
+                this.cs.doorBellText  = `${name}: ${this._i.status.doorbell_pressed}`
+                this.cs.doorBellIcon  = 'mdi:bell-ring'
+            }
+            else if ( mute ) {
+                this.cs.doorBellState = 'warn'
+                this.cs.doorBellText  = `${name}: ${this._i.status.doorbell_muted}`
+                this.cs.doorBellIcon  = 'mdi:bell-off'
+            } else {
+                this.cs.doorBellState = 'off'
+                this.cs.doorBellText  = `${name}: ${mute.state === 'off' ? this._i.status.doorbell_mute : this._i.status.doorbell_idle}`
+                this.cs.doorBellIcon  = 'mdi:bell'
+            }
         }
+
         if( this.cc.showDoor2Bell ) {
-            const door2BellState = this._getState(this.cc.door2BellId, 'off');
-            this.cs.door2BellState = door2BellState.state === 'on' ? 'state-on' : '';
-            this.cs.door2BellText  = door2BellState.attributes.friendly_name + ': ' +
-                    ( this.cs.door2BellState === 'state-on' ?  this._i.status.doorbell_pressed : this._i.status.doorbell_idle )
-            this.cs.door2BellIcon  = 'mdi:doorbell-video';
+            const bell = this._getState(this.cc.door2BellId, 'off');
+            const name = bell.attributes.friendly_name
+            const mute = bell.attributes.chimes_silenced || bell.attributes.calls_silenced
+            if ( bell.state === 'on' ) {
+                this.cs.door2BellState = 'on'
+                this.cs.door2BellText  = `${name}: ${this._i.status.doorbell_pressed}`
+                this.cs.door2BellIcon  = 'mdi:bell-ring'
+            }
+            else if ( mute ) {
+                this.cs.door2BellState = 'warn'
+                this.cs.door2BellText  = `${name}: ${this._i.status.doorbell_muted}`
+                this.cs.door2BellIcon  = 'mdi:bell-off'
+            } else {
+                this.cs.door2BellState = 'off'
+                this.cs.door2BellText  = `${name}: ${mute.state === 'off' ? this._i.status.doorbell_mute : this._i.status.doorbell_idle}`
+                this.cs.door2BellIcon  = 'mdi:bell'
+            }
         }
 
         if( this.cc.showLight ) {
@@ -992,6 +1011,9 @@ class AarloGlance extends LitElement {
         this.checkConfig()
 
         // GLOBAL config
+        // Mobile? see here: https://developer.mozilla.org/en-US/docs/Web/HTTP/Browser_detection_using_the_user_agent
+        this.gc.isMobile = navigator.userAgent.includes("Mobi")
+ 
         // Language override?
         this.gc.lang = config.lang
 
@@ -1012,10 +1034,14 @@ class AarloGlance extends LitElement {
         // and copy the defaults and add camera specifics
 
         // PER-CAMERA config
+        // TODO save and restore index
         this._cameraIndex = 0
 
         // library config
-        this.lc.onClick = config.library_click ? config.library_click : ''
+        const library_click = config.image_click ? config.image_click : ""
+        this.lc.imageClickModal  = library_click.includes("modal")
+        this.lc.imageClickSmart  = library_click.includes("smart")
+        this.lc.imageAutoPlay    = library_click.includes("autoplay")
         this.lc.sizes = config.library_sizes ? config.library_sizes : [ 3 ]
         this.lc.recordings = config.max_recordings ? parseInt(config.max_recordings) : 99
         this.lc.regions = config.library_regions ? config.library_regions : this.lc.sizes
@@ -1029,7 +1055,14 @@ class AarloGlance extends LitElement {
         this.ls.gridCount = -1
 
         // on click
-        this.cc.imageClick = config.image_click ? config.image_click : '';
+        // click on image
+        const image_click = config.image_click ? config.image_click : ""
+        this.cc.imageClickStream = image_click.includes("live") ||
+            image_click.includes("play") ||
+            image_click.includes("stream")
+        this.cc.imageClickModal  = image_click.includes("modal")
+        this.cc.imageClickSmart  = image_click.includes("smart")
+        this.cc.imageAutoPlay    = image_click.includes("autoplay")
 
         // snapshot updates
         this.cc.snapshotTimeouts = config.snapshot_retry ? config.snapshot_retry : [ 2, 5 ]
@@ -1055,14 +1088,16 @@ class AarloGlance extends LitElement {
         this.cc.lastCaptureId   = config.last_id ? config.last_id : 'sensor.' + prefix + 'last_' + camera;
 
         // door definition
-        this.cc.doorId     = config.door ? config.door: null;
-        this.cc.doorBellId = config.door_bell ? config.door_bell : null;
-        this.cc.doorLockId = config.door_lock ? config.door_lock : null;
+        this.cc.doorId         = config.door ? config.door: null;
+        this.cc.doorBellId     = config.door_bell ? config.door_bell : null;
+        this.cc.doorBellMuteId = config.door_bell_mute ? config.door_bell_mute : null;
+        this.cc.doorLockId     = config.door_lock ? config.door_lock : null;
 
         // door2 definition
-        this.cc.door2Id     = config.door2 ? config.door2: null;
-        this.cc.door2BellId = config.door2_bell ? config.door2_bell : null;
-        this.cc.door2LockId = config.door2_lock ? config.door2_lock : null;
+        this.cc.door2Id         = config.door2 ? config.door2: null;
+        this.cc.door2BellId     = config.door2_bell ? config.door2_bell : null;
+        this.cc.door2BellMuteId = config.door2_bell_mute ? config.door2_bell_mute : null;
+        this.cc.door2LockId     = config.door2_lock ? config.door2_lock : null;
 
         // light definition
         this.cc.lightId     = config.light ? config.light: null;
@@ -1159,16 +1194,14 @@ class AarloGlance extends LitElement {
     }
 
     showModal( show = true ) {
-        if( this._modalViewer ) {
+        if( this.gs.viewer === "modal" ) {
             this.setModalElementData()
             this._element('modal-viewer').style.display =  show ? 'block' : 'none'
         }
     }
 
     hideModal() {
-        if( this._modalViewer ) {
-            this._element('modal-viewer').style.display = 'none'
-        }
+        this._element('modal-viewer').style.display = 'none'
     }
 
 
@@ -1196,6 +1229,21 @@ class AarloGlance extends LitElement {
 
         this._set("top-bar-title", {text: this.cc.name})
         this._set("bottom-bar-title", {text: this.cc.name})
+
+        this._element("externals-door-bell").addEventListener('click', () => {
+            if ( this.cc.doorBellMuteId ) {
+                this.toggleSwitch( this.cc.doorBellMuteId )
+            } else {
+                this.moreInfo( this.cc.doorBellId )
+            }
+        })
+        this._element("externals-door-bell-2").addEventListener('click', () => {
+            if ( this.cc.door2BellMuteId ) {
+                this.toggleSwitch( this.cc.door2BellMuteId )
+            } else {
+                this.moreInfo( this.cc.door2BellId )
+            }
+        })
     }
 
     updateImageView() {
@@ -1205,7 +1253,7 @@ class AarloGlance extends LitElement {
             return
         }
 
-        if( this._image !== '' ) {
+        if( this.cs.image !== '' ) {
             this.cs.imageDate     = '';
             this.cs.imageFullDate = this.cs.imageSource ? this.cs.imageSource : ''
             if( this.cs.imageFullDate.startsWith('capture/') ) { 
@@ -1220,7 +1268,7 @@ class AarloGlance extends LitElement {
             this.cs.imageDate = ''
         }
 
-        this._set("image-viewer", {title: this.cs.imageFullDate, alt: this.cs.imageFullDate, src: this._image})
+        this._set("image-viewer", {title: this.cs.imageFullDate, alt: this.cs.imageFullDate, src: this.cs.image})
 
         this._set("top-bar-date", {title: this.cs.imageFullDate, text: this.cs.imageDate})
         this._set("top-bar-status", {text: this.cs.state })
@@ -1264,8 +1312,8 @@ class AarloGlance extends LitElement {
      */
     updateImageURL() {
         const camera = this._getState(this.cc.id,'unknown');
-        this._image_base = camera.attributes.entity_picture
-        this._image = camera.attributes.entity_picture + "&t=" + new Date().getTime()
+        this.cs.image = camera.attributes.entity_picture + "&t=" + new Date().getTime()
+        this.cs.imageBase = camera.attributes.entity_picture
     }
 
     updateImageURLLater(seconds = 2) {
@@ -1276,7 +1324,7 @@ class AarloGlance extends LitElement {
     }
 
     showImageView() {
-        if( this._image !== '' ) {
+        if( this.cs.image !== '' ) {
             this._show("image-viewer")
             this._hide("broken-image")
         } else {
@@ -1508,8 +1556,6 @@ class AarloGlance extends LitElement {
     setupVideoView() {
         this._show("video-stop")
         this._show("video-full-screen")
-        this._show("video-door-lock", this.cc.showDoorLock )
-        this._show("video-light-on", this.cc.showLight )
         this._show("modal-video-stop")
         this._show("modal-video-full-screen")
         this._show("modal-video-door-lock", this.cc.showDoorLock )
@@ -1534,17 +1580,19 @@ class AarloGlance extends LitElement {
         }
 
         if( state === 'starting' ) {
-            this._mset( 'video-player',{src: this._video, poster: this._videoPoster} )
+            this._mset( 'video-player',{src: this.gs.video, poster: this.gs.videoPoster} )
             this._mshow("video-seek")
-            this._videoState = 'playing'
+            this._mhide("video-door-lock")
+            this._mhide("video-light-on")
+            this.gs.videoState = 'playing'
             this.setUpSeekBar();
             this.showVideoControls(4);
         } else if( state !== '' ) {
-            this._videoState = state
+            this.gs.videoState = state
         }
 
-        this._mshow("video-play", this._videoState === 'paused')
-        this._mshow("video-pause", this._videoState === 'playing')
+        this._mshow("video-play", this.gs.videoState === 'paused')
+        this._mshow("video-pause", this.gs.videoState === 'playing')
     }
 
     showVideoView() {
@@ -1569,10 +1617,10 @@ class AarloGlance extends LitElement {
  
     setMPEGStreamElementData() {
         const video = this._melement('stream-player')
-        const et = this._findEgressToken( this._stream );
+        const et = this._findEgressToken( this.gs.stream );
 
-        this._dash = dashjs.MediaPlayer().create();
-        this._dash.extend("RequestModifier", () => {
+        this.gs.dash = dashjs.MediaPlayer().create();
+        this.gs.dash.extend("RequestModifier", () => {
             return {
                 modifyRequestHeader: function (xhr) {
                     xhr.setRequestHeader('Egress-Token',et);
@@ -1580,22 +1628,22 @@ class AarloGlance extends LitElement {
                 }
             };
         }, true);
-        this._dash.initialize( video, this._stream, true )
+        this.gs.dash.initialize( video, this.gs.stream, true )
     }
 
     setHLSStreamElementData() {
         const video = this._melement('stream-player')
         if (Hls.isSupported()) {
-            this._hls = new Hls();
-            this._hls.attachMedia(video);
-            this._hls.on(Hls.Events.MEDIA_ATTACHED, () => {
-                this._hls.loadSource(this._stream);
-                this._hls.on(Hls.Events.MANIFEST_PARSED, () => {
+            this.gs.hls = new Hls();
+            this.gs.hls.attachMedia(video);
+            this.gs.hls.on(Hls.Events.MEDIA_ATTACHED, () => {
+                this.gs.hls.loadSource(this.gs.stream);
+                this.gs.hls.on(Hls.Events.MANIFEST_PARSED, () => {
                     video.play();
                 });
             })
         } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-            video.src = this._stream;
+            video.src = this.gs.stream;
             video.addEventListener('loadedmetadata', () => {
                 video.play();
             });
@@ -1609,7 +1657,7 @@ class AarloGlance extends LitElement {
     updateStreamView( state = '' ) {
 
         // Autostart?
-        if ( state === '' && this._stream === null ) {
+        if ( state === '' && this.gs.stream === null ) {
             if( this.cs.autoPlay && this.cs.autoPlayTimer === null ) {
                 this.cs.autoPlayTimer = setTimeout( () => {
                     this.playStream( false )
@@ -1681,9 +1729,10 @@ class AarloGlance extends LitElement {
 
         // Load language pack. Try less specific before reverting to en.
         // testing: import(`https://twrecked.github.io/lang/${lang}.js?t=${lang_date}`)
+        // final: import(`https://cdn.jsdelivr.net/gh/twrecked/lovelace-hass-aarlo@master/lang/${lang}.js`)
         if( !lang.startsWith(this._lang) ) {
             console.log( `importing ${lang} language` )
-            import(`https://cdn.jsdelivr.net/gh/twrecked/lovelace-hass-aarlo@master/lang/${lang}.js`)
+            import(`https://twrecked.github.io/lang/${lang.toLowerCase()}.js?t=${new Date().getTime()}`)
                 .then( module => {
                     this._lang = lang
                     this._i = module.messages
@@ -1699,7 +1748,7 @@ class AarloGlance extends LitElement {
             return
         }
 
-        // Now wait for the elements to be added to the shadown DOM.
+        // Now wait for the elements to be added to the shadow DOM.
         if( !this.isViewReady() ) {
             console.log( 'waiting for an element ' )
             setTimeout( () => {
@@ -1782,76 +1831,52 @@ class AarloGlance extends LitElement {
         this.asyncWSUpdateSnapshot().then()
     }
 
-    async asyncLoadLatestVideo(modal) {
-        const video = await this.wsLoadLibrary(1);
-        if ( video ) {
-            this._modalViewer = modal
-            this._video       = video[0].url;
-            this._videoPoster = video[0].thumbnail;
-        } else {
-            this._modalViewer = false;
-            this._video       = null;
-            this._videoPoster = null;
-        }
-    }
-
-    playLatestVideo(modal) {
-        const camera = this._getState(this.cc.id,'unknown');
-        this._modalViewer = modal
-        this._video       = camera.attributes.last_video
-        this._videoPoster = camera.attributes.last_thumbnail
+    playLatestVideo() {
+        this.gs.video       = this.cs.lastVideo
+        this.gs.videoPoster = this.cs.image
         this.showVideo()
-        // TODO maybe resurrect this one...
-        // if ( this._video === null ) {
-            // this.asyncLoadLatestVideo(modal).then( () => {
-                // this.showVideo()
-            // })
-        // }
     }
 
     startVideo() {
-        if( this._video ) {
+        if( this.gs.video ) {
             this._melement( 'video-player' ).play()
         }
     }
 
     stopVideo() {
-        if ( this._video ) {
+        if ( this.gs.video ) {
             this._melement('video-player' ).pause()
             this.hideModal()
             this.resetView()
-            this._video = null
-            this._videoState = ''
+            this.gs.video = null
+            this.gs.videoState = ''
         }
     }
 
-    async asyncPlayStream( modal ) {
+    async asyncPlayStream() {
         const stream = await this.wsStartStream();
-        if (stream) {
-            this._modalViewer  = modal;
-            this._stream       = stream.url;
-            this._streamPoster = this._image;
+        if( stream ) {
+            this.gs.stream       = stream.url;
+            this.gs.streamPoster = this.cs.image;
         } else {
-            this._modalViewer  = false;
-            this._stream       = null;
-            this._streamPoster = null;
+            this.gs.stream = null;
         }
     }
 
-    playStream( modal ) {
+    playStream( ) {
         this.cs.autoPlayTimer = null
-        if ( this._stream === null ) {
+        if ( this.gs.stream === null ) {
             if( this.cc.autoPlay ) {
                 this.cs.autoPlay = this.cc.autoPlay
             }
-            this.asyncPlayStream(modal).then( () => {
+            this.asyncPlayStream().then( () => {
                 this.showStream()
             })
         }
     }
 
     async asyncStopStream() {
-        if( this._stream ) {
+        if( this.gs.stream ) {
             await this.wsStopStream();
         }
     }
@@ -1861,15 +1886,15 @@ class AarloGlance extends LitElement {
         this._melement('stream-player' ).pause()
         this.asyncStopStream().then( () => {
             this.cs.autoPlay = false
-            this._stream = null;
-            if(this._hls) {
-                this._hls.stopLoad();
-                this._hls.destroy();
-                this._hls = null
+            this.gs.stream = null;
+            if(this.gs.hls) {
+                this.gs.hls.stopLoad();
+                this.gs.hls.destroy();
+                this.gs.hls = null
             }
-            if(this._dash) {
-                this._dash.reset();
-                this._dash = null;
+            if(this.gs.dash) {
+                this.gs.dash.reset();
+                this.gs.dash = null;
             }
         })
     }
@@ -1884,7 +1909,7 @@ class AarloGlance extends LitElement {
     }
 
     async asyncLoadLibrary() {
-        this._video = null;
+        this.gs.video = null;
         this.ls.videos = await this.wsLoadLibrary(this.lc.recordings);
         // this.ls.offset = 0
     }
@@ -1897,13 +1922,15 @@ class AarloGlance extends LitElement {
     }
 
     playLibraryVideo(index) {
-        index += this.ls.offset;
-        if (this.ls.videos && index < this.ls.videos.length) {
-            this._modalViewer = this.lc.onClick === 'modal'
-            this._video       = this.ls.videos[index].url;
-            this._videoPoster = this.ls.videos[index].thumbnail;
-            this.showVideo()
-        } 
+        if ( this.gs.video === null ) {
+            index += this.ls.offset;
+            if (this.ls.videos && index < this.ls.videos.length) {
+                this.gs.viewer      = this.getViewType( this.lc )
+                this.gs.video       = this.ls.videos[index].url;
+                this.gs.videoPoster = this.ls.videos[index].thumbnail;
+                this.showVideo()
+            } 
+        }
     }
 
     firstLibraryPage() {
@@ -1941,15 +1968,24 @@ class AarloGlance extends LitElement {
         this.showImageView()
     }
 
+    getViewType( c ) {
+        if( c.imageClickSmart ) {
+            return this.gc.isMobile ? "" : "modal"
+        } else if( c.imageClickModal ) {
+            return "modal"
+        } 
+        return ""
+    }
+                                
     clickImage() {
-        if ( this.cc.imageClick === 'modal-play' ) {
-            this.playStream(true)
-        } else if ( this.cc.imageClick === 'play' ) {
-            this.playStream(false)
-        } else if ( this.cc.imageClick === 'modal-last' ) {
-            this.playLatestVideo(true)
+        // How are we showing it?
+        this.gs.viewer = this.getViewType( this.cc )
+
+        // What are we showing?
+        if ( this.cc.imageClickStream ) {
+            this.playStream()
         } else {
-            this.playLatestVideo(false)
+            this.playLatestVideo()
         }
     }
 
@@ -1981,7 +2017,7 @@ class AarloGlance extends LitElement {
     }
 
     controlFullScreen() {
-        let video = this._melement( this._stream ? 'stream-player' : 'video-player' )
+        let video = this._melement( this.gs.stream ? 'stream-player' : 'video-player' )
         if (video.requestFullscreen) {
             video.requestFullscreen().then()
         } else if (video.mozRequestFullScreen) {
@@ -2012,6 +2048,14 @@ class AarloGlance extends LitElement {
             this._hass.callService( 'light','turn_off', { entity_id:id } )
         } else {
             this._hass.callService( 'light','turn_on', { entity_id:id } )
+        }
+    }
+
+    toggleSwitch( id ) {
+        if ( this._getState(id,'on').state === 'on' ) {
+            this._hass.callService( 'switch','turn_off', { entity_id:id } )
+        } else {
+            this._hass.callService( 'switch','turn_on', { entity_id:id } )
         }
     }
 
