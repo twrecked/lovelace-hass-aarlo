@@ -58,6 +58,8 @@ export var messages = {
 		doorbell_muted:     'muted (click to unmute)',
 		light_on:           'on',
 		light_off:          'off',
+		next_camera:        'next camera',
+		previous_camera:    'previous camera',
 	},
 	
 	// known triggers
