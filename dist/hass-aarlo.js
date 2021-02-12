@@ -7,9 +7,9 @@
  *   image element data
  * - setConfig(); called at startup; we read out config data and store inside
  *   `?c` variables.
- * - render(); called at startup; we start initialView() and return the
+ * - render(); called at startup; we start initialSetup() and return the
  *   skeleton HTML for the card.
- * - initialView(); loops until HTML is in place then set up which individual
+ * - initialSetup(); loops until HTML is in place then set up which individual
  *   elements are present (eg, motion sensor if asked for) and then displays
  *   the image card.
  *
@@ -58,15 +58,7 @@ class AarloGlance extends LitElement {
 
         // Maybe gs should be cs/ls; think about multiple videos going...
         this._gc = {}
-        this._gs = {
-            dash: null,
-            hls: null,
-            stream: null,
-            streamPoster: '',
-            video: null,
-            videoState: '',
-            videoPoster: '',
-        }
+        this._gs = {}
         this._cc = {}
         this._cs = {}
         this._lc = {}
@@ -224,7 +216,7 @@ class AarloGlance extends LitElement {
     }
 
     render() {
-        this.initialView()
+        this.initialSetup()
         return html`
             ${AarloGlance.styleTemplate}
             <div class="w3-modal"
@@ -703,6 +695,11 @@ class AarloGlance extends LitElement {
         return 'unknown'
     }
 
+    _merge_config( global, local ) {
+        let merged = Object.assign( {}, global )
+        return Object.assign( merged, local )
+    }
+
     get gc() {
         return this._gc
     }
@@ -873,12 +870,19 @@ class AarloGlance extends LitElement {
         }
 
         // We always save this, used by library code to check for updates
-        const captured = this._getState(this.cc.capturedTodayId, 0).state;
-        const last = this._getState(this.cc.lastCaptureId, 0).state;
-        this.cs.capturedText = `${this._i.status.captured}: ` + 
-                ( captured === "0" ? this._i.status.captured_nothing : `${captured} ${this._i.status.captured_something} ${last}` );
-        this.cs.capturedIcon  = 'mdi:file-video'
-        this.cs.capturedState = captured !== "0" ? 'state-update' : ''
+        const captured = this._getState(this.cc.capturedTodayId, "0").state;
+        const last = this._getState(this.cc.lastCaptureId, "0").state;
+        if( this.ls.videos && this.ls.videos.length > 0 ) {
+            this.cs.capturedText  = `${this._i.status.library}: ` +
+                    ( captured === "0" ? "" : `${captured} ${this._i.status.captured_something} ${last}, ` ) +
+                    this._i.status.library_open
+            this.cs.capturedIcon  = 'mdi:file-video'
+            this.cs.capturedState = captured !== "0" ? 'on' : ''
+        } else {
+            this.cs.capturedText  = `${this._i.status.library}: ${this._i.status.library_empty}`
+            this.cs.capturedIcon  = 'mdi:file-video-outline'
+            this.cs.capturedState = 'off'
+        }
 
         // OPTIONAL DOORS
         if( this.cc.showDoor ) {
@@ -926,12 +930,12 @@ class AarloGlance extends LitElement {
                     this.cs.doorBellText  = `${name}: ${this._i.status.doorbell_muted}`
                     this.cs.doorBellIcon  = 'mdi:bell-off'
                 } else {
-                    this.cs.doorBellState = 'off'
+                    this.cs.doorBellState = ''
                     this.cs.doorBellText  = `${name}: ${this._i.status.doorbell_mute}`
                     this.cs.doorBellIcon  = 'mdi:bell'
                 }
             } else {
-                this.cs.doorBellState = 'off'
+                this.cs.doorBellState = ''
                 this.cs.doorBellText  = `${name}: ${this._i.status.doorbell_idle}`
                 this.cs.doorBellIcon  = 'mdi:bell'
             }
@@ -952,12 +956,12 @@ class AarloGlance extends LitElement {
                     this.cs.door2BellText  = `${name}: ${this._i.status.doorbell_muted}`
                     this.cs.door2BellIcon  = 'mdi:bell-off'
                 } else {
-                    this.cs.door2BellState = 'off'
+                    this.cs.door2BellState = ''
                     this.cs.door2BellText  = `${name}: ${this._i.status.doorbell_mute}`
                     this.cs.door2BellIcon  = 'mdi:bell'
                 }
             } else {
-                this.cs.door2BellState = 'off'
+                this.cs.door2BellState = ''
                 this.cs.door2BellText  = `${name}: ${this._i.status.doorbell_idle}`
                 this.cs.door2BellIcon  = 'mdi:bell'
             }
@@ -1037,9 +1041,17 @@ class AarloGlance extends LitElement {
     getGlobalLibraryConfig( config ) {
     }
 
-    _merge_config( global, local ) {
-        let merged = Object.assign( {}, global )
-        return Object.assign( merged, local )
+    getGlobalState( _config ) {
+        return {
+            dash: null,
+            hls: null,
+            libraryCamera: -1,
+            stream: null,
+            streamPoster: '',
+            video: null,
+            videoState: '',
+            videoPoster: '',
+        }
     }
 
     getCameraConfig( global, local ) {
@@ -1170,8 +1182,10 @@ class AarloGlance extends LitElement {
 
     getCameraState( config ) {
         return {
-            autoPlay: config.autoPlay,
+            autoPlay:      config.autoPlay,
             autoPlayTimer: null,
+            image:         null,
+            imageBase:     null,
         }
     }
 
@@ -1203,9 +1217,12 @@ class AarloGlance extends LitElement {
 
     getLibraryState( _config ) {
         return {
-            size: -1,
-            sizeIndex: 0,
-            gridCount: -1,
+            gridCount:  -1,
+            lastOffset: -1,
+            offset:     0,
+            size:       -1,
+            sizeIndex:  0,
+            videos:     null,
         }
     }
 
@@ -1215,6 +1232,7 @@ class AarloGlance extends LitElement {
         this._config = config
 
         this.gc = this.getGlobalConfig( config )
+        this.gs = this.getGlobalState( config )
 
         if( "entities" in this._config ) {
             this._cameraIndex = 0
@@ -1372,11 +1390,11 @@ class AarloGlance extends LitElement {
     updateImageView() {
 
         // Nothing there yet...
-        if( !this.isViewReady() ) {
+        if( !this.isReady() ) {
             return
         }
 
-        if( this.cs.image !== '' ) {
+        if( this.cs.image !== null ) {
             this.cs.imageDate     = '';
             this.cs.imageFullDate = this.cs.imageSource ? this.cs.imageSource : ''
             if( this.cs.imageFullDate.startsWith('capture/') ) { 
@@ -1449,7 +1467,7 @@ class AarloGlance extends LitElement {
     }
 
     showImageView() {
-        if( this.cs.image !== '' ) {
+        if( this.cs.image !== null ) {
             this._show("image-viewer")
             this._hide("broken-image")
         } else {
@@ -1481,7 +1499,7 @@ class AarloGlance extends LitElement {
         this._set("library-control-close",{ state: "on"} )
 
         // set state
-        this.ls.offset = 0
+        // this.ls.offset = 0
     }
 
     setupLibraryHandlers() {
@@ -1606,7 +1624,9 @@ class AarloGlance extends LitElement {
             this._hide(`library-${i}`)
         }
 
+        // save state
         this.ls.lastOffset = this.ls.offset
+        this.gs.libraryCamera = this._cameraIndex
 
         const not_at_start = this.ls.offset !== 0
         this._set( "library-control-first",{
@@ -1639,28 +1659,34 @@ class AarloGlance extends LitElement {
     updateLibraryView() {
 
         // Nothing there yet...
-        if( !this.isViewReady() ) {
+        if( !this.isReady() ) {
             return
         }
 
+        // If camera index has changed then load library
+        if ( this.gs.libraryCamera !== this._cameraIndex ) {
+            this._log( `library-camera-change` )
+            this._updateLibraryHTML()
+            this._updateLibraryView()
+
         // Resized? Rebuild grid and force reload of images.
-        if ( this.gs.librarySize !== this.lc.sizes[this.ls.sizeIndex] ) {
+        } else if ( this.gs.librarySize !== this.lc.sizes[this.ls.sizeIndex] ) {
             this._updateLibraryHTML()
             this.ls.lastOffset = -1
         }
 
-        // If no library then load it.
-        if ( !this.ls.videos ) {
+        // If no library then load it. Refresh all views.
+        if ( this.ls.videos === null ) {
             this._log( `library-load` )
-            this.asyncLoadLibrary().then( () => {
-                this._updateLibraryView()
+            this.asyncLoadLibrary( this._cameraIndex ).then( () => {
+                this.updateView()
             })
  
         // If last video changed then reload library.
         } else if ( this.ls.lastVideo !== this.cs.lastVideo ) {
             this._log( `library-video-update: ${this.ls.lastVideo} --> ${this.cs.lastVideo}` )
             this.ls.lastVideo = this.cs.lastVideo
-            this.asyncLoadLibrary().then( () => {
+            this.asyncLoadLibrary( this._cameraIndex ).then( () => {
                 this._updateLibraryView()
             })
 
@@ -1668,7 +1694,7 @@ class AarloGlance extends LitElement {
         } else if ( this.ls.lastOffset !== this.ls.offset ) {
             this._log( `library-view-update` )
             this._updateLibraryView()
-        }
+        } 
     }
 
     showLibraryView() {
@@ -1707,7 +1733,7 @@ class AarloGlance extends LitElement {
     updateVideoView( state = '' ) {
 
         // Nothing there yet...
-        if( !this.isViewReady() ) {
+        if( !this.isReady() ) {
             return
         }
 
@@ -1788,6 +1814,11 @@ class AarloGlance extends LitElement {
 
     updateStreamView( state = '' ) {
 
+        // Nothing there yet...
+        if( !this.isReady() ) {
+            return
+        }
+
         // Autostart?
         if ( state === '' && this.gs.stream === null ) {
             if( this.cs.autoPlay && this.cs.autoPlayTimer === null ) {
@@ -1795,11 +1826,6 @@ class AarloGlance extends LitElement {
                     this.playStream( false )
                 },5 * 1000 )
             }
-            return
-        }
-
-        // Nothing there yet...
-        if( !this.isViewReady() ) {
             return
         }
 
@@ -1839,8 +1865,8 @@ class AarloGlance extends LitElement {
         this.showStreamView()
     }
 
-    isViewReady() {
-        return this._element('image-viewer') !== null 
+    isReady() {
+        return this._ready === true
     }
 
     updateView() {
@@ -1851,7 +1877,21 @@ class AarloGlance extends LitElement {
         this.updateStreamView()
     }
 
-    initialView( lang = null ) {
+    /**
+     * Get every ready.
+     *
+     * Run when render() is called. The function will keep calling
+     * itself until initialisation is complete. What is does:
+     *  - load the card's language pack
+     *  - load the camera libraries
+     *  - wait for the render to be added to the DOM
+     *  - set up static view configuration
+     *  - open initial view
+     *
+     * @param lang language code, `null` is default
+     * @param index camera index for library load
+     */
+    initialSetup( lang = null, index = 0 ) {
 
         // No language, pick one.
         if ( lang === null ) {
@@ -1868,29 +1908,46 @@ class AarloGlance extends LitElement {
                 .then( module => {
                     this._lang = lang
                     this._i = module.messages
-                    this.initialView( lang )
+                    this.initialSetup( lang )
                 }, (_reason) => {
                     const lang_pieces = lang.split('-')
                     if( lang_pieces.length > 1 ) {
-                        this.initialView( lang_pieces[0] )
+                        this.initialSetup( lang_pieces[0] )
                     } else {
-                        this.initialView( "en" )
+                        this.initialSetup( "en" )
                     }
                 })
             return
         }
 
+        // Now load the libraries...
+        if( index < this._cameraCount ) {
+            if( this._ls[index].videos === null ) {
+                this.asyncLoadLibrary( index ).then( () => {
+                    this.initialSetup( lang, index + 1 )
+                })
+            } else {
+                this.initialSetup( lang, index + 1 )
+            }
+            return
+        }
+
         // Now wait for the elements to be added to the shadow DOM.
-        if( !this.isViewReady() ) {
+        if( this._element('image-viewer') === null ) {
             console.log( 'waiting for an element ' )
             setTimeout( () => {
-                this.initialView( lang )
+                this.initialSetup( lang )
             }, 100);
             return
         }
 
-        // Set initial state
+        // If we are here:
+        //  - language packs are in
+        //  - library are loaded
+        //  - DOM is ready
         this._ready = true
+
+        // Set initial state
         this.updateStatuses()
 
         // Install the static stuff.
@@ -1916,12 +1973,12 @@ class AarloGlance extends LitElement {
         }
     }
 
-    async wsLoadLibrary(at_most ) {
+    async wsLoadLibrary( index ) {
         try {
             const library = await this._hass.callWS({
                 type: "aarlo_library",
-                entity_id: this.cc.id,
-                at_most: at_most,
+                entity_id: this._cc[index].id,
+                at_most: this._lc[index].recordings,
             });
             return ( library.videos.length > 0 ) ? library.videos : null;
         } catch (err) {
@@ -2043,17 +2100,27 @@ class AarloGlance extends LitElement {
         }
     }
 
-    async asyncLoadLibrary() {
-        this.gs.video = null;
-        this.ls.videos = await this.wsLoadLibrary(this.lc.recordings);
-        // this.ls.offset = 0
+    /**
+     * Asynchronously load a camera's library.
+     *
+     * Because this operates in the background we save the camera index
+     * and operate on the library state (_ls) directly.
+     *
+     * @param index camera to index to use
+     * @returns {Promise<void>}
+     */
+    async asyncLoadLibrary( index ) {
+        const videos = await this.wsLoadLibrary( index )
+        this._ls[index].videos = videos ? videos : []
     }
 
     openLibrary() {
-        this.ls.showing = true
-        this.getModalDimensions()
-        this.updateLibraryView()
-        this.showLibraryView()
+        if( this.ls.videos && this.ls.videos.length > 0 ) {
+            this.ls.showing = true
+            this.getModalDimensions()
+            this.updateLibraryView()
+            this.showLibraryView()
+        }
     }
 
     playLibraryVideo(index) {
