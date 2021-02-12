@@ -60,6 +60,9 @@ export var messages = {
 		light_off:          'off',
 		next_camera:        'next camera',
 		previous_camera:    'previous camera',
+		library:            'library',
+		library_empty:      'no recordings available',
+		library_open:       'click to open',
 	},
 	
 	// known triggers
