@@ -54,7 +54,6 @@ class AarloGlance extends LitElement {
 
         // Internationalisation.
         this._i = null
-        this._lang = null
 
         // Maybe gs should be cs/ls; think about multiple videos going...
         this._gc = {}
@@ -700,6 +699,25 @@ class AarloGlance extends LitElement {
         return Object.assign( merged, local )
     }
 
+    _merge_videos() {
+        let videos = this._ls[0].videos.slice()
+        for( let i = 1; i < this._cameraCount; i++ ) {
+            let j = 0
+            let k = 0
+            while( k < this._ls[i].videos.length ) {
+                if( j === videos.length ) {
+                    videos.push( this._ls[i].videos[k] )
+                    k++
+                } else if( videos[j].created_at < this._ls[i].videos[k].created_at ) {
+                    videos.splice( j, this._ls[i].videos[k] )
+                    k++
+                }
+                j++
+            }
+        }
+        return videos
+    }
+
     get gc() {
         return this._gc
     }
@@ -794,6 +812,15 @@ class AarloGlance extends LitElement {
         else if ( this.cs.imageSource !== camera.attributes.image_source ) {
             this._log( `source-update: ${this.cs.imageSource} --> ${camera.attributes.image_source}` )
             this.updateImageURL()
+        }
+
+        // Request a library update. When done update the library view.
+        if( this.cs.lastVideo !== camera.attributes.last_video ) {
+            this._log( `video-changed: updating library` )
+            this.asyncLoadLibrary( this._cameraIndex ).then( () => {
+                this._merge_videos()
+                this._updateLibraryView()
+            })
         }
 
         // Save camera state.
@@ -1223,6 +1250,7 @@ class AarloGlance extends LitElement {
             size:       -1,
             sizeIndex:  0,
             videos:     null,
+
         }
     }
 
@@ -1671,24 +1699,9 @@ class AarloGlance extends LitElement {
 
         // Resized? Rebuild grid and force reload of images.
         } else if ( this.gs.librarySize !== this.lc.sizes[this.ls.sizeIndex] ) {
+            this._log( `library-size-change` )
             this._updateLibraryHTML()
-            this.ls.lastOffset = -1
-        }
-
-        // If no library then load it. Refresh all views.
-        if ( this.ls.videos === null ) {
-            this._log( `library-load` )
-            this.asyncLoadLibrary( this._cameraIndex ).then( () => {
-                this.updateView()
-            })
- 
-        // If last video changed then reload library.
-        } else if ( this.ls.lastVideo !== this.cs.lastVideo ) {
-            this._log( `library-video-update: ${this.ls.lastVideo} --> ${this.cs.lastVideo}` )
-            this.ls.lastVideo = this.cs.lastVideo
-            this.asyncLoadLibrary( this._cameraIndex ).then( () => {
-                this._updateLibraryView()
-            })
+            this._updateLibraryView()
 
         // If offset has changed then reload images
         } else if ( this.ls.lastOffset !== this.ls.offset ) {
@@ -1888,47 +1901,24 @@ class AarloGlance extends LitElement {
      *  - set up static view configuration
      *  - open initial view
      *
-     * @param lang language code, `null` is default
-     * @param index camera index for library load
+     * @param lang_loaded true if language is loaded
+     * @param lib_loaded true if libraries are loaded
      */
-    initialSetup( lang = null, index = 0 ) {
+    initialSetup( lang_loaded = false, lib_loaded = 0 ) {
 
-        // No language, pick one.
-        if ( lang === null ) {
-            console.log( 'setting default language' )
-            lang = this.gc.lang ? this.gc.lang : this._hass.language
-        }
-
-        // Load language pack. Try less specific before reverting to en.
-        // testing: import(`https://twrecked.github.io/lang/${lang}.js?t=${lang_date}`)
-        // final: import(`https://cdn.jsdelivr.net/gh/twrecked/lovelace-hass-aarlo@master/lang/${lang}.js`)
-        if( !lang.startsWith(this._lang) ) {
-            console.log( `importing ${lang} language` )
-            import(`https://twrecked.github.io/lang/${lang.toLowerCase()}.js?t=${new Date().getTime()}`)
-                .then( module => {
-                    this._lang = lang
-                    this._i = module.messages
-                    this.initialSetup( lang )
-                }, (_reason) => {
-                    const lang_pieces = lang.split('-')
-                    if( lang_pieces.length > 1 ) {
-                        this.initialSetup( lang_pieces[0] )
-                    } else {
-                        this.initialSetup( "en" )
-                    }
-                })
+        // Load language pack
+        if( !lang_loaded ) {
+            this.asyncLoadLanguage().then( () => {
+                this.initialSetup( true, false )
+            })
             return
         }
 
-        // Now load the libraries...
-        if( index < this._cameraCount ) {
-            if( this._ls[index].videos === null ) {
-                this.asyncLoadLibrary( index ).then( () => {
-                    this.initialSetup( lang, index + 1 )
-                })
-            } else {
-                this.initialSetup( lang, index + 1 )
-            }
+        // Now load the libraries.
+        if( !lib_loaded ) {
+            this.asyncLoadLibraries().then( () => {
+                this.initialSetup( true, true )
+            })
             return
         }
 
@@ -1936,7 +1926,7 @@ class AarloGlance extends LitElement {
         if( this._element('image-viewer') === null ) {
             console.log( 'waiting for an element ' )
             setTimeout( () => {
-                this.initialSetup( lang )
+                this.initialSetup( lang, index )
             }, 100);
             return
         }
@@ -2096,7 +2086,28 @@ class AarloGlance extends LitElement {
         if ( camera.state === 'streaming' ) {
             this.stopStream()
         } else {
+            this.gs.viewer = this.getViewType( this.cc )
             this.playStream()
+        }
+    }
+
+    async asyncLoadLanguage() {
+        let lang = this.gc.lang ? this.gc.lang : this._hass.language
+        console.log( 'setting default language' )
+
+        // Load language pack. Try less specific before reverting to en.
+        // testing: import(`https://twrecked.github.io/lang/${lang}.js?t=${lang_date}`)
+        // final: import(`https://cdn.jsdelivr.net/gh/twrecked/lovelace-hass-aarlo@master/lang/${lang}.js`)
+        let module = null
+        while( !module ) {
+            console.log( `importing ${lang} language` )
+            module = await import(`https://twrecked.github.io/lang/${lang.toLowerCase()}.js?t=${new Date().getTime()}`)
+            if( module ) {
+                this._i = module.messages
+            } else {
+                const lang_pieces = lang.split('-')
+                lang = lang_pieces.length > 1 ? lang_pieces[0] : "en"
+            }
         }
     }
 
@@ -2112,6 +2123,13 @@ class AarloGlance extends LitElement {
     async asyncLoadLibrary( index ) {
         const videos = await this.wsLoadLibrary( index )
         this._ls[index].videos = videos ? videos : []
+    }
+
+    async asyncLoadLibraries( ) {
+        for( let i = 0; i < this._cameraCount; i++ ) {
+            const videos = await this.wsLoadLibrary( i )
+            this._ls[i].videos = videos ? videos : []
+        }
     }
 
     openLibrary() {
