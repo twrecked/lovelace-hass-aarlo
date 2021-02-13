@@ -785,17 +785,15 @@ class AarloGlance extends LitElement {
         // CAMERA
         const camera = this._getState(this.cc.id,'unknown');
 
-        // Set the camera name now. We have to wait untik now to ensure `_hass`
+        // Set the camera name now. We have to wait until now to ensure `_hass`
         // is set and we can get to the camera state.
         if ( this.cc.name === null ) {
             this.cc.name = camera.attributes.friendly_name
         }
 
-        // Image changed? See if:
-        //  - camera has changed state then do an update
-        //  - camera has changed state and was taking a snapshot then queue up some updates
-        //  - auth (base name) has changed then do an update
-        //  - image source has changed then do an update
+        // Camera state has changed. Update the image URL so we update the
+        // view. If we've moved from "taking snapshot" to anything else then
+        // queue up some image update requests.
         if ( camera.state !== this.cs.state ) {
             this._log( `state-update: ${this.cs.state} --> ${camera.state}` )
             this.updateImageURL()
@@ -804,29 +802,45 @@ class AarloGlance extends LitElement {
                     this.updateImageURLLater( seconds )
                 })
             }
+            this.cs.state = camera.state
         }
-        else if ( this.cs.imageBase !== camera.attributes.entity_picture ) {
+
+        // Entity picture has changed. This means there is a new auth key
+        // attached. Update the image URL so we update the view.
+        if ( this.cs.imageBase !== camera.attributes.entity_picture ) {
             this._log( `auth-update: ${this.cs.imageBase} --> ${camera.attributes.entity_picture}` )
             this.updateImageURL()
         }
-        else if ( this.cs.imageSource !== camera.attributes.image_source ) {
+
+        // Image source has changed. This means it was from a new capture or
+        // snapshot. Update the image URL so we update the view.
+        if ( this.cs.imageSource !== camera.attributes.image_source ) {
             this._log( `source-update: ${this.cs.imageSource} --> ${camera.attributes.image_source}` )
             this.updateImageURL()
+            this.cs.imageSource = camera.attributes.image_source
         }
 
-        // Request a library update. When done update the library view.
-        if( this.cs.lastVideo !== camera.attributes.last_video ) {
-            this._log( `video-changed: updating library` )
-            this.asyncLoadLibrary( this._cameraIndex ).then( () => {
-                this._merge_videos()
-                this._updateLibraryView()
-            })
+        // LIBRARY
+        // Check for video update. We can go from:
+        // - having no videos to having one or more
+        // - having one or more videos to none
+        // - having new videos
+        if( "last_video" in camera.attributes ) {
+            if( this.cs.lastVideo !== camera.attributes.last_video ) {
+                this._log( `video-changed: updating library` )
+                this.asyncLoadLibrary( this._cameraIndex ).then( () => {
+                    this._merge_videos()
+                    this._updateLibraryView()
+                })
+                this.cs.lastVideo = camera.attributes.last_video
+            }
+        } else {
+            if( this.cs.lastVideo !== null ) {
+                this._log( `no-videos: clearing library` )
+                this.ls.videos = []
+                this.cs.lastVideo = null
+            }
         }
-
-        // Save camera state.
-        this.cs.state = camera.state
-        this.cs.imageSource = camera.attributes.image_source
-        this.cs.lastVideo = camera.attributes.last_video
 
         // FUNCTIONS
         if( this.cc.showPlay ) {
@@ -1211,6 +1225,7 @@ class AarloGlance extends LitElement {
         return {
             autoPlay:      config.autoPlay,
             autoPlayTimer: null,
+            lastVideo:     null,
             image:         null,
             imageBase:     null,
         }
