@@ -40,6 +40,21 @@ const LitElement = Object.getPrototypeOf(
     );
 const html = LitElement.prototype.html;
 
+function _value( config, value = null ) {
+    return config ? config : value
+}
+function _value_int( config, value = null ) {
+    return parseInt( _value( config, value ) )
+}
+function _includes( config, item, value = false ) {
+    return config ? config.includes(item) : value
+}
+function _either_or( config, item, true_value = true, false_value = false ) {
+    if (config && item in config) {
+        return config[item] ? true_value : false_value
+    }
+    return false_value
+}
 
 // noinspection JSUnresolvedVariable,CssUnknownTarget,CssUnresolvedCustomProperty,HtmlRequiredAltAttribute,RequiredAttributes,JSFileReferences
 class AarloGlance extends LitElement {
@@ -238,7 +253,6 @@ class AarloGlance extends LitElement {
                         <video class="aarlo-modal-video"
                                id="${this._id('modal-video-player')}"
                                playsinline
-                               @canplay="${() => { this.startVideo() }}"
                                @ended="${() => { this.stopVideo(); }}"
                                @mouseover="${() => { this.mouseOverVideo(); }}"
                                @click="${() => { this.clickVideo(); }}">
@@ -292,7 +306,6 @@ class AarloGlance extends LitElement {
                            id="${this._id('video-player')}"
                            style="display:none"
                            playsinline
-                           @canplay="${() => { this.startVideo() }}"
                            @ended="${() => { this.stopVideo(); }}"
                            @mouseover="${() => { this.mouseOverVideo(); }}"
                            @click="${() => { this.clickVideo(); }}">
@@ -699,25 +712,6 @@ class AarloGlance extends LitElement {
         return Object.assign( merged, local )
     }
 
-    _merge_videos() {
-        let videos = this._ls[0].videos.slice()
-        for( let i = 1; i < this._cameraCount; i++ ) {
-            let j = 0
-            let k = 0
-            while( k < this._ls[i].videos.length ) {
-                if( j === videos.length ) {
-                    videos.push( this._ls[i].videos[k] )
-                    k++
-                } else if( videos[j].created_at < this._ls[i].videos[k].created_at ) {
-                    videos.splice( j, this._ls[i].videos[k] )
-                    k++
-                }
-                j++
-            }
-        }
-        return videos
-    }
-
     get gc() {
         return this._gc
     }
@@ -752,7 +746,7 @@ class AarloGlance extends LitElement {
         if( !(`${this._cameraIndex}` in this._lc) ) {
             this._lc[`${this._cameraIndex}`] = {}
         }
-        return this._lc[this._cameraIndex]
+        return this._lc[this.gc.blendedMode ? this._cameraCount : this._cameraIndex]
     }
     set lc( value ) {
         this._lc[this._cameraIndex] = value
@@ -761,7 +755,7 @@ class AarloGlance extends LitElement {
         if( !(`${this._cameraIndex}` in this._ls) ) {
             this._ls[`${this._cameraIndex}`] = {}
         }
-        return this._ls[this._cameraIndex]
+        return this._ls[this.gc.blendedMode ? this._cameraCount : this._cameraIndex]
     }
     set ls( value ) {
         this._ls[this._cameraIndex] = value
@@ -802,6 +796,7 @@ class AarloGlance extends LitElement {
                     this.updateImageURLLater( seconds )
                 })
             }
+            this.gc.lastActive = this._cameraIndex
             this.cs.state = camera.state
         }
 
@@ -817,6 +812,7 @@ class AarloGlance extends LitElement {
         if ( this.cs.imageSource !== camera.attributes.image_source ) {
             this._log( `source-update: ${this.cs.imageSource} --> ${camera.attributes.image_source}` )
             this.updateImageURL()
+            this.gc.lastActive = this._cameraIndex
             this.cs.imageSource = camera.attributes.image_source
         }
 
@@ -829,7 +825,7 @@ class AarloGlance extends LitElement {
             if( this.cs.lastVideo !== camera.attributes.last_video ) {
                 this._log( `video-changed: updating library` )
                 this.asyncLoadLibrary( this._cameraIndex ).then( () => {
-                    this._merge_videos()
+                    this.mergeLibraries()
                     this._updateLibraryView()
                 })
                 this.cs.lastVideo = camera.attributes.last_video
@@ -1018,11 +1014,19 @@ class AarloGlance extends LitElement {
     }
 
     updateStatuses() {
+
+        this.gc.lastActive = -1
         const index = this._cameraIndex
         for( this._cameraIndex = 0; this._cameraIndex < this._cameraCount; this._cameraIndex++ ) {
             this._updateStatuses()
         }
         this._cameraIndex = index
+
+        if( this.gc.activeView ) {
+            if( this.gc.lastActive !== -1 && this.gc.lastActive !== index ) {
+                this.setCameraImage( this.gc.lastActive )
+            }
+        }
     }
 
     checkConfig() {
@@ -1069,13 +1073,20 @@ class AarloGlance extends LitElement {
             aspectRatioMultiplier: config.aspect_ratio === 'square' ? 1 : 0.5625,
 
             // logging?
-            log: config.logging ? config.logging : false,
+            log: _value( config.logging, false ),
 
             // lovelace card size
-            cardSize: config.card_size ? parseInt(config.card_size) : 3,
+            cardSize: _value_int( config.card_size, 3 ),
 
             // swipe threshold
-            swipeThreshold: config.swipe_threshold ? parseInt(config.swipe_threshold) : 150,
+            // swipeThreshold: config.swipe_threshold ? parseInt(config.swipe_threshold) : 150,
+            swipeThreshold: _value_int( config.swipe_threshold, 150 ),
+
+            // active camera mode
+            activeView: _includes( config.image_view, "active" ),
+
+            // blended library
+            blendedMode: _includes( config.library_view, "blended" ),
         }
     }
 
@@ -1278,24 +1289,35 @@ class AarloGlance extends LitElement {
         this.gs = this.getGlobalState( config )
 
         if( "entities" in this._config ) {
-            this._cameraIndex = 0
+            let ci = 0
             this._config.entities.forEach( (local_config) => {
-                this.cc = this.getCameraConfig( config, local_config )
-                this.cs = this.getCameraState( this.cc )
-                this.lc = this.getLibraryConfig( config, local_config )
-                this.ls = this.getLibraryState( this.lc )
-                this._cameraIndex++
+                this._cc[ci] = this.getCameraConfig( config, local_config )
+                this._cs[ci] = this.getCameraState( this._cc[ci] )
+                this._lc[ci] = this.getLibraryConfig( config, local_config )
+                this._ls[ci] = this.getLibraryState( this._lc[ci] )
+                ci++
             })
-            this._cameraCount = this._cameraIndex
+
+            // For blended we fake a library at the end.
+            if( this.gc.blendedMode ) {
+                this._lc[ci] = this.getLibraryConfig( config, {} )
+                this._ls[ci] = this.getLibraryState( this._lc[ci] )
+            }
+
+            // Use the first camera.
+            this._cameraCount = ci
             this._cameraIndex = 0
+
         } else {
             // Single camera. Much simpler.
-            this._cameraIndex = 0
-            this.cc = this.getCameraConfig( config, {} )
-            this.cs = this.getCameraState( this.cc )
-            this.lc = this.getLibraryConfig( config, {} )
-            this.ls = this.getLibraryState( this.lc )
+            this._cc[0] = this.getCameraConfig( config, {} )
+            this._cs[0] = this.getCameraState( this._cc[0] )
+            this._lc[0] = this.getLibraryConfig( config, {} )
+            this._ls[0] = this.getLibraryState( this._lc[0] )
+
+            // Use the first camera.
             this._cameraCount = 1
+            this._cameraIndex = 0
         }
  
         //this.checkConfig()
@@ -1339,13 +1361,6 @@ class AarloGlance extends LitElement {
         this._widthHeight("modal-video-background", this.cs.modalWidth, this.cs.modalHeight)
         this._widthHeight("modal-video-player", this.cs.modalWidth, this.cs.modalHeight)
         this._widthHeight("modal-stream-player", this.cs.modalWidth, this.cs.modalHeight)
- 
-        // window.onscroll = () => {
-            // this.positionModal()
-        // }
-        // window.ontouchend = () => {
-            // this.showVideoControls(2)
-        // }
     }
 
     showModal( show = true ) {
@@ -1758,6 +1773,15 @@ class AarloGlance extends LitElement {
         this._set ("modal-video-full-screen", {title: this._i.video.fullscreen, icon: "mdi:fullscreen"} )
     }
 
+    setupVideoHandlers() {
+        this._element( "video-player" ).addEventListener( 'canplay', () => {
+            this.startVideo()
+        })
+        this._element( "modal-video-player" ).addEventListener( 'canplay', () => {
+            this.startVideo()
+        })
+    }
+
     updateVideoView( state = '' ) {
 
         // Nothing there yet...
@@ -1963,6 +1987,7 @@ class AarloGlance extends LitElement {
 
         this.setupImageHandlers()
         this.setupLibraryHandlers()
+        this.setupVideoHandlers()
 
         // And go...
         this.updateImageView()
@@ -2145,6 +2170,29 @@ class AarloGlance extends LitElement {
             const videos = await this.wsLoadLibrary( i )
             this._ls[i].videos = videos ? videos : []
         }
+        this.mergeLibraries()
+    }
+
+    mergeLibraries() {
+        if( !this.gc.blendedMode ) {
+            return
+        }
+        let videos = this._ls[0].videos.slice()
+        for( let i = 1; i < this._cameraCount; i++ ) {
+            let j = 0
+            let k = 0
+            while( k < this._ls[i].videos.length ) {
+                if( j === videos.length ) {
+                    videos.push( this._ls[i].videos[k] )
+                    k++
+                } else if( videos[j].created_at < this._ls[i].videos[k].created_at ) {
+                    videos.splice( j, 0, this._ls[i].videos[k] )
+                    k++
+                }
+                j++
+            }
+        }
+        this._ls[this._cameraCount].videos = videos
     }
 
     openLibrary() {
@@ -2224,18 +2272,19 @@ class AarloGlance extends LitElement {
         }
     }
 
-    nextCameraImage() {
-        this._cameraIndex = this._cameraIndex === (this._cameraCount - 1) ? 0 : (this._cameraIndex + 1)
+    setCameraImage( index ) {
+        this._cameraIndex = index
         this.setupImageView()
         this.setupLibraryView()
         this.updateImageView()
     }
 
+    nextCameraImage() {
+        this.setCameraImage( this._cameraIndex === (this._cameraCount - 1) ? 0 : (this._cameraIndex + 1) )
+    }
+
     previousCameraImage() {
-        this._cameraIndex = this._cameraIndex === 0 ? (this._cameraCount - 1) : (this._cameraIndex - 1)
-        this.setupImageView()
-        this.setupLibraryView()
-        this.updateImageView()
+        this.setCameraImage( this._cameraIndex === 0 ? (this._cameraCount - 1) : (this._cameraIndex - 1) )
     }
 
     clickVideo() {
