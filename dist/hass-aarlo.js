@@ -40,21 +40,33 @@ const LitElement = Object.getPrototypeOf(
     );
 const html = LitElement.prototype.html;
 
+function _array( config, value = [] ) {
+    if( !config ) {
+        return value
+    }
+    if( typeof config === "string" ) {
+        return config.split(',')
+    }
+    return config
+}
 function _value( config, value = null ) {
     return config ? config : value
 }
-function _value_int( config, value = null ) {
+function _value_int( config, value = 0 ) {
     return parseInt( _value( config, value ) )
+}
+function _value_float( config, value = 0 ) {
+    return parseFloat( _value( config, value ) )
 }
 function _includes( config, item, value = false ) {
     return config ? config.includes(item) : value
 }
-function _either_or( config, item, true_value = true, false_value = false ) {
-    if (config && item in config) {
-        return config[item] ? true_value : false_value
-    }
-    return false_value
-}
+// function _either_or( config, item, true_value = true, false_value = false ) {
+//     if (config && item in config) {
+//         return config[item] ? true_value : false_value
+//     }
+//     return false_value
+// }
 
 // noinspection JSUnresolvedVariable,CssUnknownTarget,CssUnresolvedCustomProperty,HtmlRequiredAltAttribute,RequiredAttributes,JSFileReferences
 class AarloGlance extends LitElement {
@@ -1069,11 +1081,22 @@ class AarloGlance extends LitElement {
             lang: config.lang,
 
             // aspect ratio
-            aspectRatio: config.aspect_ratio === 'square' ? '1x1' : '16x9',
-            aspectRatioMultiplier: config.aspect_ratio === 'square' ? 1 : 0.5625,
+            aspectRatio: _includes( config.image_view, 'square' ) ? '1x1' : '16x9',
+            aspectRatioMultiplier: _includes( config.image_view, 'square' ) ? 1 : 0.5625,
+            // active camera mode
+            activeView: _includes( config.image_view, "active" ),
+            // auto play
+            autoPlay: _includes( config.image_view, "autoplay" ),
+            // stream directly from Arlo
+            playDirect: _includes( config.image_view, "direct" ),
 
-            // logging?
-            log: _value( config.logging, false ),
+            // blended library
+            blendedMode: _includes( config.library_view, "blended" ),
+            // auto play recording when finished
+            libraryAutoPlay: _includes( config.library_view, "autoplay" ),
+
+            // modal window multiplier
+            modalMultiplier: _value_float( config.modal_multiplier, 0.8 ),
 
             // lovelace card size
             cardSize: _value_int( config.card_size, 3 ),
@@ -1082,19 +1105,15 @@ class AarloGlance extends LitElement {
             // swipeThreshold: config.swipe_threshold ? parseInt(config.swipe_threshold) : 150,
             swipeThreshold: _value_int( config.swipe_threshold, 150 ),
 
-            // active camera mode
-            activeView: _includes( config.image_view, "active" ),
-
-            // blended library
-            blendedMode: _includes( config.library_view, "blended" ),
+            // logging?
+            log: _value( config.logging, false ),
         }
     }
 
-    getGlobalLibraryConfig( config ) {
-    }
-
-    getGlobalState( _config ) {
+    getGlobalState( config ) {
         return {
+            autoplay: _value( config.autoPlay, false ),
+            autoPlayTimer: null,
             dash: null,
             hls: null,
             libraryCamera: -1,
@@ -1106,9 +1125,9 @@ class AarloGlance extends LitElement {
         }
     }
 
-    getCameraConfig( global, local ) {
+    getCameraConfigOld( global, local ) {
         const config = this._merge_config( global, local )
- 
+
         // find camera
         let camera = ""
         if( config.entity ) {
@@ -1232,6 +1251,102 @@ class AarloGlance extends LitElement {
         return cc
     }
 
+    getCameraConfigNew( global, local ) {
+        const config = this._merge_config( global, local )
+
+        // Find entity and determine camera name.
+        const entity = config.entity
+        if ( !entity.startsWith( 'camera.aarlo_' ) ) {
+            this.throwError( "new config only works with aarlo entity names" )
+            return
+        }
+        const camera = entity.replace( 'camera.aarlo_','' )
+        const prefix = "aarlo_"
+
+        let cc = {}
+
+        // Grab name if there
+        cc.name = _value( config.name, null )
+
+        // What appears at the top?
+        cc.showTopTitle     = _includes(config.image_top,"name" )
+        cc.showTopDate      = _includes(config.image_top,"date" )
+        cc.showTopStatus    = _includes(config.image_top,"status" )
+
+        // What appears at the bottom.
+        cc.showBottomTitle  = _includes(config.image_bottom,"name" )
+        cc.showBottomDate   = _includes(config.image_bottom,"date" )
+        cc.showBottomStatus = _includes(config.image_bottom,"status" )
+        cc.showPlay         = _includes(config.image_bottom,"play" )
+        cc.showSnapshot     = _includes(config.image_bottom,"snapshot" )
+        cc.showCameraOnOff  = _includes(config.image_bottom,"on_off" )
+        cc.showBattery      = _includes(config.image_bottom,"battery" )
+        cc.showSignal       = _includes(config.image_bottom,"signal" )
+        cc.showMotion       = _includes(config.image_bottom,"motion" )
+        cc.showSound        = _includes(config.image_bottom,"audio" )
+        cc.showCaptured     = _includes(config.image_bottom,"library" )
+        cc.showImageDate    = true
+
+        // What does clicking the image do?
+        const image_click = _array( config.image_click )
+        cc.imageClickStream = image_click.includes("stream")
+        cc.imageClickModal  = image_click.includes("modal")
+        cc.imageClickSmart  = image_click.includes("smart")
+        cc.imageAutoPlay    = image_click.includes("autoplay")
+
+        // snapshot updates
+        cc.snapshotTimeouts = _array( config.snapshot_retry, [ 2, 5 ] )
+
+        // camera and sensors
+        cc.id              = config.camera_id ? config.camera_id : 'camera.' + prefix + camera;
+        cc.motionId        = config.motion_id ? config.motion_id : 'binary_sensor.' + prefix + 'motion_' + camera;
+        cc.soundId         = config.sound_id ? config.sound_id : 'binary_sensor.' + prefix + 'sound_' + camera;
+        cc.batteryId       = config.battery_id ? config.battery_id : 'sensor.' + prefix + 'battery_level_' + camera;
+        cc.signalId        = config.signal_id ? config.signal_id : 'sensor.' + prefix + 'signal_strength_' + camera;
+        cc.capturedTodayId = config.capture_id ? config.capture_id : 'sensor.' + prefix + 'captured_today_' + camera;
+        cc.lastCaptureId   = config.last_id ? config.last_id : 'sensor.' + prefix + 'last_' + camera;
+
+        // door definition
+        cc.doorId         = config.door ? config.door: null;
+        cc.doorBellId     = config.door_bell ? config.door_bell : null;
+        cc.doorBellMuteId = config.door_bell_mute ? config.door_bell_mute : null;
+        cc.doorLockId     = config.door_lock ? config.door_lock : null;
+
+        // door2 definition
+        cc.door2Id         = config.door2 ? config.door2: null;
+        cc.door2BellId     = config.door2_bell ? config.door2_bell : null;
+        cc.door2BellMuteId = config.door2_bell_mute ? config.door2_bell_mute : null;
+        cc.door2LockId     = config.door2_lock ? config.door2_lock : null;
+
+        // light definition
+        cc.lightId     = config.light ? config.light: null;
+
+        cc.showDoor      = !!cc.doorId
+        cc.showDoorLock  = !!cc.doorLockId
+        cc.showDoorBell  = !!cc.doorBellId
+        cc.showDoor2     = !!cc.door2Id
+        cc.showDoor2Lock = !!cc.door2LockId
+        cc.showDoor2Bell = !!cc.door2BellId
+
+        cc.showLight      = !!cc.lightId
+        cc.showLightLeft  =   config.light_left ? !!config.light_left : false;
+        cc.showLightRight =  !cc.showLightLeft
+
+        cc.showOthers = ( cc.showDoor || cc.showDoorLock || cc.showDoorBell ||
+                                cc.showDoor2 || cc.showDoor2Lock || cc.showDoor2Bell ||
+                                    cc.showLight )
+
+        return cc
+    }
+
+    getCameraConfig( global, local ) {
+        if( "show" in global ) {
+            return this.getCameraConfigOld( global, local )
+        } else {
+            return this.getCameraConfigNew( global, local )
+        }
+    }
+
     getCameraState( config ) {
         return {
             autoPlay:      config.autoPlay,
@@ -1245,25 +1360,23 @@ class AarloGlance extends LitElement {
     getLibraryConfig( global, local ) {
 
         const config = this._merge_config( global, local )
-        const library_click = config.image_click ? config.image_click : ""
-        const sizes = config.library_sizes ? config.library_sizes : [ 3 ]
+        const sizes = _array( config.library_sizes, [ 3 ] )
 
         return {
             // What to when video clicked
-            imageClickModal: library_click.includes("modal"),
-            imageClickSmart: library_click.includes("smart"),
-            imageAutoPlay:   library_click.includes("autoplay"),
+            imageClickModal: _includes( config.library_click, "modal"),
+            imageClickSmart: _includes( config.library_click, "smart" ),
 
             // How many recordings to show
             sizes:      sizes,
-            recordings: config.max_recordings ? parseInt(config.max_recordings) : 99,
+            recordings: _value_int( config.max_recordings, 99 ),
 
             // Highlight motion triggers?
-            regions: config.library_regions ? config.library_regions : sizes,
+            regions: _array( config.library_regions, sizes ),
             colors:  {
-                "Animal":  config.library_animal ? config.library_animal : 'orangered',
-                "Vehicle": config.library_vehicle ? config.library_vehicle : 'yellow',
-                "Person":  config.library_person ? config.library_person : 'lime',
+                "Animal":  _value( config.library_animal, 'orangered' ),
+                "Vehicle": _value( config.library_vehicle, 'yellow' ),
+                "Person":  _value( config.library_person, 'lime' ),
             },
         }
     }
@@ -1329,8 +1442,8 @@ class AarloGlance extends LitElement {
     }
 
     getModalDimensions() {
-        let width  = window.innerWidth * this.cc.modalMultiplier
-        let height = window.innerHeight * this.cc.modalMultiplier
+        let width  = window.innerWidth * this.gc.modalMultiplier
+        let height = window.innerHeight * this.gc.modalMultiplier
         const ratio = this.gc.aspectRatioMultiplier
         if( height / width > ratio ) {
             height = width * ratio
@@ -1873,8 +1986,8 @@ class AarloGlance extends LitElement {
 
         // Autostart?
         if ( state === '' && this.gs.stream === null ) {
-            if( this.cs.autoPlay && this.cs.autoPlayTimer === null ) {
-                this.cs.autoPlayTimer = setTimeout( () => {
+            if( this.gs.autoPlay && this.gs.autoPlayTimer === null ) {
+                this.gs.autoPlayTimer = setTimeout( () => {
                     this.playStream( false )
                 },5 * 1000 )
             }
@@ -1882,7 +1995,7 @@ class AarloGlance extends LitElement {
         }
 
         if ( state === 'starting' ) {
-            if ( this.cc.playDirectFromArlo ) {
+            if ( this.gc.playDirect ) {
                 this.setMPEGStreamElementData()
             } else {
                 this.setHLSStreamElementData()
@@ -2019,7 +2132,7 @@ class AarloGlance extends LitElement {
     async wsStartStream() {
         try {
             return await this._hass.callWS({
-                type: this.cc.playDirectFromArlo ? "aarlo_stream_url" : "camera/stream",
+                type: this.gc.playDirect ? "aarlo_stream_url" : "camera/stream",
                 entity_id: this.cc.id,
             })
         } catch (err) {
@@ -2086,10 +2199,10 @@ class AarloGlance extends LitElement {
     }
 
     playStream( ) {
-        this.cs.autoPlayTimer = null
+        this.gs.autoPlayTimer = null
         if ( this.gs.stream === null ) {
-            if( this.cc.autoPlay ) {
-                this.cs.autoPlay = this.cc.autoPlay
+            if( this.gs.autoPlay ) {
+                this.gs.autoPlay = this.gs.autoPlay
             }
             this.asyncPlayStream().then( () => {
                 this.showStream()
@@ -2107,7 +2220,7 @@ class AarloGlance extends LitElement {
         this.resetView()
         this._melement('stream-player' ).pause()
         this.asyncStopStream().then( () => {
-            this.cs.autoPlay = false
+            this.gs.autoPlay = false
             this.gs.stream = null;
             if(this.gs.hls) {
                 this.gs.hls.stopLoad();
