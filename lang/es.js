@@ -23,7 +23,7 @@ export var messages = {
 		previous_page: 'página previa',
 		next_size:     'siguiente tamaño de parrilla',
 		close:         'cerrar archivo',
-		next_page:     'página siguiente,
+		next_page:     'página siguiente',
 		last_page:     'última página',
 		captured:      'capturado',
 	},
