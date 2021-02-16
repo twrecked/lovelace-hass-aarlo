@@ -1387,7 +1387,6 @@ class AarloGlance extends LitElement {
 
     getLibraryState( _config ) {
         return {
-            hideDownloadTimeout: {},
             gridCount:  -1,
             lastOffset: -1,
             offset:     0,
