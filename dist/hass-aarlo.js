@@ -2103,7 +2103,7 @@ class AarloGlance extends LitElement {
 
         // Now wait for the elements to be added to the shadow DOM.
         if( this._element('image-viewer') === null ) {
-            console.log( 'waiting for an element ' )
+            this_.log( 'waiting for an element ' )
             setTimeout( () => {
                 this.initialSetup( lang, index )
             }, 100);
@@ -2273,18 +2273,18 @@ class AarloGlance extends LitElement {
 
     async asyncLoadLanguage() {
         let lang = this.gc.lang ? this.gc.lang : this._hass.language
-        console.log( 'setting default language' )
 
         // Load language pack. Try less specific before reverting to en.
         // testing: import(`https://twrecked.github.io/lang/${lang}.js?t=${lang_date}`)
         // final: import(`https://cdn.jsdelivr.net/gh/twrecked/lovelace-hass-aarlo@master/lang/${lang}.js`)
         let module = null
         while( !module ) {
-            console.log( `importing ${lang} language` )
-            module = await import(`https://twrecked.github.io/lang/${lang.toLowerCase()}.js?t=${new Date().getTime()}`)
-            if( module ) {
+            this._log( `importing ${lang} language` )
+            try {
+                module = await import(`https://twrecked.github.io/lang/${lang.toLowerCase()}.js?t=${new Date().getTime()}`)
                 this._i = module.messages
-            } else {
+            } catch( error ) {
+                this._log( `failed to load language pack: ${lang}` )
                 const lang_pieces = lang.split('-')
                 lang = lang_pieces.length > 1 ? lang_pieces[0] : "en"
             }
