@@ -12,18 +12,20 @@ architecture is very different and (I hope) a lot more efficient.
 
 The `library_sizes` config is a good place to start.
 
-The card now supports localisation but only English is provided at the
-moment. If anybody fancies translating look at `en.js`
+The card now supports localisation with English, French, German and Spanish 
+provided at the moment. If anybody fancies translating into other languages,
+look at `en.js`
 [here](https://github.com/twrecked/lovelace-hass-aarlo/tree/master/lang), you
-just need to translate the strings.
+just need to translate the strings in quotes.
 
 
 ## Table of Contents
 - [Introduction](#introduction)
 - [Installation](#installation)
+- [How it looks](#how-it-looks)
 - [Configuration](#configuration)
 - [Further Documentation](#further-documentation)
-- [How it looks](#how-it-looks)
+- [Old Configuration](#old-configuration)
 
 
 <a name="introduction"></a>
@@ -49,6 +51,7 @@ This document assumes you are familiar with Home Assistant setup and configurati
 Many thanks to:
 * [Button Card](https://github.com/kuuji/button-card/blob/master/button-card.js)
   for a working lovelace card I could understand
+* Translations: Spanish by [alceasan](https://github.com/alceasan); German by [TheDK](https://github.com/TheDK)
 * [JetBrains](https://www.jetbrains.com/?from=hass-aarlo) for the excellent
   **PyCharm IDE** and providing me with an open source license to speed up the
   project development.
@@ -88,8 +91,324 @@ resources:
 The card type is `aarlo-glance.js`.
 
 
+<a name="how-it-looks"></a>
+## How it looks
+
+![The Image View](/images/arlo-glance-01.png?raw=true)
+
+Reading from left to right you have the camera name, motion detection indicator,
+captured clip indicator, battery levels, signal level and current state. If you
+click the image the last captured clip will play, if you click the last captured
+icon you will be show the video library thumbnails - see below. Clicking the
+camera icon (not shown) will take a snapshot and replace the current thumbnail.
+(See supported features for list of camera statuses)
+
+![The Library View](/images/arlo-glance-02.png)
+
+Clicking on the last captured clip will display thumbnail mode. Clicking on a
+thumbnail starts the appropiate video.  You can currently only see the last 99
+videos. If you move your mouse over a thumbnail it will show you time of capture
+and, if you have a Smart subscription, a reason for the capture. **>** takes you
+to the next page, **<** to the previous and **X** closes the window.
+
+
+
 <a name="configuration"></a>
 ## Configuration
+
+__From version 0.2 onwards the configuration settings have changed.__
+
+_To continue using the previous configuration make sure to leave the `show`
+option in your settings._
+
+#### Card Type
+
+| Name | Value                 | Description                            |
+|------|-----------------------|----------------------------------------|
+| type | `custom:aarlo-glance` | Tell lovelace this is an `aarlo` card. |
+
+You have to tell `lovelace` the card type.
+
+#### Simple or Multi Camera Configuration
+
+Choose a single camera configuration or multiple camera configuration.
+One of `entity` or `entities` must be used, if you supply both `entity` and
+`entities` at the top level `entities` will take priority.
+
+- Single Camera Configuration
+
+| Name   | Type      | Required | Description                                                                                       |
+|--------|-----------|----------|---------------------------------------------------------------------------------------------------|
+| entity | entity_id | No       | Full entity id of camera this card is controlling - for example, `camera.aarlo_front_door_camera` |
+| name   | String    | No       | Display name.                                                                                     |
+
+- Multi Camera Configuration
+
+| Name     | Type  | Required | Description                               |
+|----------|-------|----------|-------------------------------------------|
+| entities | array | No       | An array of single camera configurations. |
+
+A multi camera configuration is an array of single camera configurations.
+You can specify a shared configuration for most options so a multi camera
+configuration can be as simple as:
+
+```yaml
+entities:
+  - entity: camera.aarlo_front_door_camera
+  - entity: camera.aarlo_front_camera
+# shared options
+```
+
+#### Image Options
+
+| Name       | Type  | Required | Supported Values                          |
+|------------|-------|----------|-------------------------------------------|
+| image_view | list  | No       | active, start-stream, direct, square      |
+
+These are the options that determine the overall behaviour of the card when
+showing the image view.
+- `active`; for multi camera cards, the image will change to the most recently
+  updated camera
+- `start-stream`; the card will start streaming when opened
+- `start-recording`; _not implemented yet_, the card will play recording when
+  finished
+- `direct`; when streaming the card will access Arlo directly rather than go
+  through Home Assistant
+- `square`; use a square image; useful for Arlo Video Doorbells; this affects
+  the library view as well.
+
+
+| Name         | Type | Required | Supported Values                                                                      |
+|--------------|------|----------|---------------------------------------------------------------------------------------|
+| image_top    | list | No       | name, date, status                                                                    |
+| image_bottom | list | No       | name, date, status, motion, sound, battery, signal, library, stream, on_off, snapshot |
+
+These options determine what information and functions are available on the
+image view. `image_top` controls what appears at the top and `image_bottom`
+what appears at the bottom.
+  - `name`; camera name
+  - `date`: date/time of last capture
+  - `status`: current camera status - for example, `Idle`, `Recording`
+  - `motion`: motion detection status, click for history
+  - `sound`: sound detection status, click for history
+  - `battery`: current battery level, click for history 
+  - `signal`: current wifi strength, click for history 
+  - `library`: library status - are there any recordings today, any recordings at
+    all, click to open the library view
+  - `stream`: click to start a live stream
+  - `on_off`: click to turn the camera on and off
+  - `snapshot`; click to take a snapshot
+
+##### Notes
+To get the `aarlo` Device sensors to work correctly you need to enable the
+corresponding `binary_sensor` or `sensor`. For example, to get motion
+notifications working you need the following binary sensor enabled:
+
+
+| Name        | Type | Required | Supported Values                |
+|-------------|------|----------|---------------------------------|
+| image_click | list | No       | modal, smart, stream, recording |
+
+This option determines what happens when you click the image
+  - `modal`; open the recording or stream in a modal window
+  - `smart`; open the recording or stream in a modal window on a desktop machine,
+    shown in line otherwise.
+  - `stream`; start a live stream
+  - `recording`; play the last recording
+
+| Name           | Type    | Required | Default |
+|----------------|---------|----------|---------|
+| snapshot_retry | seconds | No       | 2,5     |
+
+This option lets you change the image update retry times. If you find the
+snapshot image doesn't update all the time try adding extra time outs.
+
+#### Library Options
+
+| Name         | Type | Required | Supported Values                  |
+|--------------|------|----------|-----------------------------------|
+| library_view | list | No       | blended, start-recording          |
+
+This option determines the overall behaviour of the card when showing the
+library view.
+  - `blended`; for multi camera cards; the library view will display all camera
+    recordings spliced together
+  - `start-recording`; _not implemented yet_, automatically show the recording when
+    finished.
+
+| Name          | Type | Required | Supported Values                |
+|---------------|------|----------|---------------------------------|
+| library_click | list | No       | modal, smart                    |
+
+This option determine what happens when you click the image
+  - `modal`; open the recording or stream in a modal window
+  - `smart`; open the recording or stream in a modal window on a desktop
+    machine, show inline otherwise.
+
+| Name         | Type         | Required | Default |
+|--------------|--------------|----------|---------|
+| library_size | Integer list | No       | 3       |
+
+This option sets the available library sizes. It is a comma separated list of
+integer values; for example `3,6,1` and you can cycle through the sizes from the
+library view. When you open the library view it will return the previous size
+used.
+
+| Name            | Type         | Required | Default |
+|-----------------|--------------|----------|---------|
+| library_regions | Integer list | No       | 3       |
+
+This option sets the library sizes that will highlight the object that caused
+the recording. The default value is `library_size`. This is useful for hiding
+the highlight for larger library sizes.
+
+| Name            | Type         | Required | Default |
+|-----------------|--------------|----------|---------|
+| max_recordings  | Integer      | No       | 100     |
+
+This option specifies the maximum number of recordings to show in the library.
+It is per camera.
+
+#### Device Options
+
+| Name            | Type      | Description                      |
+|-----------------|-----------|----------------------------------|
+| door            | entity_id | A door contact switch.           |
+| door_lock       | entity_id | A door lock switch.              |
+| door_bell       | entity_id | A door bell.                     |
+| door_bell_mute  | entity_id | A switch to mute `door_bell`.    |
+| door2           | entity_id | A door contact switch.           |
+| door2_lock      | entity_id | A door lock switch.              |
+| door2_bell      | entity_id | A door bell.                     |
+| door2_bell_mute | entity_id | A switch to mute `door2_bell`.   |
+| light           | entity_id | A light switch.                  |
+
+These options are useful if the camera is pointing at a door.
+
+As well as reporting camera status the card can report on and operate other
+devices. The card can tell you if doors are open, show and operate door locks,
+show and operate lights and show and operate door bells.
+
+The door lock and light controls will appear on the live stream.
+
+#### Arlo Device Options
+
+| Name       | Type   | Description                                        | 
+|------------|--------|----------------------------------------------------|
+| motion_id  | String | Override the calculated motion device name         |
+| sound_id   | String | Override the calculated sound device name          |
+| battery_id | String | Override the calculated battery device name        |
+| signal_id  | String | Override the calculated signal device name         |
+| capture_id | String | Override the calculated captured today device name |
+| last_id    | String | Override the calculated last captured device name  |
+
+If you don't change the device names `aarlo` gives you won't need to change
+these options, they are based on the entity you set. If you do change the name
+or want to use a device not provided by `aarlo` then use these.
+
+```yaml
+binary_sensor:
+  - platform: aarlo
+    monitored_conditions:
+    - motion
+```
+
+#### Advanced Options
+
+You won't generally need to change these.
+
+| Name             | Type    | Default | Description                                                          |
+|------------------|---------|---------|----------------------------------------------------------------------|
+| card_size        | integer | 3       | Tell `lovelace` how much space to allocate for the card.             |
+| id               | string  |         | Override the HTML element `id` the card uses.                        |
+| logging          | boolean | false   | Set to true to enable logging to the browser console.                |
+| modal_multiplier | float   | 0.8     | Set this to change how much space the modal window will try to take. |
+| swipe_threshold  | integer | 150     | Set this to change how long a swipe has to be to register.           |
+
+
+## Example Configurations
+
+#### A Single Camera Card
+
+This card is a single camera with custom library sizes that can monitor a door
+and control the door's lock.
+
+```yaml
+type: 'custom:aarlo-glance'
+entity: camera.aarlo_front_door_camera
+name: front door
+image_view: direct
+image_top: 'name,status'
+image_bottom: 'motion,library,play,snapshot,battery'
+image_click: 'recordings'
+library_sizes: '3,4,2'
+door: binary_sensor.front_door
+door_lock: lock.front_door_lock
+```
+
+#### Multi Camera Card #1
+
+This card is a multi camera card with custom library sizes where both cameras
+are monitoring the same door. The image will change to the most recently
+active camera and the library view is blended.
+
+```yaml
+type: 'custom:aarlo-glance'
+entities:
+  - entity: camera.aarlo_front_door_camera
+    name: front door
+  - entity: camera.aarlo_front_camera
+    name: front
+image_view: direct,active
+library_view: blended
+image_top: 'name,status'
+image_bottom: 'motion,library,play,snapshot,battery'
+image_click: 'recordings'
+library_sizes: '3,4,2'
+door: binary_sensor.front_door
+door_lock: lock.front_door_lock
+```
+
+#### Multi Camera Card #2
+
+This card is a multi camera card with custom library sizes where both cameras
+are monitoring their own door. The image will change to the most recently
+active camera and the library view is blended.
+
+```yaml
+type: 'custom:aarlo-glance'
+entities:
+  - entity: camera.aarlo_front_door_camera
+    name: front door
+    door: binary_sensor.front_door
+    door_lock: lock.front_door_lock
+  - entity: camera.aarlo_back_door_camera
+    name: back door
+    door: binary_sensor.back_door
+    door_lock: lock.back_door_lock
+image_view: direct,active
+library_view: blended
+image_top: 'name,status'
+image_bottom: 'motion,library,play,snapshot,battery'
+image_click: 'recordings'
+library_sizes: '3,4,2'
+```
+
+
+<a name="further-documentation"></a>
+##  Further Documentation
+See [hass-aarlo](https://github.com/twrecked/hass-aarlo/blob/master/README.md)
+for general Aarlo documentation.
+
+
+<a name="old-configuration"></a>
+## Old Configuration
+
+__From version 0.2 onwards the configuration settings have changed.__
+
+_This way of configuring the card is deprecated. It will continue to work for
+for now but it will be going away. Please use [Configuration](#configuration)
+instead._
 
 The card supports the following configuration items:
 
@@ -237,29 +556,4 @@ You don't need to reboot to see the GUI changes, a reload is sufficient. And if
 all goes will see a card that looks like this:
 
 
-<a name="how-it-looks"></a>
-## How it looks
-
-![The Image View](/images/arlo-glance-01.png?raw=true)
-
-Reading from left to right you have the camera name, motion detection indicator,
-captured clip indicator, battery levels, signal level and current state. If you
-click the image the last captured clip will play, if you click the last captured
-icon you will be show the video library thumbnails - see below. Clicking the
-camera icon (not shown) will take a snapshot and replace the current thumbnail.
-(See supported features for list of camera statuses)
-
-Clicking on the last captured clip will display thumbnail mode. Clicking on a
-thumbnail starts the appropiate video.  You can currently only see the last 99
-videos. If you move your mouse over a thumbnail it will show you time of capture
-and, if you have a Smart subscription, a reason for the capture. **>** takes you
-to the next page, **<** to the previous and **X** closes the window.
-
-![The Library View](/images/arlo-glance-02.png)
-
-
-<a name="further-documentation"></a>
-##  Further Documentation
-See [hass-aarlo](https://github.com/twrecked/hass-aarlo/blob/master/README.md)
-for general Aarlo documentation.
 
