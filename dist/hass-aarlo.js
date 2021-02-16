@@ -1086,14 +1086,20 @@ class AarloGlance extends LitElement {
             // active camera mode
             activeView: _includes( config.image_view, "active" ),
             // auto play
-            autoPlay: _includes( config.image_view, "autoplay" ),
+            autoPlay: _includes( config.image_view, "autoplay" ) ||
+                        _includes( config.image_view, "start-stream" ),
+            // auto play recording
+            autoPlayRecording: _includes( config.image_view, "start-recording" ),
             // stream directly from Arlo
             playDirect: _includes( config.image_view, "direct" ),
 
             // blended library
             blendedMode: _includes( config.library_view, "blended" ),
             // auto play recording when finished
-            libraryAutoPlay: _includes( config.library_view, "autoplay" ),
+            libraryAutoPlay: _includes( config.library_view, "autoplay" ) ||
+                        _includes( config.image_view, "start-recording" ),
+            // download videos?
+            libraryDownload: _includes( config.library_view, "download" ),
 
             // modal window multiplier
             modalMultiplier: _value_float( config.modal_multiplier, 0.8 ),
@@ -1113,7 +1119,6 @@ class AarloGlance extends LitElement {
     getGlobalState( config ) {
         return {
             autoplay: _value( config.autoPlay, false ),
-            autoPlayTimer: null,
             dash: null,
             hls: null,
             libraryCamera: -1,
@@ -1292,7 +1297,6 @@ class AarloGlance extends LitElement {
         cc.imageClickStream = image_click.includes("stream")
         cc.imageClickModal  = image_click.includes("modal")
         cc.imageClickSmart  = image_click.includes("smart")
-        cc.imageAutoPlay    = image_click.includes("autoplay")
 
         // snapshot updates
         cc.snapshotTimeouts = _array( config.snapshot_retry, [ 2, 5 ] )
@@ -1383,6 +1387,7 @@ class AarloGlance extends LitElement {
 
     getLibraryState( _config ) {
         return {
+            hideDownloadTimeout: {},
             gridCount:  -1,
             lastOffset: -1,
             offset:     0,
@@ -1674,7 +1679,7 @@ class AarloGlance extends LitElement {
     }
 
     setupLibraryHandlers() {
-        // rudementary swipe support
+        // rudimentary swipe support
         const viewer = this._element("library-viewer")
 
         if( this.gc.isMobile ) {
@@ -1715,20 +1720,35 @@ class AarloGlance extends LitElement {
 
         for( let i = 0; i < this.gs.librarySize * this.gs.librarySize; ++i ) {
 
+            // The thumbnail element.
             let img = document.createElement("img")
             img.id = this._id(`library-${i}`)
             img.style.width = "100%"
             img.style.height = "100%"
             img.style.objectFit = "cover"
             img.addEventListener("click", () => { this.playLibraryVideo(i) } )
+            img.addEventListener("mouseover", () => { this.showDownloadIcon(i) } )
+            img.addEventListener("mouseout", () => { this.hideDownloadIcon(i) } )
 
+            // The region highlight element
             let box = document.createElement("div")
             box.id = this._id(`library-box-${i}`)
             box.style.width = "100%"
             box.style.height = "100%"
             box.style.position = "absolute"
             box.style.top = "0"
-            img.addEventListener("click", () => { this.playLibraryVideo(i) } )
+            box.addEventListener("click", () => { this.playLibraryVideo(i) } )
+            box.addEventListener("mouseover", () => { this.showDownloadIcon(i) } )
+            box.addEventListener("mouseout", () => { this.hideDownloadIcon(i) } )
+
+            // The download icon
+            let a = document.createElement("a")
+            a.id = this._id(`library-a-${i}`)
+            a.style.position = "absolute"
+            a.style.left = `2%`
+            a.style.top  = `5%`
+            a.setAttribute("download","")
+            a.innerHTML = `<ha-icon icon="mdi:download"></ha-icon>`
 
             const column = Math.floor((i % this.gs.librarySize) + 1)
             const row = Math.floor((i / this.gs.librarySize) + 1)
@@ -1738,6 +1758,7 @@ class AarloGlance extends LitElement {
             div.style.gridRow    = `${row}`
             div.appendChild(img)
             div.appendChild(box)
+            div.appendChild(a)
             grid.appendChild(div)
         }
 
@@ -1790,9 +1811,16 @@ class AarloGlance extends LitElement {
                 this._hide( bid )
             }
 
+            // download icon
+            const aid = `library-a-${i}`
+            this._element( aid ).href = video.url
+            this._hide( aid )
+
         }
         for( ; i < this.ls.gridCount; i++ ) {
             this._hide(`library-${i}`)
+            this._hide(`library-box-${i}`)
+            this._hide(`library-a-${i}`)
         }
 
         // save state
@@ -1986,8 +2014,8 @@ class AarloGlance extends LitElement {
 
         // Autostart?
         if ( state === '' && this.gs.stream === null ) {
-            if( this.gs.autoPlay && this.gs.autoPlayTimer === null ) {
-                this.gs.autoPlayTimer = setTimeout( () => {
+            if( this.cs.autoPlay && this.cs.autoPlayTimer === null ) {
+                this.cs.autoPlayTimer = setTimeout( () => {
                     this.playStream( false )
                 },5 * 1000 )
             }
@@ -2199,10 +2227,10 @@ class AarloGlance extends LitElement {
     }
 
     playStream( ) {
-        this.gs.autoPlayTimer = null
+        this.cs.autoPlayTimer = null
         if ( this.gs.stream === null ) {
             if( this.gs.autoPlay ) {
-                this.gs.autoPlay = this.gs.autoPlay
+                this.cs.autoPlay = this.gs.autoPlay
             }
             this.asyncPlayStream().then( () => {
                 this.showStream()
@@ -2220,7 +2248,7 @@ class AarloGlance extends LitElement {
         this.resetView()
         this._melement('stream-player' ).pause()
         this.asyncStopStream().then( () => {
-            this.gs.autoPlay = false
+            this.cs.autoPlay = false
             this.gs.stream = null;
             if(this.gs.hls) {
                 this.gs.hls.stopLoad();
@@ -2518,6 +2546,15 @@ class AarloGlance extends LitElement {
         }
     }
 
+    showDownloadIcon(index) {
+        if( this.gc.libraryDownload ) {
+            this._show(`library-a-${index}`)
+        }
+    }
+
+    hideDownloadIcon(index) {
+        this._hide(`library-a-${index}`)
+    }
 }
 
 // Bring in our custom scripts

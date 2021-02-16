@@ -225,9 +225,9 @@ snapshot image doesn't update all the time try adding extra time outs.
 
 #### Library Options
 
-| Name         | Type | Required | Supported Values                  |
-|--------------|------|----------|-----------------------------------|
-| library_view | list | No       | blended, start-recording          |
+| Name         | Type | Required | Supported Values                   |
+|--------------|------|----------|------------------------------------|
+| library_view | list | No       | blended, start-recording, download |
 
 This option determines the overall behaviour of the card when showing the
 library view.
@@ -235,6 +235,8 @@ library view.
     recordings spliced together
   - `start-recording`; _not implemented yet_, automatically show the recording when
     finished.
+  - `download`; show an icon to download the video when the mouse hovers over
+    the recording thumbnail
 
 | Name          | Type | Required | Supported Values                |
 |---------------|------|----------|---------------------------------|
