@@ -12,10 +12,11 @@ architecture is very different and (I hope) a lot more efficient.
 
 The `library_sizes` config is a good place to start.
 
-The card now supports localisation but only English is provided at the
-moment. If anybody fancies translating look at `en.js`
+The card now supports localisation with English, French, German and Spanish 
+provided at the moment. If anybody fancies translating into other languages,
+look at `en.js`
 [here](https://github.com/twrecked/lovelace-hass-aarlo/tree/master/lang), you
-just need to translate the strings.
+just need to translate the strings in quotes.
 
 
 ## Table of Contents
@@ -131,8 +132,8 @@ You have to tell `lovelace` the card type.
 #### Simple or Multi Camera Configuration
 
 Choose a single camera configuration or multiple camera configuration.
-If you supply both `entity` and `entities` at the top level `entities` will
-take priority.
+One of `entity` or `entities` must be used, if you supply both `entity` and
+`entities` at the top level `entities` will take priority.
 
 - Single Camera Configuration
 
