@@ -52,6 +52,7 @@ Many thanks to:
 * [Button Card](https://github.com/kuuji/button-card/blob/master/button-card.js)
   for a working lovelace card I could understand
 * Translations: Spanish by [alceasan](https://github.com/alceasan); German by [TheDK](https://github.com/TheDK)
+  Italian by [QuakeGio83](https://github.com/QuakeGio83); Swedish by [pierrebengtsson](https://github.com/pierrebengtsson)
 * [JetBrains](https://www.jetbrains.com/?from=hass-aarlo) for the excellent
   **PyCharm IDE** and providing me with an open source license to speed up the
   project development.
