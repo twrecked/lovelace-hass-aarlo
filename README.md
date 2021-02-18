@@ -342,7 +342,7 @@ entity: camera.aarlo_front_door_camera
 name: front door
 image_view: direct
 image_top: 'name,status'
-image_bottom: 'motion,library,play,snapshot,battery'
+image_bottom: 'motion,library,stream,snapshot,battery'
 image_click: 'recordings'
 library_sizes: '3,4,2'
 door: binary_sensor.front_door
@@ -365,7 +365,7 @@ entities:
 image_view: direct,active
 library_view: blended
 image_top: 'name,status'
-image_bottom: 'motion,library,play,snapshot,battery'
+image_bottom: 'motion,library,stream,snapshot,battery'
 image_click: 'recordings'
 library_sizes: '3,4,2'
 door: binary_sensor.front_door
