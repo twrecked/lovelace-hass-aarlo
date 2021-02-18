@@ -1087,11 +1087,13 @@ class AarloGlance extends LitElement {
             activeView: _includes( config.image_view, "active" ),
             // auto play
             autoPlay: _includes( config.image_view, "autoplay" ) ||
-                        _includes( config.image_view, "start-stream" ),
+                        _includes( config.image_view, "start-stream" ) ||
+                        _value( config.auto_play, false ),
             // auto play recording
             autoPlayRecording: _includes( config.image_view, "start-recording" ),
             // stream directly from Arlo
-            playDirect: _includes( config.image_view, "direct" ),
+            playDirect: _includes( config.image_view, "direct" ) ||
+                        _value( config.play_direct, false ),
 
             // blended library
             blendedMode: _includes( config.library_view, "blended" ),
