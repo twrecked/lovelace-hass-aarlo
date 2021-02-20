@@ -260,15 +260,16 @@ class AarloGlance extends LitElement {
                         </div>
                         <video class="aarlo-modal-video"
                                id="${this._id('modal-stream-player')}"
+                               playsinline 
                                @ended="${() => { this.stopStream() }}"
                                @mouseover="${() => { this.mouseOverVideo(); }}"
                                @click="${() => { this.clickVideo(); }}">
                             Your browser does not support the video tag.
                         </video>
                         <video class="aarlo-modal-video"
-                               id="${this._id('modal-video-player')}"
-                               playsinline autoplay
-                               @ended="${() => { this.stopVideo(); }}"
+                               id="${this._id('modal-recording-player')}"
+                               playsinline 
+                               @ended="${() => { this.stopRecording(); }}"
                                @mouseover="${() => { this.mouseOverVideo(); }}"
                                @click="${() => { this.clickVideo(); }}">
                             Your browser does not support the video tag.
@@ -286,7 +287,7 @@ class AarloGlance extends LitElement {
                                          @click="${() => { this.controlToggleSound(); }}">
                                 </ha-icon>
                                 <ha-icon id="${this._id('modal-video-stop')}"
-                                         @click="${() => { this.controlStopVideoOrStream(); }}">
+                                         @click="${() => { this.controlStop(); }}">
                                 </ha-icon>
                                 <ha-icon id="${this._id('modal-video-play-pause')}"
                                          @click="${() => { this.controlPlayPause(); }}">
@@ -312,16 +313,17 @@ class AarloGlance extends LitElement {
                     <video class="aarlo-video"
                            id="${this._id('stream-player')}"
                            style="display:none"
+                           playsinline 
                            @ended="${() => { this.stopStream() }}"
                            @mouseover="${() => { this.mouseOverVideo(); }}"
                            @click="${() => { this.clickVideo(); }}">
                         Your browser does not support the video tag.
                     </video>
                     <video class="aarlo-video"
-                           id="${this._id('video-player')}"
+                           id="${this._id('recording-player')}"
                            style="display:none"
-                           playsinline autoplay
-                           @ended="${() => { this.stopVideo(); }}"
+                           playsinline 
+                           @ended="${() => { this.stopRecording(); }}"
                            @mouseover="${() => { this.mouseOverVideo(); }}"
                            @click="${() => { this.clickVideo(); }}">
                         Your browser does not support the video tag.
@@ -379,7 +381,7 @@ class AarloGlance extends LitElement {
                                  @click="${() => { this.showOrStopStream() }}">
                         </ha-icon>
                         <ha-icon id="${this._id('camera-snapshot')}"
-                                 @click="${() => { this.wsUpdateSnapshot() }}">
+                                 @click="${() => { this.updateSnapshot() }}">
                         </ha-icon>
                         <ha-icon id="${this._id('camera-battery')}"
                                  @click="${() => { this.moreInfo(this.cc.batteryId) }}">
@@ -465,7 +467,7 @@ class AarloGlance extends LitElement {
                                  @click="${() => { this.controlToggleSound(); }}">
                         </ha-icon>
                         <ha-icon id="${this._id('video-stop')}"
-                                 @click="${() => { this.controlStopVideoOrStream(); }}">
+                                 @click="${() => { this.controlStop(); }}">
                         </ha-icon>
                         <ha-icon id="${this._id('video-play-pause')}"
                                  @click="${() => { this.controlPlayPause(); }}">
@@ -833,23 +835,23 @@ class AarloGlance extends LitElement {
 
         // LIBRARY
         // Check for video update. We can go from:
-        // - having no videos to having one or more
-        // - having one or more videos to none
-        // - having new videos
+        // - having no recordings to having one or more
+        // - having one or more recordings to none
+        // - having new recordings
         if( "last_video" in camera.attributes ) {
-            if( this.cs.lastVideo !== camera.attributes.last_video ) {
+            if( this.cs.lastRecording !== camera.attributes.last_video ) {
                 this._log( `video-changed: updating library` )
                 this.asyncLoadLibrary( this._cameraIndex ).then( () => {
                     this.mergeLibraries()
                     this._updateLibraryView()
                 })
-                this.cs.lastVideo = camera.attributes.last_video
+                this.cs.lastRecording = camera.attributes.last_video
             }
         } else {
-            if( this.cs.lastVideo !== null ) {
+            if( this.cs.lastRecording !== null ) {
                 this._log( `no-videos: clearing library` )
-                this.ls.videos = []
-                this.cs.lastVideo = null
+                this.ls.recordings    = []
+                this.cs.lastRecording = null
             }
         }
 
@@ -924,7 +926,7 @@ class AarloGlance extends LitElement {
         // We always save this, used by library code to check for updates
         const captured = this._getState(this.cc.capturedTodayId, "0").state;
         const last = this._getState(this.cc.lastCaptureId, "0").state;
-        if( this.ls.videos && this.ls.videos.length > 0 ) {
+        if( this.ls.recordings && this.ls.recordings.length > 0 ) {
             this.cs.capturedText  = `${this._i.status.library}: ` +
                     ( captured === "0" ? "" : `${captured} ${this._i.status.captured_something} ${last}, ` ) +
                     this._i.status.library_open
@@ -1132,11 +1134,10 @@ class AarloGlance extends LitElement {
             dash: null,
             hls: null,
             libraryCamera: -1,
+            recording: null,
+            recordingPoster: '',
             stream: null,
             streamPoster: '',
-            video: null,
-            videoState: '',
-            videoPoster: '',
         }
     }
 
@@ -1365,7 +1366,7 @@ class AarloGlance extends LitElement {
         return {
             autoPlay:      config.autoPlay,
             autoPlayTimer: null,
-            lastVideo:     null,
+            lastRecording: null,
             image:         null,
             imageBase:     null,
         }
@@ -1400,9 +1401,9 @@ class AarloGlance extends LitElement {
             gridCount:  -1,
             lastOffset: -1,
             offset:     0,
+            recordings: null,
             size:       -1,
             sizeIndex:  0,
-            videos:     null,
 
         }
     }
@@ -1486,7 +1487,7 @@ class AarloGlance extends LitElement {
         this._widthHeight("modal-content", this.cs.modalWidth - 16, null, "important")
         this._widthHeight("modal-video-wrapper", this.cs.modalWidth, this.cs.modalHeight - 16)
         this._widthHeight("modal-video-background", this.cs.modalWidth, this.cs.modalHeight)
-        this._widthHeight("modal-video-player", this.cs.modalWidth, this.cs.modalHeight)
+        this._widthHeight("modal-recording-player", this.cs.modalWidth, this.cs.modalHeight)
         this._widthHeight("modal-stream-player", this.cs.modalWidth, this.cs.modalHeight)
     }
 
@@ -1661,7 +1662,7 @@ class AarloGlance extends LitElement {
         }
         this._show('top-bar', this.cc.showTopTitle || this.cc.showTopDate || this.cc.showTopStatus )
         this._show('bottom-bar')
-        this.hideVideoView()
+        this.hideRecordingView()
         this.hideStreamView()
         this.hideLibraryView()
         this.hideModal()
@@ -1735,7 +1736,7 @@ class AarloGlance extends LitElement {
             img.style.width = "100%"
             img.style.height = "100%"
             img.style.objectFit = "cover"
-            img.addEventListener("click", () => { this.playLibraryVideo(i) } )
+            img.addEventListener("click", () => { this.playRecording(i) } )
             img.addEventListener("mouseover", () => { this.showDownloadIcon(i) } )
             img.addEventListener("mouseout", () => { this.hideDownloadIcon(i) } )
 
@@ -1746,7 +1747,7 @@ class AarloGlance extends LitElement {
             box.style.height = "100%"
             box.style.position = "absolute"
             box.style.top = "0"
-            box.addEventListener("click", () => { this.playLibraryVideo(i) } )
+            box.addEventListener("click", () => { this.playRecording(i) } )
             box.addEventListener("mouseover", () => { this.showDownloadIcon(i) } )
             box.addEventListener("mouseout", () => { this.hideDownloadIcon(i) } )
 
@@ -1780,8 +1781,8 @@ class AarloGlance extends LitElement {
     _updateLibraryView() {
    
         // Massage offset so it fits in library.
-        if( this.ls.offset + this.ls.gridCount > this.ls.videos.length ) {
-            this.ls.offset = Math.max(this.ls.videos.length - this.ls.gridCount, 0)
+        if( this.ls.offset + this.ls.gridCount > this.ls.recordings.length ) {
+            this.ls.offset = Math.max(this.ls.recordings.length - this.ls.gridCount, 0)
         } else if( this.ls.offset < 0 ) {
             this.ls.offset = 0
         }
@@ -1789,11 +1790,11 @@ class AarloGlance extends LitElement {
         let i = 0;
         let j= this.ls.offset;
         const show_triggers = this.lc.regions.includes(this.gs.librarySize)
-        const last = Math.min(j + this.ls.gridCount, this.ls.videos.length)
+        const last = Math.min(j + this.ls.gridCount, this.ls.recordings.length)
         for( ; j < last; i++, j++ ) {
             const id = `library-${i}`
             const bid = `library-box-${i}`
-            const video = this.ls.videos[j]
+            const video = this.ls.recordings[j]
             let captured_text = `${this._i.library.captured}: ${video.created_at_pretty}`
             if ( video.trigger && video.trigger !== '' ) {
                 captured_text += ` (${this._i.trigger[video.trigger.toLowerCase()]})`
@@ -1851,7 +1852,7 @@ class AarloGlance extends LitElement {
         this._set( "library-control-resize",{ title: this._i.library.next_size, icon: 'mdi:resize', state: "on" })
         this._set( "library-control-close",{ title: this._i.library.close, icon: 'mdi:close', state: "on" })
 
-        const not_at_end = this.ls.offset + this.ls.gridCount < this.ls.videos.length
+        const not_at_end = this.ls.offset + this.ls.gridCount < this.ls.recordings.length
         this._set( "library-control-next",{
             title: not_at_end ? this._i.library.next_page : "",
             icon: 'mdi:chevron-right',
@@ -1893,7 +1894,7 @@ class AarloGlance extends LitElement {
     showLibraryView() {
         this._show("library-viewer")
         this._show("library-controls")
-        this.hideVideoView()
+        this.hideRecordingView()
         this.hideStreamView()
         this.hideImageView()
         this.hideModal()
@@ -1904,7 +1905,9 @@ class AarloGlance extends LitElement {
         this._hide("library-controls")
     }
 
-    setupVideoView() {
+    // RECORDING VIEW
+
+    setupRecordingView() {
         this._show("video-stop")
         this._show("video-full-screen")
         this._show("modal-video-stop")
@@ -1921,34 +1924,38 @@ class AarloGlance extends LitElement {
         this._set ("modal-video-play", {title: this._i.video.play, icon: "mdi:play"} )
         this._set ("modal-video-pause", {title: this._i.video.pause, icon: "mdi:pause"} )
         this._set ("modal-video-full-screen", {title: this._i.video.fullscreen, icon: "mdi:fullscreen"} )
+
+        this._melement( 'recording-player' ).muted = this.gc.isApple
     }
 
-    setupVideoHandlers() {
-        // this._element( "video-player" ).addEventListener( 'canplay', () => {
-        //     this.playVideo()
-        // })
-        // this._element( "modal-video-player" ).addEventListener( 'canplay', () => {
-        //     this.playVideo()
-        // })
-    }
-
-    setupVideoPlayer() {
-        this._mset( 'video-player',{src: this.gs.video, poster: this.gs.videoPoster} )
+    setupRecordingPlayer() {
+        this._mset( 'recording-player',{src: this.gs.recording, poster: this.gs.recordingPoster} )
         this._mshow("video-seek")
         this._mhide("video-door-lock")
         this._mhide("video-light-on")
-        this.setUpSeekBar();
-        this.showVideoControls(4);
     }
 
-    updateVideoView() {
+    setupRecordingHandlers() {
+        this._element( "recording-player" ).addEventListener( 'loadedmetadata', (evt) => {
+            this.setUpSeekBar();
+            this.startVideo( evt.target )
+            this.showVideoControls(4);
+        })
+        this._element( "modal-recording-player" ).addEventListener( 'loadedmetadata', (evt) => {
+            this.setUpSeekBar();
+            this.startVideo( evt.target )
+            this.showVideoControls(4);
+        })
+    }
+
+    updateRecordingView() {
 
         // Nothing there yet...
         if( !this.isReady() ) {
             return
         }
 
-        let video = this._melement( 'video-player' )
+        let video = this._melement( 'recording-player' )
         if( video.paused ) {
             this._mset("video-play-pause", {title: this._i.video.play, icon:"mdi:play"})
         } else {
@@ -1961,25 +1968,25 @@ class AarloGlance extends LitElement {
         }
     }
 
-    showVideoView() {
+    showRecordingView() {
         this.hideStreamView()
-        this._mshow("video-player")
+        this._mshow("recording-player")
         this._mshow("video-controls")
         this.showModal()
         this.hideLibraryView()
         this.hideImageView()
     }
 
-    hideVideoView() {
-        this._mhide("video-player")
+    hideRecordingView() {
+        this._mhide("recording-player")
         this._mhide("video-controls")
         this.hideModal()
     }
 
-    showVideo() {
-        this.setupVideoPlayer()
-        this.updateVideoView()
-        this.showVideoView()
+    showRecording() {
+        this.setupRecordingPlayer()
+        this.updateRecordingView()
+        this.showRecordingView()
     }
  
     setMPEGStreamElementData() {
@@ -1996,6 +2003,14 @@ class AarloGlance extends LitElement {
             };
         }, true);
         this.gs.dash.initialize( video, this.gs.stream, true )
+    }
+
+    destroyMPEGStream() {
+        if(this.gs.hls) {
+            this.gs.hls.stopLoad();
+            this.gs.hls.destroy();
+            this.gs.hls = null
+        }
     }
 
     setHLSStreamElementData() {
@@ -2018,8 +2033,16 @@ class AarloGlance extends LitElement {
         }
     }
 
-    // Mostly handled in setupVideoView
+    destroyHLSStream() {
+        if(this.gs.dash) {
+            this.gs.dash.reset();
+            this.gs.dash = null;
+        }
+    }
+
+    // Mostly handled in setupRecordingView
     setupStreamView() {
+        this._melement( 'stream-player' ).muted = this.gc.isApple
     }
 
     setupStreamPlayer() {
@@ -2050,7 +2073,7 @@ class AarloGlance extends LitElement {
         if ( this.gs.stream === null ) {
             if( this.cs.autoPlay && this.cs.autoPlayTimer === null ) {
                 this.cs.autoPlayTimer = setTimeout( () => {
-                    this.playStream( false )
+                    this.playStream()
                 },5 * 1000 )
             }
             return
@@ -2067,7 +2090,7 @@ class AarloGlance extends LitElement {
     }
 
     showStreamView() {
-        this.hideVideoView()
+        this.hideRecordingView()
         this._mshow("stream-player")
         this._mshow("video-controls")
         this.showModal()
@@ -2091,15 +2114,15 @@ class AarloGlance extends LitElement {
         this.updateStatuses()
         this.updateImageView()
         this.updateLibraryView()
-        this.updateVideoView()
+        this.updateRecordingView()
         this.updateStreamView()
     }
 
     updateVideoOrStreamView() {
         if( this.gs.stream !== null ) {
             this.updateStreamView()
-        } else {
-            this.updateVideoView()
+        } else if( this.gs.recording !== null ) {
+            this.updateRecordingView()
         }
     }
 
@@ -2160,12 +2183,12 @@ class AarloGlance extends LitElement {
         // Install the static stuff.
         this.setupImageView()
         this.setupLibraryView()
-        this.setupVideoView()
+        this.setupRecordingView()
         this.setupStreamView()
 
         this.setupImageHandlers()
         this.setupLibraryHandlers()
-        this.setupVideoHandlers()
+        this.setupRecordingHandlers()
 
         // And go...
         this.updateImageView()
@@ -2188,9 +2211,9 @@ class AarloGlance extends LitElement {
                 entity_id: this._cc[index].id,
                 at_most: this._lc[index].recordings,
             });
-            return ( library.videos.length > 0 ) ? library.videos : null;
+            return ( library.videos.length > 0 ) ? library.videos : [];
         } catch (err) {
-            return null
+            throw `wsLoadLibrary failed {err}`
         }
     }
 
@@ -2201,7 +2224,7 @@ class AarloGlance extends LitElement {
                 entity_id: this.cc.id,
             })
         } catch (err) {
-            return null
+            throw `wsStartStream failed {err}`
         }
     }
 
@@ -2212,113 +2235,91 @@ class AarloGlance extends LitElement {
                 entity_id: this.cc.id,
             })
         } catch (err) {
-            return null
+            throw `wsStopStream failed {err}`
         }
+        
     }
 
-    async asyncWSUpdateSnapshot() {
+    async wsUpdateSnapshot() {
         try {
             return await this._hass.callWS({
                 type: "aarlo_request_snapshot",
                 entity_id: this.cc.id
             })
         } catch (err) {
-            return null
+            throw `wsUpdateSnapshot failed {err}`
         }
     }
 
-    wsUpdateSnapshot() {
-        this.asyncWSUpdateSnapshot().then()
+    updateSnapshot() {
+        this.wsUpdateSnapshot()
+            .then()
+            .catch( (e) => {
+                alert( e )
+            })
     }
 
-    pauseVideoElement( video ) {
+    pauseVideo( video ) {
         video.pause()
         this.updateVideoOrStreamView()
     }
 
-    playVideoElement( video ) {
+    startVideo( video ) {
         let promise = video.play()
         if( promise !== undefined ) {
             promise.then( () => {
                 this.updateVideoOrStreamView()
             }).catch( (e) => {
-                alert(e)
-                // this.updateVideoOrStreamView()
+                this.updateVideoOrStreamView()
             })
         } else {
-                alert("no idea")
-        }
-        this.updateVideoOrStreamView()
-    }
-
-    playVideo() {
-        if( this.gs.video ) {
-            this.playVideoElement(this._melement( 'video-player' ))
+            this.updateVideoOrStreamView()
         }
     }
 
-    playLatestLibraryVideo() {
-        this.gs.video       = this.cs.lastVideo
-        this.gs.videoPoster = this.cs.image
-        this.showVideo()
+    getViewType( c ) {
+        if( c.imageClickSmart ) {
+            return this.gc.isMobile ? "" : "modal"
+        } else if( c.imageClickModal ) {
+            return "modal"
+        } 
+        return ""
     }
-
-    stopVideo() {
-        if ( this.gs.video ) {
-            this.pauseVideoElement(this._melement( 'video-player' ))
-            this.hideModal()
-            this.resetView()
-            this.gs.video = null
-        }
-    }
-
-    async asyncPlayStream() {
-        const stream = await this.wsStartStream();
-        if( stream ) {
-            this.gs.stream       = stream.url;
-            this.gs.streamPoster = this.cs.image;
-        } else {
-            throw "Failed to start stream!"
-        }
-    }
-
+                                
     playStream( ) {
         this.cs.autoPlayTimer = null
         if ( this.gs.stream === null ) {
             if( this.gs.autoPlay ) {
                 this.cs.autoPlay = this.gs.autoPlay
             }
-            this.asyncPlayStream().then( () => {
-                this.showStream()
-            })
-            .catch( (e) => {
-                alert(e)
-            })
+            this._melement('stream-player').muted = false
+            this.wsStartStream()
+                .then( (stream) => {
+                    this.gs.viewer       = this.getViewType( this.cc )
+                    this.gs.stream       = stream.url;
+                    this.gs.streamPoster = this.cs.image;
+                    this.showStream()
+                })
+                .catch( (e) => {
+                    alert( e )
+                })
         } else {
-                this.showStream()
+            this.showStream()
         }
-    }
-
-    async asyncStopStream() {
-        await this.wsStopStream();
     }
 
     stopStream() {
         this.resetView()
         this._melement('stream-player' ).pause()
-        this.asyncStopStream().then( () => {
-            this.cs.autoPlay = false
-            this.gs.stream = null;
-            if(this.gs.hls) {
-                this.gs.hls.stopLoad();
-                this.gs.hls.destroy();
-                this.gs.hls = null
-            }
-            if(this.gs.dash) {
-                this.gs.dash.reset();
-                this.gs.dash = null;
-            }
-        })
+        this.cs.autoPlay = false
+        this.gs.stream = null;
+        this.destroyMPEGStream()
+        this.destroyHLSStream()
+        this.wsStopStream()
+            .then()
+            .catch( (e) => {
+                alert( e )
+            })
     }
 
     showOrStopStream() {
@@ -2361,14 +2362,17 @@ class AarloGlance extends LitElement {
      * @returns {Promise<void>}
      */
     async asyncLoadLibrary( index ) {
-        const videos = await this.wsLoadLibrary( index )
-        this._ls[index].videos = videos ? videos : []
+        try {
+            this._ls[index].recordings = await this.wsLoadLibrary( index )
+        } catch(err) {
+            alert(err)
+            this._ls[index].recordings = []
+        }
     }
 
     async asyncLoadLibraries( ) {
         for( let i = 0; i < this._cameraCount; i++ ) {
-            const videos = await this.wsLoadLibrary( i )
-            this._ls[i].videos = videos ? videos : []
+            await this.asyncLoadLibrary(i)
         }
         this.mergeLibraries()
     }
@@ -2377,26 +2381,26 @@ class AarloGlance extends LitElement {
         if( !this.gc.blendedMode ) {
             return
         }
-        let videos = this._ls[0].videos.slice()
+        let recordings = this._ls[0].recordings.slice()
         for( let i = 1; i < this._cameraCount; i++ ) {
             let j = 0
             let k = 0
-            while( k < this._ls[i].videos.length ) {
-                if( j === videos.length ) {
-                    videos.push( this._ls[i].videos[k] )
+            while( k < this._ls[i].recordings.length ) {
+                if( j === recordings.length ) {
+                    recordings.push( this._ls[i].recordings[k] )
                     k++
-                } else if( videos[j].created_at < this._ls[i].videos[k].created_at ) {
-                    videos.splice( j, 0, this._ls[i].videos[k] )
+                } else if( recordings[j].created_at < this._ls[i].recordings[k].created_at ) {
+                    recordings.splice( j, 0, this._ls[i].recordings[k] )
                     k++
                 }
                 j++
             }
         }
-        this._ls[this._cameraCount].videos = videos
+        this._ls[this._cameraCount].recordings = recordings
     }
 
     openLibrary() {
-        if( this.ls.videos && this.ls.videos.length > 0 ) {
+        if( this.ls.recordings && this.ls.recordings.length > 0 ) {
             this.ls.showing = true
             this.getModalDimensions()
             this.updateLibraryView()
@@ -2404,15 +2408,33 @@ class AarloGlance extends LitElement {
         }
     }
 
-    playLibraryVideo(index) {
-        if ( this.gs.video === null ) {
+    playRecording(index) {
+        if ( this.gs.recording === null ) {
             index += this.ls.offset;
-            if (this.ls.videos && index < this.ls.videos.length) {
-                this.gs.viewer      = this.getViewType( this.lc )
-                this.gs.video       = this.ls.videos[index].url;
-                this.gs.videoPoster = this.ls.videos[index].thumbnail;
-                this.showVideo()
+            if (this.ls.recordings && index < this.ls.recordings.length) {
+                this._melement( 'recording-player' ).muted = false
+                this.gs.viewer          = this.getViewType( this.lc )
+                this.gs.recording       = this.ls.recordings[index].url;
+                this.gs.recordingPoster = this.ls.recordings[index].thumbnail;
+                this.showRecording()
             } 
+        }
+    }
+
+    playLatestRecording() {
+        this._melement( 'recording-player' ).muted = false
+        this.gs.viewer          = this.getViewType( this.cc )
+        this.gs.recording       = this.cs.lastRecording
+        this.gs.recordingPoster = this.cs.image
+        this.showRecording()
+    }
+
+    stopRecording() {
+        if ( this.gs.recording ) {
+            this.pauseVideo(this._melement( 'recording-player' ))
+            this.hideModal()
+            this.resetView()
+            this.gs.recording = null
         }
     }
 
@@ -2427,13 +2449,13 @@ class AarloGlance extends LitElement {
     }
 
     nextLibraryPage() {
-        const last = Math.max(this.ls.videos.length - this.ls.gridCount, 0)
+        const last = Math.max(this.ls.recordings.length - this.ls.gridCount, 0)
         this.ls.offset = Math.min(this.ls.offset + this.ls.gridCount, last)
         this.updateLibraryView()
     }
 
     lastLibraryPage() {
-        this.ls.offset = Math.max(this.ls.videos.length - this.ls.gridCount, 0)
+        this.ls.offset = Math.max(this.ls.recordings.length - this.ls.gridCount, 0)
         this.updateLibraryView()
     }
 
@@ -2447,28 +2469,15 @@ class AarloGlance extends LitElement {
 
     closeLibrary() {
         this.ls.showing = false
-        this.stopVideo()
+        this.stopRecording()
         this.showImageView()
     }
 
-    getViewType( c ) {
-        if( c.imageClickSmart ) {
-            return this.gc.isMobile ? "" : "modal"
-        } else if( c.imageClickModal ) {
-            return "modal"
-        } 
-        return ""
-    }
-                                
     clickImage() {
-        // How are we showing it?
-        this.gs.viewer = this.getViewType( this.cc )
-
-        // What are we showing?
         if ( this.cc.imageClickStream ) {
             this.playStream()
         } else {
-            this.playLatestLibraryVideo()
+            this.playLatestRecording()
         }
     }
 
@@ -2499,28 +2508,28 @@ class AarloGlance extends LitElement {
         this.showVideoControls(2)
     }
 
-    controlStopVideoOrStream() {
-        this.stopVideo()
+    controlStop() {
+        this.stopRecording()
         this.stopStream()
     }
 
     controlPlayPause( ) {
-        let video = this._melement( 'video-player' )
+        let video = this._melement( 'recording-player' )
         if( video.paused ) {
-            this.playVideoElement( video )
+            this.startVideo( video )
         } else {
-            this.pauseVideoElement( video )
+            this.pauseVideo( video )
         }
     }
 
     controlToggleSound( ) {
-        let video = this._melement( this.gs.stream ? 'stream-player' : 'video-player' )
+        let video = this._melement( this.gs.stream ? 'stream-player' : 'recording-player' )
         video.muted = !video.muted;
         this.updateVideoOrStreamView()
     }
 
     controlFullScreen() {
-        let video = this._melement( this.gs.stream ? 'stream-player' : 'video-player' )
+        let video = this._melement( this.gs.stream ? 'stream-player' : 'recording-player' )
         if (video.requestFullscreen) {
             video.requestFullscreen().then()
         } else if (video.mozRequestFullScreen) {
@@ -2563,7 +2572,7 @@ class AarloGlance extends LitElement {
     }
 
     setUpSeekBar() {
-        let video = this._melement('video-player')
+        let video = this._melement('recording-player')
         let seekBar = this._melement('video-seek')
 
         video.addEventListener( "timeupdate", () => {
