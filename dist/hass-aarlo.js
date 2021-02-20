@@ -1925,7 +1925,8 @@ class AarloGlance extends LitElement {
         this._set ("modal-video-pause", {title: this._i.video.pause, icon: "mdi:pause"} )
         this._set ("modal-video-full-screen", {title: this._i.video.fullscreen, icon: "mdi:fullscreen"} )
 
-        this._melement( 'recording-player' ).muted = this.gc.isApple
+        this._element('recording-player').muted = this.gc.isApple
+        this._element('modal-recording-player').muted = this.gc.isApple
     }
 
     setupRecordingPlayer() {
@@ -2042,7 +2043,8 @@ class AarloGlance extends LitElement {
 
     // Mostly handled in setupRecordingView
     setupStreamView() {
-        this._melement( 'stream-player' ).muted = this.gc.isApple
+        this._element('stream-player').muted = this.gc.isApple
+        this._element('modal-stream-player').muted = this.gc.isApple
     }
 
     setupStreamPlayer() {
