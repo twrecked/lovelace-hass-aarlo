@@ -259,19 +259,11 @@ class AarloGlance extends LitElement {
                              id="${this._id('modal-video-background')}">
                         </div>
                         <video class="aarlo-modal-video"
-                               id="${this._id('modal-stream-player')}"
-                               playsinline 
-                               @ended="${() => { this.stopStream() }}"
-                               @mouseover="${() => { this.mouseOverVideo(); }}"
-                               @click="${() => { this.clickVideo(); }}">
-                            Your browser does not support the video tag.
-                        </video>
-                        <video class="aarlo-modal-video"
-                               id="${this._id('modal-recording-player')}"
-                               playsinline 
-                               @ended="${() => { this.stopRecording(); }}"
-                               @mouseover="${() => { this.mouseOverVideo(); }}"
-                               @click="${() => { this.clickVideo(); }}">
+                               id="${this._id('modal-video-player')}"
+                               style="display:none" playsinline muted
+                               @ended="${() => { this.videoEnded(); }}"
+                               @mouseover="${() => { this.videoMouseOver(); }}"
+                               @click="${() => { this.videoClicked(); }}">
                             Your browser does not support the video tag.
                         </video>
                         <div class="box box-bottom"
@@ -311,27 +303,17 @@ class AarloGlance extends LitElement {
                 <div class="aarlo-base aarlo-aspect-${this.gc.aspectRatio}"
                      id="${this._id('aarlo-wrapper')}">
                     <video class="aarlo-video"
-                           id="${this._id('stream-player')}"
-                           style="display:none"
-                           playsinline 
-                           @ended="${() => { this.stopStream() }}"
-                           @mouseover="${() => { this.mouseOverVideo(); }}"
-                           @click="${() => { this.clickVideo(); }}">
-                        Your browser does not support the video tag.
-                    </video>
-                    <video class="aarlo-video"
-                           id="${this._id('recording-player')}"
-                           style="display:none"
-                           playsinline 
-                           @ended="${() => { this.stopRecording(); }}"
-                           @mouseover="${() => { this.mouseOverVideo(); }}"
-                           @click="${() => { this.clickVideo(); }}">
+                           id="${this._id('video-player')}"
+                           style="display:none" playsinline muted
+                           @ended="${() => { this.videoEnded(); }}"
+                           @mouseover="${() => { this.videoMouseOver(); }}"
+                           @click="${() => { this.videoClicked(); }}">
                         Your browser does not support the video tag.
                     </video>
                     <img class="aarlo-image"
                          id="${this._id('image-viewer')}"
                          style="display:none"
-                         @click="${() => { this.clickImage(); }}">
+                         @click="${() => { this.imageClicked(); }}">
                     <div class="aarlo-image"
                          id="${this._id('library-viewer')}"
                          style="display:none">
@@ -1082,11 +1064,6 @@ class AarloGlance extends LitElement {
             // Mobile? see here: https://developer.mozilla.org/en-US/docs/Web/HTTP/Browser_detection_using_the_user_agent
             isMobile: navigator.userAgent.includes("Mobi"),
 
-            // Yuck!
-            isApple: navigator.userAgent.includes("iPad") ||
-                        navigator.userAgent.includes("iPhone") ||
-                        navigator.userAgent.includes("Macintosh"),
-     
             // Language override?
             lang: config.lang,
 
@@ -1104,6 +1081,8 @@ class AarloGlance extends LitElement {
             // stream directly from Arlo
             playDirect: _includes( config.image_view, "direct" ) ||
                         _value( config.play_direct, false ),
+            // initial state is muted
+            isMuted: _includes( config.image_view, "muted" ),
 
             // blended library
             blendedMode: _includes( config.library_view, "blended" ),
@@ -1120,7 +1099,6 @@ class AarloGlance extends LitElement {
             cardSize: _value_int( config.card_size, 3 ),
 
             // swipe threshold
-            // swipeThreshold: config.swipe_threshold ? parseInt(config.swipe_threshold) : 150,
             swipeThreshold: _value_int( config.swipe_threshold, 150 ),
 
             // logging?
@@ -1134,10 +1112,10 @@ class AarloGlance extends LitElement {
             dash: null,
             hls: null,
             libraryCamera: -1,
+            isMuted: _value(config.isMuted, false),
+            poster: '',
             recording: null,
-            recordingPoster: '',
             stream: null,
-            streamPoster: '',
         }
     }
 
@@ -1487,8 +1465,7 @@ class AarloGlance extends LitElement {
         this._widthHeight("modal-content", this.cs.modalWidth - 16, null, "important")
         this._widthHeight("modal-video-wrapper", this.cs.modalWidth, this.cs.modalHeight - 16)
         this._widthHeight("modal-video-background", this.cs.modalWidth, this.cs.modalHeight)
-        this._widthHeight("modal-recording-player", this.cs.modalWidth, this.cs.modalHeight)
-        this._widthHeight("modal-stream-player", this.cs.modalWidth, this.cs.modalHeight)
+        this._widthHeight("modal-video-player", this.cs.modalWidth, this.cs.modalHeight)
     }
 
     showModal( show = true ) {
@@ -1916,33 +1893,27 @@ class AarloGlance extends LitElement {
         this._show("modal-video-light-on", this.cc.showLight )
 
         this._set ("video-stop", {title: this._i.video.stop, icon: "mdi:stop"} )
-        this._set ("video-play", {title: this._i.video.play, icon: "mdi:play"} )
-        this._set ("video-pause", {title: this._i.video.pause, icon: "mdi:pause"} )
         this._set ("video-full-screen", {title: this._i.video.fullscreen, icon: "mdi:fullscreen"} )
 
         this._set ("modal-video-stop", {title: this._i.video.stop, icon: "mdi:stop"} )
-        this._set ("modal-video-play", {title: this._i.video.play, icon: "mdi:play"} )
-        this._set ("modal-video-pause", {title: this._i.video.pause, icon: "mdi:pause"} )
         this._set ("modal-video-full-screen", {title: this._i.video.fullscreen, icon: "mdi:fullscreen"} )
-
-        this._element('recording-player').muted = this.gc.isApple
-        this._element('modal-recording-player').muted = this.gc.isApple
     }
 
     setupRecordingPlayer() {
-        this._mset( 'recording-player',{src: this.gs.recording, poster: this.gs.recordingPoster} )
+        this._mset( 'video-player',{src: this.gs.recording, poster: this.gs.poster} )
         this._mshow("video-seek")
+        this._mshow("video-play-pause")
         this._mhide("video-door-lock")
         this._mhide("video-light-on")
     }
 
     setupRecordingHandlers() {
-        this._element( "recording-player" ).addEventListener( 'loadedmetadata', (evt) => {
+        this._element( "video-player" ).addEventListener( 'loadedmetadata', (evt) => {
             this.setUpSeekBar();
             this.startVideo( evt.target )
             this.showVideoControls(4);
         })
-        this._element( "modal-recording-player" ).addEventListener( 'loadedmetadata', (evt) => {
+        this._element( "modal-video-player" ).addEventListener( 'loadedmetadata', (evt) => {
             this.setUpSeekBar();
             this.startVideo( evt.target )
             this.showVideoControls(4);
@@ -1956,7 +1927,7 @@ class AarloGlance extends LitElement {
             return
         }
 
-        let video = this._melement( 'recording-player' )
+        let video = this._melement( 'video-player' )
         if( video.paused ) {
             this._mset("video-play-pause", {title: this._i.video.play, icon:"mdi:play"})
         } else {
@@ -1971,7 +1942,7 @@ class AarloGlance extends LitElement {
 
     showRecordingView() {
         this.hideStreamView()
-        this._mshow("recording-player")
+        this._mshow("video-player")
         this._mshow("video-controls")
         this.showModal()
         this.hideLibraryView()
@@ -1979,7 +1950,7 @@ class AarloGlance extends LitElement {
     }
 
     hideRecordingView() {
-        this._mhide("recording-player")
+        this._mhide("video-player")
         this._mhide("video-controls")
         this.hideModal()
     }
@@ -1991,7 +1962,7 @@ class AarloGlance extends LitElement {
     }
  
     setMPEGStreamElementData() {
-        const video = this._melement('stream-player')
+        const video = this._melement('video-player')
         const et = this._findEgressToken( this.gs.stream );
 
         this.gs.dash = dashjs.MediaPlayer().create();
@@ -2015,7 +1986,7 @@ class AarloGlance extends LitElement {
     }
 
     setHLSStreamElementData() {
-        const video = this._melement('stream-player')
+        const video = this._melement('video-player')
 
         if (Hls.isSupported()) {
             this.gs.hls = new Hls();
@@ -2041,10 +2012,8 @@ class AarloGlance extends LitElement {
         }
     }
 
-    // Mostly handled in setupRecordingView
+    // Handled in setupRecordingView
     setupStreamView() {
-        this._element('stream-player').muted = this.gc.isApple
-        this._element('modal-stream-player').muted = this.gc.isApple
     }
 
     setupStreamPlayer() {
@@ -2055,13 +2024,11 @@ class AarloGlance extends LitElement {
             this.setHLSStreamElementData()
         }
 
-        this._mhide("video-play")
-        this._mhide("video-pause")
         this._mhide("video-play-pause")
         this._mhide("video-seek")
         this.showVideoControls(4);
 
-        this._mset('stream-player', {poster: this.gs.streamPoster})
+        this._mset('video-player', {poster: this.gs.poster})
     }
 
     updateStreamView() {
@@ -2084,7 +2051,7 @@ class AarloGlance extends LitElement {
         this._mset( "video-door-lock", {title: this.cs.doorLockText, icon: this.cs.doorLockIcon, state: this.cs.doorLockState} )
         this._mset( "video-light-on", {title: this.cs.lightText, icon: this.cs.lightIcon, state: this.cs.lightState} )
 
-        if( this._melement( 'stream-player' ).muted ) {
+        if( this._melement( 'video-player' ).muted ) {
             this._mset("video-toggle-sound", {icon:"mdi:volume-off"})
         } else {
             this._mset("video-toggle-sound", {icon:"mdi:volume-high"})
@@ -2093,7 +2060,7 @@ class AarloGlance extends LitElement {
 
     showStreamView() {
         this.hideRecordingView()
-        this._mshow("stream-player")
+        this._mshow("video-player")
         this._mshow("video-controls")
         this.showModal()
         this.hideLibraryView()
@@ -2101,7 +2068,7 @@ class AarloGlance extends LitElement {
     }
 
     hideStreamView() {
-        this._mhide("stream-player")
+        this._mhide("video-player")
         this._mhide("video-controls")
         this.hideModal()
     }
@@ -2271,7 +2238,7 @@ class AarloGlance extends LitElement {
         if( promise !== undefined ) {
             promise.then( () => {
                 this.updateVideoOrStreamView()
-            }).catch( (e) => {
+            }).catch( () => {
                 this.updateVideoOrStreamView()
             })
         } else {
@@ -2294,12 +2261,12 @@ class AarloGlance extends LitElement {
             if( this.gs.autoPlay ) {
                 this.cs.autoPlay = this.gs.autoPlay
             }
-            this._melement('stream-player').muted = false
+            this._melement('video-player').muted = this.gs.isMuted
             this.wsStartStream()
                 .then( (stream) => {
-                    this.gs.viewer       = this.getViewType( this.cc )
-                    this.gs.stream       = stream.url;
-                    this.gs.streamPoster = this.cs.image;
+                    this.gs.viewer = this.getViewType( this.cc )
+                    this.gs.stream = stream.url;
+                    this.gs.poster = this.cs.image;
                     this.showStream()
                 })
                 .catch( (e) => {
@@ -2312,7 +2279,7 @@ class AarloGlance extends LitElement {
 
     stopStream() {
         this.resetView()
-        this._melement('stream-player' ).pause()
+        this._melement('video-player' ).pause()
         this.cs.autoPlay = false
         this.gs.stream = null;
         this.destroyMPEGStream()
@@ -2414,26 +2381,26 @@ class AarloGlance extends LitElement {
         if ( this.gs.recording === null ) {
             index += this.ls.offset;
             if (this.ls.recordings && index < this.ls.recordings.length) {
-                this._melement( 'recording-player' ).muted = false
-                this.gs.viewer          = this.getViewType( this.lc )
-                this.gs.recording       = this.ls.recordings[index].url;
-                this.gs.recordingPoster = this.ls.recordings[index].thumbnail;
+                this._melement( 'video-player' ).muted = this.gs.isMuted
+                this.gs.viewer    = this.getViewType( this.lc )
+                this.gs.recording = this.ls.recordings[index].url;
+                this.gs.poster    = this.ls.recordings[index].thumbnail;
                 this.showRecording()
             } 
         }
     }
 
     playLatestRecording() {
-        this._melement( 'recording-player' ).muted = false
-        this.gs.viewer          = this.getViewType( this.cc )
-        this.gs.recording       = this.cs.lastRecording
-        this.gs.recordingPoster = this.cs.image
+        this._melement( 'video-player' ).muted = this.gs.isMuted
+        this.gs.viewer    = this.getViewType( this.cc )
+        this.gs.recording = this.cs.lastRecording
+        this.gs.poster    = this.cs.image
         this.showRecording()
     }
 
     stopRecording() {
         if ( this.gs.recording ) {
-            this.pauseVideo(this._melement( 'recording-player' ))
+            this.pauseVideo(this._melement( 'video-player' ))
             this.hideModal()
             this.resetView()
             this.gs.recording = null
@@ -2475,7 +2442,7 @@ class AarloGlance extends LitElement {
         this.showImageView()
     }
 
-    clickImage() {
+    imageClicked() {
         if ( this.cc.imageClickStream ) {
             this.playStream()
         } else {
@@ -2498,7 +2465,12 @@ class AarloGlance extends LitElement {
         this.setCameraImage( this._cameraIndex === 0 ? (this._cameraCount - 1) : (this._cameraIndex - 1) )
     }
 
-    clickVideo() {
+    videoEnded() {
+        this.stopRecording()
+        this.stopStream()
+    }
+
+    videoClicked() {
         if ( this._misHidden("video-controls") ) {
             this.showVideoControls(2)
         } else {
@@ -2506,7 +2478,7 @@ class AarloGlance extends LitElement {
         }
     }
 
-    mouseOverVideo() {
+    videoMouseOver() {
         this.showVideoControls(2)
     }
 
@@ -2516,7 +2488,7 @@ class AarloGlance extends LitElement {
     }
 
     controlPlayPause( ) {
-        let video = this._melement( 'recording-player' )
+        let video = this._melement( 'video-player' )
         if( video.paused ) {
             this.startVideo( video )
         } else {
@@ -2525,13 +2497,14 @@ class AarloGlance extends LitElement {
     }
 
     controlToggleSound( ) {
-        let video = this._melement( this.gs.stream ? 'stream-player' : 'recording-player' )
+        let video = this._melement('video-player')
         video.muted = !video.muted;
+        this.gs.isMuted = video.muted
         this.updateVideoOrStreamView()
     }
 
     controlFullScreen() {
-        let video = this._melement( this.gs.stream ? 'stream-player' : 'recording-player' )
+        let video = this._melement('video-player')
         if (video.requestFullscreen) {
             video.requestFullscreen().then()
         } else if (video.mozRequestFullScreen) {
@@ -2574,7 +2547,7 @@ class AarloGlance extends LitElement {
     }
 
     setUpSeekBar() {
-        let video = this._melement('recording-player')
+        let video = this._melement('video-player')
         let seekBar = this._melement('video-seek')
 
         video.addEventListener( "timeupdate", () => {

@@ -162,9 +162,9 @@ entities:
 
 #### Image Options
 
-| Name       | Type  | Required | Supported Values                          |
-|------------|-------|----------|-------------------------------------------|
-| image_view | list  | No       | active, start-stream, direct, square      |
+| Name       | Type | Required | Supported Values                            |
+|------------|------|----------|---------------------------------------------|
+| image_view | list | No       | active, start-stream, direct, muted, square |
 
 These are the options that determine the overall behaviour of the card when
 showing the image view.
@@ -175,6 +175,8 @@ showing the image view.
   finished
 - `direct`; when streaming the card will access Arlo directly rather than go
   through Home Assistant
+- `muted`; start in a muted state, mute state is remember across recordings
+  and streams
 - `square`; use a square image; useful for Arlo Video Doorbells; this affects
   the library view as well.
 
