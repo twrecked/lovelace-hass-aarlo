@@ -358,6 +358,7 @@ class AarloGlance extends LitElement {
                     <img class="aarlo-image"
                          id="${this._id('image-viewer')}"
                          style="display:none"
+                         @error="${() => { this.imageFailed(); }}"
                          @click="${() => { this.imageClicked(); }}">
                     <div class="aarlo-image"
                          id="${this._id('library-viewer')}"
@@ -734,7 +735,11 @@ class AarloGlance extends LitElement {
         // queue up some image update requests.
         if ( camera.state !== this.cs.state ) {
             this._log( `state-update: ${this.cs.state} --> ${camera.state}` )
-            this.updateImageURL()
+            if( camera.state !== 'off' ) {
+                this.updateImageURL()
+            } else {
+                this.cs.image = camera.attributes.last_thumbnail
+            }
             if ( this.cs.state === 'taking snapshot' ) {
                 this.cc.snapshotTimeouts.forEach( (seconds) => {
                     this.updateImageURLLater( seconds )
@@ -783,30 +788,39 @@ class AarloGlance extends LitElement {
         }
 
         // FUNCTIONS
-        this.cs.playState = 'state-on';
-        if ( camera.state !== 'streaming' ) {
+        if ( this.cs.state === 'off' ) {
+            this.cs.playText = this._i.image.feature_disabled
+            this.cs.playIcon = 'mdi:play'
+            this.cs.playState = 'off';
+        } else if ( this.cs.state !== 'streaming' ) {
             this.cs.playText = this._i.image.start_stream
             this.cs.playIcon = 'mdi:play'
+            this.cs.playState = 'state-on';
         } else {
             this.cs.playText = this._i.image.stop_stream
             this.cs.playIcon = 'mdi:stop'
+            this.cs.playState = 'state-on';
         }
 
         if ( this.cs.state === 'off' ) {
             this.cs.onOffState = 'state-on';
             this.cs.onOffText  = this._i.image.turn_camera_on
             this.cs.onOffIcon  = 'mdi:camera'
-            this.cs.showCameraControls = false
         } else {
             this.cs.onOffState = '';
             this.cs.onOffText  = this._i.image.turn_camera_off
             this.cs.onOffIcon  = 'mdi:camera-off'
-            this.cs.showCameraControls = true
         }
 
-        this.cs.snapshotState = '';
-        this.cs.snapshotText  = this._i.image.take_a_snapshot
-        this.cs.snapshotIcon  = 'mdi:camera'
+        if(this.cs.state !== 'off') {
+            this.cs.snapshotState = '';
+            this.cs.snapshotText  = this._i.image.take_a_snapshot
+            this.cs.snapshotIcon  = 'mdi:camera-enhance'
+        } else {
+            this.cs.snapshotState = 'off';
+            this.cs.snapshotText  = this._i.image.feature_disabled
+            this.cs.snapshotIcon  = 'mdi:camera-off'
+        }
 
         // SENSORS
         if ( camera.attributes.wired_only ) {
@@ -826,13 +840,27 @@ class AarloGlance extends LitElement {
         this.cs.signalText = `${this._i.status.signal_strength}: ${signal.state}`
         this.cs.signalIcon = signal.state === "0" ? 'mdi:wifi-outline' : 'mdi:wifi-strength-' + signal.state;
 
-        this.cs.motionState = this._getState(this.cc.motionId,'off').state === 'on' ? 'state-on' : '';
-        this.cs.motionText  = `${this._i.status.motion}: ` +
-                ( this.cs.motionState !== '' ? this._i.status.detected : this._i.status.clear )
+        if ( this.cs.state !== 'off' ) {
+            this.cs.motionState = this._getState(this.cc.motionId,'off').state === 'on' ? 'state-on' : '';
+            this.cs.motionText  = `${this._i.status.motion}: ` +
+                    ( this.cs.motionState !== '' ? this._i.status.detected : this._i.status.clear )
+            this.cs.motionIcon = "mdi:run-fast"
+        } else {
+            this.cs.motionState = 'off'
+            this.cs.motionText  = this._i.image.feature_disabled
+            this.cs.motionIcon  = "mdi:walk"
+        }
 
-        this.cs.soundState = this._getState(this.cc.soundId,'off').state === 'on' ? 'state-on' : '';
-        this.cs.soundText  = `${this._i.status.sound}: ` +
-                ( this.cs.soundState !== '' ? this._i.status.detected : this._i.status.clear )
+        if ( this.cs.state !== 'off' ) {
+            this.cs.soundState = this._getState(this.cc.soundId,'off').state === 'on' ? 'state-on' : '';
+            this.cs.soundText  = `${this._i.status.sound}: ` +
+                    ( this.cs.soundState !== '' ? this._i.status.detected : this._i.status.clear )
+            this.cs.soundIcon = "mdi:ear-hearing"
+        } else {
+            this.cs.soundState = 'off'
+            this.cs.soundText  = this._i.image.feature_disabled
+            this.cs.soundIcon  = "mdi:ear-hearing-off"
+        }
 
         // We always save this, used by library code to check for updates
         const captured = this._getState(this.cc.capturedTodayId, "0").state;
@@ -1058,6 +1086,48 @@ class AarloGlance extends LitElement {
         }
     }
 
+    convertOldLayout(config,cc) {
+        if( config.image_top || config.image_bottom ) {
+            return
+        }
+
+        const items = ["on_off","motion","sound","library","captured","captured_today",
+                        "play","snapshot","battery","battery_level","signal_strength"]
+
+        let image_top = []
+        _pushIf(image_top, "name", config.top_title)
+        _pushIf(image_top, "date", config.top_date)
+        _pushIf(image_top, "status", config.top_status)
+
+        let image_bottom = []
+        let image_bottom_left = []
+        items.forEach( (item) => {
+            _pushIf(image_bottom_left, item, config.show.includes(item))
+        })
+        _pushIf(image_bottom, image_bottom_left.join(","), image_bottom_left)
+
+        let image_bottom_right = []
+        _pushIf(image_bottom_right, "door", cc.doorId)
+        _pushIf(image_bottom_right, "bell", cc.doorBellId)
+        _pushIf(image_bottom_right, "lock", cc.doorLockId)
+        _pushIf(image_bottom_right, "door2", cc.door2Id)
+        _pushIf(image_bottom_right, "bell2", cc.door2BellId)
+        _pushIf(image_bottom_right, "lock2", cc.door2LockId)
+        _pushIf(image_bottom_right, "light", cc.lightId)
+        _pushIf(image_bottom_right, "next", this._config.entities)
+        _pushIf(image_bottom, image_bottom_right.join(","), image_bottom_right)
+        
+        image_bottom = _replaceAll(image_bottom.join("|"), "on_off", "on-off")
+        image_bottom = _replaceAll(image_bottom, "battery_level", "battery")
+        image_bottom = _replaceAll(image_bottom, "captured_today", "library")
+        image_bottom = _replaceAll(image_bottom, "captured", "library")
+        image_bottom = _replaceAll(image_bottom, "signal_strength", "signal")
+
+        config.image_top = image_top.join("|")
+        config.image_bottom = image_bottom
+        console.log("here!")
+    }
+
     getCameraConfigOld( global, local ) {
         const config = _mergeArrays( global, local )
 
@@ -1139,8 +1209,8 @@ class AarloGlance extends LitElement {
         cc.lightId     = config.light ? config.light: null;
 
         this.convertOldLayout(config,cc)
-        cc.top_row = config.top_row
-        cc.bottom_row = config.bottom_row
+        cc.image_top = config.image_top
+        cc.image_bottom = config.image_bottom
 
         return cc
     }
@@ -1161,6 +1231,10 @@ class AarloGlance extends LitElement {
 
         // Grab name if there
         cc.name = _value( config.name, null )
+
+        // Save layout
+        cc.image_top = config.image_top
+        cc.image_bottom = config.image_bottom
 
         // What does clicking the image do?
         const image_click = _array( config.image_click )
@@ -1195,9 +1269,6 @@ class AarloGlance extends LitElement {
         // light definition
         cc.lightId     = config.light ? config.light: null;
 
-        this.convertLayout(config,cc)
-        cc.top_row = config.top_row
-        cc.bottom_row = config.bottom_row
         return cc
     }
 
@@ -1400,7 +1471,7 @@ class AarloGlance extends LitElement {
         }
     }
 
-    buildRow(element, sections) {
+    buildImageRow(element, sections) {
         let text_items = ["name","date","status"]
         element.innerHTML = ''
         _array(sections).forEach((section,index,array) => {
@@ -1432,105 +1503,17 @@ class AarloGlance extends LitElement {
         })
     }
 
-    buildLayout(config) {
-        if( config.top_row ) {
-            this.buildRow(this._element('top-bar'), config.top_row)
+    buildImageLayout(config) {
+        if( config.image_top ) {
+            this.buildImageRow(this._element('top-bar'), config.image_top)
         }
-        if( config.bottom_row ) {
-            this.buildRow(this._element('bottom-bar'), config.bottom_row)
+        if( config.image_bottom ) {
+            this.buildImageRow(this._element('bottom-bar'), config.image_bottom)
         }
-    }
-
-    convertOldLayout(config,cc) {
-        if( config.top_row || config.bottom_row ) {
-            return
-        }
-
-        const items = ["on_off","motion","sound","library","captured","captured_today",
-                        "play","snapshot","battery","battery_level","signal_strength"]
-
-        let top_row = []
-        _pushIf(top_row, "name", config.top_title)
-        _pushIf(top_row, "date", config.top_date)
-        _pushIf(top_row, "status", config.top_status)
-
-        let bottom_row = []
-        let bottom_row_left = []
-        items.forEach( (item) => {
-            _pushIf(bottom_row_left, item, config.show.includes(item))
-        })
-        _pushIf(bottom_row, bottom_row_left.join(","), bottom_row_left)
-
-        let bottom_row_right = []
-        _pushIf(bottom_row_right, "door", cc.doorId)
-        _pushIf(bottom_row_right, "bell", cc.doorBellId)
-        _pushIf(bottom_row_right, "lock", cc.doorLockId)
-        _pushIf(bottom_row_right, "door2", cc.door2Id)
-        _pushIf(bottom_row_right, "bell2", cc.door2BellId)
-        _pushIf(bottom_row_right, "lock2", cc.door2LockId)
-        _pushIf(bottom_row_right, "light", cc.lightId)
-        _pushIf(bottom_row_right, "next", this._config.entities)
-        _pushIf(bottom_row, bottom_row_right.join(","), bottom_row_right)
-        
-        bottom_row = _replaceAll(bottom_row.join("|"), "on_off", "on-off")
-        bottom_row = _replaceAll(bottom_row, "battery_level", "battery")
-        bottom_row = _replaceAll(bottom_row, "captured_today", "library")
-        bottom_row = _replaceAll(bottom_row, "captured", "library")
-        bottom_row = _replaceAll(bottom_row, "signal_strength", "signal")
-
-        config.top_row = top_row.join("|")
-        config.bottom_row = bottom_row
-        console.log("here!")
-    }
-
-    convertLayout(config,cc) {
-
-        if( config.top_row || config.bottom_row ) {
-            return
-        }
-
-        const items = ["on_off","motion","sound","library",
-                        "stream","snapshot","battery","signal"]
-
-        let top_row = []
-        const image_top = _array(config.image_top)
-        _pushIf(top_row, "name", image_top.includes("name"))
-        _pushIf(top_row, "date", image_top.includes("date"))
-        _pushIf(top_row, "status", image_top.includes("status"))
-
-        let bottom_row = []
-        const image_bottom = _array(config.image_bottom)
-        _pushIf(bottom_row, "name", image_bottom.includes("name"))
-
-        let bottom_row_left = []
-        _pushIf(bottom_row_left, "previous", this._config.entities)
-        items.forEach( (item) => {
-            _pushIf(bottom_row_left, item, image_bottom.includes(item))
-        })
-        _pushIf(bottom_row, bottom_row_left.join(","), bottom_row_left)
-
-        _pushIf(bottom_row, "date", image_bottom.includes("date"))
-
-        let bottom_row_right = []
-        _pushIf(bottom_row_right, "door", cc.doorId)
-        _pushIf(bottom_row_right, "bell", cc.doorBellId)
-        _pushIf(bottom_row_right, "lock", cc.doorLockId)
-        _pushIf(bottom_row_right, "door2", cc.door2Id)
-        _pushIf(bottom_row_right, "bell2", cc.door2BellId)
-        _pushIf(bottom_row_right, "lock2", cc.door2LockId)
-        _pushIf(bottom_row_right, "light", cc.lightId)
-        _pushIf(bottom_row_right, "next", this._config.entities)
-        _pushIf(bottom_row, bottom_row_right.join(","), bottom_row_right)
-        
-        _pushIf(bottom_row, "status", image_bottom.includes("status"))
-
-        config.top_row = top_row.join("|")
-        config.bottom_row = _replaceAll(bottom_row.join("|"), "on_off", "on-off")
-        console.log("here!")
     }
 
     setupImageView() {
-        this.buildLayout(this.cc)
+        this.buildImageLayout(this.cc)
         this._set("camera-name", {text: this.cc.name})
     }
 
@@ -1578,26 +1561,22 @@ class AarloGlance extends LitElement {
                 this.cs.imageDate     = this.cs.imageFullDate.substr(9);
                 this.cs.imageFullDate = `${this._i.image.snapshot_capture} ${this.cs.imageDate}`
             }
+            this._set("image-viewer", {src: this.cs.image})
         } else {
             this.cs.imageFullDate = ''
             this.cs.imageDate = ''
         }
 
-        this._set("image-viewer", {title: this.cs.imageFullDate, alt: this.cs.imageFullDate, src: this.cs.image})
+        this._set("image-viewer", {title: this.cs.imageFullDate, alt: this.cs.imageFullDate})
         this._set("camera-status", {text: this.cs.state })
         this._set("camera-date", {title: this.cs.imageFullDate, text: this.cs.imageDate})
 
         this._set("camera-previous", {title: this._i.status.previous_camera, icon: "mdi:chevron-left", state: "on"})
         this._set("camera-on-off", {title: this.cs.onOffText, icon: this.cs.onOffIcon, state: this.cs.onOffState})
-        this._set("camera-motion", {title: this.cs.motionText, icon: "mdi:run-fast", state: this.cs.motionState})
-        this._set("camera-sound", {title: this.cs.soundText, icon: "mdi:ear-hearing", state: this.cs.soundState})
         this._set("camera-captured", {title: this.cs.capturedText, icon: this.cs.capturedIcon, state: this.cs.capturedState})
-        this._set("camera-play", {title: this.cs.playText, icon: this.cs.playIcon, state: this.cs.playState})
-        this._set("camera-snapshot", {title: this.cs.snapshotText, icon: this.cs.snapshotIcon, state: this.cs.snapshotState})
         this._set("camera-battery", {title: this.cs.batteryText, icon: `mdi:${this.cs.batteryIcon}`, state: this.cs.batteryState})
         this._set("camera-signal", {title: this.cs.signalText, icon: this.cs.signalIcon, state: 'state-update'})
         this._set("camera-library", {title: this.cs.capturedText, icon: this.cs.capturedIcon, state: this.cs.capturedState})
-        this._set("camera-stream", {title: this.cs.playText, icon: this.cs.playIcon, state: this.cs.playState})
 
         this._set("camera-door", {title: this.cs.doorText, icon: this.cs.doorIcon, state: this.cs.doorState})
         this._set("camera-bell", {title: this.cs.doorBellText, icon: this.cs.doorBellIcon, state: this.cs.doorBellState})
@@ -1607,6 +1586,19 @@ class AarloGlance extends LitElement {
         this._set("camera-lock2", {title: this.cs.door2LockText, icon: this.cs.door2LockIcon, state: this.cs.door2LockState})
         this._set("camera-light", {title: this.cs.lightText, icon: this.cs.lightIcon, state: this.cs.lightState})
         this._set("camera-next", {title: this._i.status.next_camera, icon: "mdi:chevron-right", state: "on"})
+
+        this._set("camera-motion", {title: this.cs.motionText, icon: this.cs.motionIcon, state: this.cs.motionState})
+        this._set("camera-sound", {title: this.cs.soundText, icon: this.cs.soundIcon, state: this.cs.soundState})
+        this._set("camera-stream", {title: this.cs.playText, icon: this.cs.playIcon, state: this.cs.playState})
+        this._set("camera-snapshot", {title: this.cs.snapshotText, icon: this.cs.snapshotIcon, state: this.cs.snapshotState}) 
+
+        if( this.cs.image !== null ) {
+            this._show("image-viewer")
+            this._hide("broken-image")
+        } else {
+            this._show("broken-image")
+            this._hide("image-viewer")
+        }
     }
 
     /**
@@ -1639,8 +1631,8 @@ class AarloGlance extends LitElement {
             this._show("broken-image")
             this._hide("image-viewer")
         }
-        this._show('top-bar', !!this.cc.top_row)
-        this._show('bottom-bar', !!this.cc.bottom_row)
+        this._show('top-bar', !!this.cc.image_top)
+        this._show('bottom-bar', !!this.cc.image_bottom)
         this.hideRecordingView()
         this.hideStreamView()
         this.hideLibraryView()
@@ -2442,6 +2434,12 @@ class AarloGlance extends LitElement {
         this.ls.showing = false
         this.stopRecording()
         this.showImageView()
+    }
+
+    imageFailed() {
+        this.cs.image = null
+        this.updateImageView()
+        this._log("image load failed")
     }
 
     imageClicked() {
