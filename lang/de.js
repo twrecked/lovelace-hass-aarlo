@@ -14,7 +14,7 @@ export var messages = {
 		stop_stream:       'Livestream stoppen',
 		automatic_capture: 'Automatisch aufgenommen um',
 		snapshot_capture:  'Snapshot erstellt am',
-		feature_disabled:  'camera off, feature disabled'
+		feature_disabled:  'Kamera aus, Feature deaktiviert'
 	},
 	
 	// library viewer
@@ -75,15 +75,15 @@ export var messages = {
 
 	// camera states
 	state: {
-		off:                "Off",
-		idle:               "Idle",
-		recording:          "Recording",
+		off:                "Aus",
+		idle:               "Bereit",
+		recording:          "Aufnahme",
 		streaming:          "Streaming",
-		recording_snapshot: "Recording + Snapshot",
+		recording_snapshot: "Aufnahme + Snapshot",
 		streaming_snapshot: "Streaming + Snapshot",
-		taking_snapshot:    "Taking Snapshot",
-		recently_active:    "Recently Active",
-		unavailable:        "Unavailable",
-		offline_too_cold:   "Offline, Too Cold",
+		taking_snapshot:    "Snapshot erstellen",
+		recently_active:    "Kürzlich aktiv",
+		unavailable:        "Nicht verfügbar",
+		offline_too_cold:   "Offline (zu kalt)",
 	}
 }
