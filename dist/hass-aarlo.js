@@ -2424,7 +2424,7 @@ class AarloGlance extends LitElement {
     }
 
     imageFailed() {
-        this.cs.image = null
+        this.cs.details.viewer = {title: "", alt: "", src: null}
         this.updateImageView()
         this._log("image load failed")
     }
