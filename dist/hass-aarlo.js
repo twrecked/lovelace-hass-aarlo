@@ -716,6 +716,23 @@ class AarloGlance extends LitElement {
         this._ls[this._cameraIndex] = value
     }
 
+    /**
+     * Find `what` in `section` of language pack.
+     *
+     * The code removes punctuation and replaces spaces with underscores
+     * in `what`.
+     * @param section - the section of `this._i` to look at
+     * @param what - what to look for
+     * @returns {*}
+     * @private
+     */
+    _tr(section, what) {
+        const new_what = what.replace(/[^\w\s]|_/g, "")
+                .replace(/\s+/g, " ")
+                .replace(/\s/g, "_")
+                .toLowerCase()
+        return new_what in this._i[section] ? this._i[section][new_what] : what
+    }
     _getState(_id, default_value = '') {
         return this._hass !== null && _id in this._hass.states ?
             this._hass.states[_id] : {
@@ -757,7 +774,7 @@ class AarloGlance extends LitElement {
             }
             this.gc.lastActive = this._cameraIndex
             this.cs.state = camera.state
-            this.cs.details.status = { text: this.cs.state }
+            this.cs.details.status = { text: this._tr("state",this.cs.state) }
         }
 
         // Entity picture has changed. This means there is a new auth key

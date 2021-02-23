@@ -15,6 +15,7 @@ export var messages = {
 		stop_stream:       'parar vídeo en directo',
 		automatic_capture: 'capturado automáticamente a las ',
 		snapshot_capture:  'capturado a las ',
+		feature_disabled:  'camera off, feature disabled'
 	},
 	
 	// library viewer
@@ -72,4 +73,18 @@ export var messages = {
 		person:  "persona",
 		parcel:  "paquete"
 	},
+
+	// camera states
+	state: {
+		off:                "Off",
+		idle:               "Idle",
+		recording:          "Recording",
+		streaming:          "Streaming",
+		recording_snapshot: "Recording + Snapshot",
+		streaming_snapshot: "Streaming + Snapshot",
+		taking_snapshot:    "Taking Snapshot",
+		recently_active:    "Recently Active",
+		unavailable:        "Unavailable",
+		offline_too_cold:   "Offline, Too Cold",
+	}
 }

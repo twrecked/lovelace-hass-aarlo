@@ -14,6 +14,7 @@ export var messages = {
 		stop_stream:       'Livestream stoppen',
 		automatic_capture: 'Automatisch aufgenommen um',
 		snapshot_capture:  'Snapshot erstellt am',
+		feature_disabled:  'camera off, feature disabled'
 	},
 	
 	// library viewer
@@ -71,4 +72,18 @@ export var messages = {
 		person:  "Person",
 		parcel:  "Paket"
 	},
+
+	// camera states
+	state: {
+		off:                "Off",
+		idle:               "Idle",
+		recording:          "Recording",
+		streaming:          "Streaming",
+		recording_snapshot: "Recording + Snapshot",
+		streaming_snapshot: "Streaming + Snapshot",
+		taking_snapshot:    "Taking Snapshot",
+		recently_active:    "Recently Active",
+		unavailable:        "Unavailable",
+		offline_too_cold:   "Offline, Too Cold",
+	}
 }

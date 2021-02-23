@@ -73,4 +73,18 @@ export var messages = {
 		person:  "person",
 		parcel:  "parcel"
 	},
+
+	// camera states
+	state: {
+		off:                "Off",
+		idle:               "Idle",
+		recording:          "Recording",
+		streaming:          "Streaming",
+		recording_snapshot: "Recording + Snapshot",
+		streaming_snapshot: "Streaming + Snapshot",
+		taking_snapshot:    "Taking Snapshot",
+		recently_active:    "Recently Active",
+		unavailable:        "Unavailable",
+		offline_too_cold:   "Offline, Too Cold",
+	}
 }
