@@ -160,52 +160,88 @@ entities:
 # shared options
 ```
 
+#### Global Options
+
+| Name       | Type | Required | Supported Values                            |
+|------------|------|----------|---------------------------------------------|
+| global     | list | No       | active, muted, numeric, square              |
+
+These are the options that determine the overall behaviour of the card.
+- `active`; for multi camera cards, the image will change to the most recently
+  updated camera
+- `muted`; start in a muted state, mute state is remember across recordings
+  and streams
+- `numeric`; show the library count as a number, works up to `9`, after which
+  `9+` is shown
+- `square`; use a square image; useful for Arlo Video Doorbells; this affects
+  the library view as well.
+
+
 #### Image Options
 
 | Name       | Type | Required | Supported Values                            |
 |------------|------|----------|---------------------------------------------|
-| image_view | list | No       | active, start-stream, direct, muted, square |
+| image_view | list | No       | start-stream, start-recording, direct       |
 
 These are the options that determine the overall behaviour of the card when
 showing the image view.
-- `active`; for multi camera cards, the image will change to the most recently
-  updated camera
 - `start-stream`; the card will start streaming when opened
 - `start-recording`; _not implemented yet_, the card will play recording when
   finished
 - `direct`; when streaming the card will access Arlo directly rather than go
   through Home Assistant
-- `muted`; start in a muted state, mute state is remember across recordings
-  and streams
-- `square`; use a square image; useful for Arlo Video Doorbells; this affects
-  the library view as well.
 
 
-| Name         | Type | Required | Supported Values                                                                      |
-|--------------|------|----------|---------------------------------------------------------------------------------------|
-| image_top    | list | No       | name, date, status                                                                    |
-| image_bottom | list | No       | name, date, status, motion, sound, battery, signal, library, stream, on_off, snapshot |
+| Name         | Type | Required | Supported Values                                                                        |
+|--------------|------|----------|-----------------------------------------------------------------------------------------|
+| image_top    | list | No       | name, date, status, motion, sound, battery, signal, library, stream, onoff, snapshot... |
+| image_bottom | list | No       | name, date, status, motion, sound, battery, signal, library, stream, onoff, snapshot... |
 
 These options determine what information and functions are available on the
 image view. `image_top` controls what appears at the top and `image_bottom`
-what appears at the bottom.
+what appears at the bottom. If you leave one of the options blank nothing will
+appear at that place on the image.
   - `name`; camera name
-  - `date`: date/time of last capture
-  - `status`: current camera status - for example, `Idle`, `Recording`
-  - `motion`: motion detection status, click for history
-  - `sound`: sound detection status, click for history
-  - `battery`: current battery level, click for history 
-  - `signal`: current wifi strength, click for history 
-  - `library`: library status - are there any recordings today, any recordings at
+  - `date`; date/time of last capture
+  - `status`; current camera status - for example, `Idle`, `Recording`
+  - `motion`; motion detection status, click for history
+  - `sound`; sound detection status, click for history
+  - `battery`; current battery level, click for history 
+  - `signal`; current wifi strength, click for history 
+  - `library`; library status - are there any recordings today, any recordings at
     all, click to open the library view
-  - `stream`: click to start a live stream
-  - `on_off`: click to turn the camera on and off
+  - `stream`; click to start a live stream
+  - `onoff`; click to turn the camera on and off
   - `snapshot`; click to take a snapshot
+
+If you have multiple cameras showing on one card the following options are
+available:
+  - `previous`; click to move to the previous camera
+  - `next`; click to move to the next camera
+
+The following options can be used if you used any Device Options. You can
+always `SHIFT+CLICK` to see a device history.
+  - `door`; door status
+  - `lock`; lock status; click to lock and unlock
+  - `bell`; door bell status, if you supply a mute switch then click to
+    mute/unmute
+  - `door2`; door2 status
+  - `lock2`; lock status; click to lock and unlock
+  - `bell2`; door bell status, if you supply a mute switch then click to
+    mute/unmute
+  - `light`; light status, click to turn off and on
 
 ##### Notes
 To get the `aarlo` Device sensors to work correctly you need to enable the
 corresponding `binary_sensor` or `sensor`. For example, to get motion
 notifications working you need the following binary sensor enabled:
+
+```yaml
+binary_sensor:
+  - platform: aarlo
+    monitored_conditions:
+    - motion
+```
 
 
 | Name        | Type | Required | Supported Values                |
@@ -330,6 +366,56 @@ You won't generally need to change these.
 | modal_multiplier | float   | 0.8     | Set this to change how much space the modal window will try to take. |
 | swipe_threshold  | integer | 150     | Set this to change how long a swipe has to be to register.           |
 
+
+## Customizing the Layout
+
+You can use `image_top` and `image_bottom` to customize the icons and text in
+the image. The card will keep the order you entered the icons in and will
+allow you to groups items together. And unlink previous versions you can place
+the icons at the top of the screen.
+
+For example, the following entry will place some camera icons at the bottom of
+the image. They are in the same group so the card will spread them across its
+entire width.
+
+```yaml
+image_bottom: 'onoff,motion,library,stream,signal,sound,snapshot,battery'
+```
+
+![A Single Group](/images/single-group.png?raw=true)
+
+In this example we create 2 groups using the `|` symbol. Now the first group
+is placed to the left of the card and the second group to the right.
+
+```yaml
+image_bottom: 'onoff,motion,library,stream,signal,sound|snapshot,battery'
+```
+
+![Two Groups](/images/two-groups.png?raw=true)
+
+In this example we create an empty group at the beginning which forces all the
+icons to appear on the right of the card.
+
+```yaml
+image_bottom: '|onoff,motion,library,stream,signal,sound,snapshot,battery'
+```
+
+And this one places them at the top:
+
+```yaml
+image_top: 'onoff,motion,library,stream,signal,sound,snapshot,battery'
+```
+
+If you find the configuration is getting too wide you can also split the
+groups up this way:
+
+```yaml
+image_bottom:
+  - 'previous,sound,motion,battery,library,stream,snapshot'
+  - 'door,lock,light,next'
+```
+
+If you find things too closely placed together a `,,` will insert a gap.
 
 ## Example Configurations
 

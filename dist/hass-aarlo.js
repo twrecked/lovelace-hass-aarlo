@@ -40,6 +40,9 @@ const LitElement = Object.getPrototypeOf(
     );
 const html = LitElement.prototype.html;
 
+function _real(value) {
+    return value !== undefined && value !== null
+}
 function _array( config, value = [] ) {
     if( !config ) {
         return value
@@ -90,6 +93,13 @@ function _replaceAll( old_string, from, to ) {
 function _mergeArrays( left, right ) {
     let merged = Object.assign( {}, left )
     return Object.assign( merged, right )
+}
+function _tsi(title, state, icon ) {
+    return {
+        title: title,
+        state: state,
+        icon:  icon
+    }
 }
 
 // function _either_or( config, item, true_value = true, false_value = false ) {
@@ -356,7 +366,7 @@ class AarloGlance extends LitElement {
                         Your browser does not support the video tag.
                     </video>
                     <img class="aarlo-image"
-                         id="${this._id('image-viewer')}"
+                         id="${this._id('camera-viewer')}"
                          style="display:none"
                          @error="${() => { this.imageFailed(); }}"
                          @click="${() => { this.imageClicked(); }}">
@@ -591,13 +601,13 @@ class AarloGlance extends LitElement {
      * It gets called a lot.
      */
     __set( element, title, text, icon, state, src, alt, poster ) {
-        if ( title !== undefined )  { this.__title( element, title ) }
-        if ( text !== undefined )   { this.__text ( element, text ) }
-        if ( icon !== undefined )   { this.__icon ( element, icon ) }
-        if ( state !== undefined )  { this.__state( element, state ) }
-        if ( src !== undefined )    { this.__src( element, src ) }
-        if ( alt !== undefined )    { this.__alt( element, alt ) }
-        if ( poster !== undefined ) { this.__poster( element, poster ) }
+        if (_real(title))  { this.__title( element, title ) }
+        if (_real(text))   { this.__text ( element, text ) }
+        if (_real(icon))   { this.__icon ( element, icon ) }
+        if (_real(state))  { this.__state( element, state ) }
+        if (_real(src))    { this.__src( element, src ) }
+        if (_real(alt))    { this.__alt( element, alt ) }
+        if (_real(poster)) { this.__poster( element, poster ) }
     }
 
     /**
@@ -736,33 +746,52 @@ class AarloGlance extends LitElement {
         if ( camera.state !== this.cs.state ) {
             this._log( `state-update: ${this.cs.state} --> ${camera.state}` )
             if( camera.state !== 'off' ) {
-                this.updateImageURL()
+                this.generateImageURL()
             } else {
                 this.cs.image = camera.attributes.last_thumbnail
             }
             if ( this.cs.state === 'taking snapshot' ) {
                 this.cc.snapshotTimeouts.forEach( (seconds) => {
-                    this.updateImageURLLater( seconds )
+                    this.generateImageURLLater( seconds )
                 })
             }
             this.gc.lastActive = this._cameraIndex
             this.cs.state = camera.state
+            this.cs.details.status = { text: this.cs.state }
         }
 
         // Entity picture has changed. This means there is a new auth key
         // attached. Update the image URL so we update the view.
         if ( this.cs.imageBase !== camera.attributes.entity_picture ) {
             this._log( `auth-update: ${this.cs.imageBase} --> ${camera.attributes.entity_picture}` )
-            this.updateImageURL()
+            this.generateImageURL()
         }
 
         // Image source has changed. This means it was from a new capture or
         // snapshot. Update the image URL so we update the view.
         if ( this.cs.imageSource !== camera.attributes.image_source ) {
             this._log( `source-update: ${this.cs.imageSource} --> ${camera.attributes.image_source}` )
-            this.updateImageURL()
+            this.generateImageURL()
             this.gc.lastActive = this._cameraIndex
             this.cs.imageSource = camera.attributes.image_source
+        }
+
+        // Update status details.
+        if( this.cs.image !== null ) {
+            let date = ""
+            let full_date = this.cs.imageSource ? this.cs.imageSource : ''
+            if( full_date.startsWith('capture/') ) { 
+                date      = full_date.substr(8);
+                full_date = `${this._i.image.automatic_capture} ${date}`
+            } else if( full_date.startsWith('snapshot/') ) { 
+                date      = full_date.substr(9);
+                full_date = `${this._i.image.snapshot_capture} ${date}`
+            }
+            this.cs.details.viewer = {title: full_date, alt: full_date, src: this.cs.image}
+            this.cs.details.date = {title: full_date, text: date}
+        } else {
+            this.cs.details.viewer = {title: "", alt: "", src: null}
+            this.cs.details.date = {title: "", text: ""}
         }
 
         // LIBRARY
@@ -787,129 +816,127 @@ class AarloGlance extends LitElement {
             }
         }
 
+        // IMAGE 
         // FUNCTIONS
-        if ( this.cs.state === 'off' ) {
-            this.cs.playText = this._i.image.feature_disabled
-            this.cs.playIcon = 'mdi:play'
-            this.cs.playState = 'off';
-        } else if ( this.cs.state !== 'streaming' ) {
-            this.cs.playText = this._i.image.start_stream
-            this.cs.playIcon = 'mdi:play'
-            this.cs.playState = 'state-on';
+        if (this.cs.state === 'off') {
+            this.cs.details.stream = _tsi(this._i.image.feature_disabled, 'off', 'mdi:play')
+        } else if(this.cs.state !== 'streaming') {
+            this.cs.details.stream = _tsi(this._i.image.start_stream, 'on', 'mdi:play')
         } else {
-            this.cs.playText = this._i.image.stop_stream
-            this.cs.playIcon = 'mdi:stop'
-            this.cs.playState = 'state-on';
+            this.cs.details.stream = _tsi(this._i.image.stop_stream, 'on', 'mdi:stop')
         }
 
         if ( this.cs.state === 'off' ) {
-            this.cs.onOffState = 'state-on';
-            this.cs.onOffText  = this._i.image.turn_camera_on
-            this.cs.onOffIcon  = 'mdi:camera'
+            this.cs.details.onoff = _tsi(this._i.image.turn_camera_on, 'state-on', 'mdi:camera')
         } else {
-            this.cs.onOffState = '';
-            this.cs.onOffText  = this._i.image.turn_camera_off
-            this.cs.onOffIcon  = 'mdi:camera-off'
+            this.cs.details.onoff = _tsi(this._i.image.turn_camera_off, '', 'mdi:camera-off')
         }
 
         if(this.cs.state !== 'off') {
-            this.cs.snapshotState = '';
-            this.cs.snapshotText  = this._i.image.take_a_snapshot
-            this.cs.snapshotIcon  = 'mdi:camera-enhance'
+            this.cs.details.snapshot = _tsi(this._i.image.take_a_snapshot, '', 'mdi:camera-enhance')
         } else {
-            this.cs.snapshotState = 'off';
-            this.cs.snapshotText  = this._i.image.feature_disabled
-            this.cs.snapshotIcon  = 'mdi:camera-off'
+            this.cs.details.snapshot = _tsi(this._i.image.feature_disabled, 'off', 'mdi:camera-off')
         }
 
         // SENSORS
         if ( camera.attributes.wired_only ) {
-            this.cs.batteryState = 'state-update';
-            this.cs.batteryText  = this._i.status.plugged_in
-            this.cs.batteryIcon  = 'power-plug';
+            this.cs.details.battery = _tsi( this._i.status.plugged_in, 'state-update', 'power-plug')
         } else {
             const battery = this._getState(this.cc.batteryId, 0);
             const prefix = camera.attributes.charging ? 'battery-charging' : 'battery';
-            this.cs.batteryState = battery.state < 25 ? 'state-warn' : ( battery.state < 15 ? 'state-error' : 'state-update' );
-            this.cs.batteryText  = `${this._i.status.battery_strength}: ${battery.state}%`;
-            this.cs.batteryIcon  = prefix + ( battery.state < 10 ? '-outline' :
-                                                ( battery.state > 90 ? '' : '-' + Math.round(battery.state/10) + '0' ) );
+            this.cs.details.battery = _tsi(
+                `${this._i.status.battery_strength}: ${battery.state}%`,
+                battery.state < 25 ? 'state-warn' : ( battery.state < 15 ? 'state-error' : 'state-update' ),
+                `mdi:${prefix}` + (battery.state < 10 ? '-outline' :
+                            (battery.state > 90 ? '' : '-' + Math.round(battery.state/10) + '0' ))
+            )
         }
 
         const signal = this._getState(this.cc.signalId, 0);
-        this.cs.signalText = `${this._i.status.signal_strength}: ${signal.state}`
-        this.cs.signalIcon = signal.state === "0" ? 'mdi:wifi-outline' : 'mdi:wifi-strength-' + signal.state;
+        this.cs.details.signal = _tsi(
+            `${this._i.status.signal_strength}: ${signal.state}`,
+            '',
+            signal.state === "0" ? 'mdi:wifi-outline' : `mdi:wifi-strength-${signal.state}`
+        )
 
         if ( this.cs.state !== 'off' ) {
-            this.cs.motionState = this._getState(this.cc.motionId,'off').state === 'on' ? 'state-on' : '';
-            this.cs.motionText  = `${this._i.status.motion}: ` +
-                    ( this.cs.motionState !== '' ? this._i.status.detected : this._i.status.clear )
-            this.cs.motionIcon = "mdi:run-fast"
+            const has_motion = this._getState(this.cc.motionId,'off').state === 'on'
+            this.cs.details.motion = _tsi(
+                `${this._i.status.motion}: ${has_motion ? this._i.status.detected : this._i.status.clear}`,
+                has_motion ? 'on' : '',
+                "mdi:run-fast"
+            )
         } else {
-            this.cs.motionState = 'off'
-            this.cs.motionText  = this._i.image.feature_disabled
-            this.cs.motionIcon  = "mdi:walk"
+            this.cs.details.motion = _tsi(this._i.image.feature_disabled, 'off', "mdi:walk")
         }
 
         if ( this.cs.state !== 'off' ) {
-            this.cs.soundState = this._getState(this.cc.soundId,'off').state === 'on' ? 'state-on' : '';
-            this.cs.soundText  = `${this._i.status.sound}: ` +
-                    ( this.cs.soundState !== '' ? this._i.status.detected : this._i.status.clear )
-            this.cs.soundIcon = "mdi:ear-hearing"
+            const has_sound = this._getState(this.cc.soundId,'off').state === 'on'
+            this.cs.details.sound = _tsi(
+                `${this._i.status.sound}: ${has_sound ? this._i.status.detected : this._i.status.clear}`,
+                has_sound ? 'state-on' : '',
+                "mdi:ear-hearing"
+            )
         } else {
-            this.cs.soundState = 'off'
-            this.cs.soundText  = this._i.image.feature_disabled
-            this.cs.soundIcon  = "mdi:ear-hearing-off"
+            this.cs.details.sound = _tsi(this._i.image.feature_disabled, 'off', "mdi:ear-hearing-off")
         }
 
         // We always save this, used by library code to check for updates
         const captured = this._getState(this.cc.capturedTodayId, "0").state;
         const last = this._getState(this.cc.lastCaptureId, "0").state;
         if( this.ls.recordings && this.ls.recordings.length > 0 ) {
-            this.cs.capturedText = `${this._i.status.library}: ` +
-                    ( captured === "0" ? "" : `${captured} ${this._i.status.captured_something} ${last}, ` ) +
-                    this._i.status.library_open
-            this.cs.capturedIcon = this.gc.numeric ?
-                    'mdi:numeric-' + (captured > 9 ? "9-plus" : captured) + '-box' :
-                    'mdi:file-video'
-            this.cs.capturedState = captured !== "0" ? 'on' : ''
+            this.cs.details.library = _tsi(
+                `${this._i.status.library}: ` +
+                        ( captured === "0" ? "" : `${captured} ${this._i.status.captured_something} ${last}, ` ) +
+                        this._i.status.library_open,
+                captured !== "0" ? 'on' : '',
+                this.gc.numeric ? 'mdi:numeric-' + (captured > 9 ? "9-plus" : captured) + '-box' : 'mdi:file-video'
+            )
         } else {
-            this.cs.capturedText = `${this._i.status.library}: ${this._i.status.library_empty}`
-            this.cs.capturedIcon = this.gc.numeric ?
-                    'mdi:numeric-0-box' :
-                    'mdi:file-video-outline'
-            this.cs.capturedState = 'off'
+            this.cs.details.library = _tsi(
+                `${this._i.status.library}: ${this._i.status.library_empty}`,
+                'off',
+                this.gc.numeric ? 'mdi:numeric-0-box' : 'mdi:file-video-outline'
+            )
         }
 
         // OPTIONAL DOORS
         if(this.cc.doorId) {
-            const doorState = this._getState(this.cc.doorId, 'off');
-            this.cs.doorState = doorState.state === 'on' ? 'state-on' : '';
-            this.cs.doorText  = doorState.attributes.friendly_name + ': ' +
-                    ( this.cs.doorState === '' ? this._i.status.door_closed : this._i.status.door_open )
-            this.cs.doorIcon  = this.cs.doorState === '' ? 'mdi:door' : 'mdi:door-open';
+            const doorState = this._getState(this.cc.doorId, 'off')
+            const is_open   = doorState.state === 'on'
+            this.cs.details.door = _tsi(
+                `${doorState.attributes.friendly_name}: ${is_open ? this._i.status.door_open : this._i.status.door_closed}`,
+                is_open ? 'on' : '',
+                is_open ? 'mdi:door-open' : 'mdi:door',
+            )
         }
         if(this.cc.door2Id) {
-            const door2State = this._getState(this.cc.door2Id, 'off');
-            this.cs.door2State = door2State.state === 'on' ? 'state-on' : '';
-            this.cs.door2Text  = door2State.attributes.friendly_name + ': ' +
-                    ( this.cs.door2State === '' ? this._i.status.door_closed : this._i.status.door_open )
-            this.cs.door2Icon  = this.cs.door2State === '' ? 'mdi:door' : 'mdi:door-open';
+            const doorState = this._getState(this.cc.door2Id, 'off')
+            const is_open   = doorState.state === 'on'
+            this.cs.details.door2 = _tsi(
+                `${doorState.attributes.friendly_name}: ${is_open ? this._i.status.door2_open : this._i.status.door2_closed}`,
+                is_open ? 'on' : '',
+                is_open ? 'mdi:door-open' : 'mdi:door',
+            )
         }
 
         if(this.cc.doorLockId) {
             const doorLockState = this._getState(this.cc.doorLockId, 'locked');
-            this.cs.doorLockState = doorLockState.state === 'locked' ? 'state-on' : 'state-warn';
-            this.cs.doorLockText  = doorLockState.attributes.friendly_name + ': ' +
-                    ( this.cs.doorLockState === 'state-on' ? this._i.status.lock_locked : this._i.status.lock_unlocked )
-            this.cs.doorLockIcon  = this.cs.doorLockState === 'state-on' ? 'mdi:lock' : 'mdi:lock-open';
+            const is_locked     = doorLockState.state === 'locked'
+            this.cs.details.lock = _tsi(
+                `${doorLockState.attributes.friendly_name}: ${is_locked ? this._i.status.lock_locked : this._i.status.lock_unlocked}`,
+                is_locked ? 'state-on' : 'state-warn',
+                is_locked ? 'mdi:lock' : 'mdi:lock-open',
+            )
         }
         if(this.cc.door2LockId) {
-            const door2LockState = this._getState(this.cc.door2LockId, 'locked');
-            this.cs.door2LockState = door2LockState.state === 'locked' ? 'state-on' : 'state-warn';
-            this.cs.door2LockText  = door2LockState.attributes.friendly_name + ': ' + 
-                    ( this.cs.door2LockState === 'state-on' ? this._i.status.lock_locked : this._i.status.lock_unlocked )
-            this.cs.door2LockIcon  = this.cs.door2LockState === 'state-on' ? 'mdi:lock' : 'mdi:lock-open';
+            const door2LockState = this._getState(this.cc.door2LockId, 'locked')
+            const is_locked      = doorLockState.state === 'locked'
+            this.cs.details.lock2 = _tsi(
+                `${door2LockState.attributes.friendly_name}: ${is_locked ? this._i.status.lock_locked : this._i.status.lock_unlocked}`,
+                is_locked ? 'state-on' : 'state-warn',
+                is_locked ? 'mdi:lock' : 'mdi:lock-open',
+            )
         }
 
         if(this.cc.doorBellId) {
@@ -918,23 +945,15 @@ class AarloGlance extends LitElement {
             const mute = bell.attributes.chimes_silenced || bell.attributes.calls_silenced
             const muteable = !!this.cc.doorBellMuteId
             if ( bell.state === 'on' ) {
-                this.cs.doorBellState = 'on'
-                this.cs.doorBellText  = `${name}: ${this._i.status.doorbell_pressed}`
-                this.cs.doorBellIcon  = 'mdi:bell-ring'
+                this.cs.details.bell = _tsi(`${name}: ${this._i.status.doorbell_pressed}`, 'on', 'mdi:bell-ring')
             } else if( muteable ) {
                 if ( mute ) {
-                    this.cs.doorBellState = 'warn'
-                    this.cs.doorBellText  = `${name}: ${this._i.status.doorbell_muted}`
-                    this.cs.doorBellIcon  = 'mdi:bell-off'
+                    this.cs.details.bell = _tsi(`${name}: ${this._i.status.doorbell_muted}`, 'warn', 'mdi:bell-off')
                 } else {
-                    this.cs.doorBellState = ''
-                    this.cs.doorBellText  = `${name}: ${this._i.status.doorbell_mute}`
-                    this.cs.doorBellIcon  = 'mdi:bell'
+                    this.cs.details.bell = _tsi(`${name}: ${this._i.status.doorbell_mute}`, '', 'mdi:bell')
                 }
             } else {
-                this.cs.doorBellState = ''
-                this.cs.doorBellText  = `${name}: ${this._i.status.doorbell_idle}`
-                this.cs.doorBellIcon  = 'mdi:bell'
+                this.cs.details.bell = _tsi(`${name}: ${this._i.status.doorbell_idle}`, '', 'mdi:bell')
             }
         }
 
@@ -944,32 +963,26 @@ class AarloGlance extends LitElement {
             const mute = bell.attributes.chimes_silenced || bell.attributes.calls_silenced
             const muteable = !!this.cc.door2BellMuteId
             if ( bell.state === 'on' ) {
-                this.cs.door2BellState = 'on'
-                this.cs.door2BellText  = `${name}: ${this._i.status.doorbell_pressed}`
-                this.cs.door2BellIcon  = 'mdi:bell-ring'
+                this.cs.details.bell2 = _tsi(`${name}: ${this._i.status.doorbell_pressed}`, 'on', 'mdi:bell-ring')
             } else if( muteable ) {
                 if ( mute ) {
-                    this.cs.door2BellState = 'warn'
-                    this.cs.door2BellText  = `${name}: ${this._i.status.doorbell_muted}`
-                    this.cs.door2BellIcon  = 'mdi:bell-off'
+                    this.cs.details.bell2 = _tsi(`${name}: ${this._i.status.doorbell_muted}`, 'warn', 'mdi:bell-off')
                 } else {
-                    this.cs.door2BellState = ''
-                    this.cs.door2BellText  = `${name}: ${this._i.status.doorbell_mute}`
-                    this.cs.door2BellIcon  = 'mdi:bell'
+                    this.cs.details.bell2 = _tsi(`${name}: ${this._i.status.doorbell_mute}`, '', 'mdi:bell')
                 }
             } else {
-                this.cs.door2BellState = ''
-                this.cs.door2BellText  = `${name}: ${this._i.status.doorbell_idle}`
-                this.cs.door2BellIcon  = 'mdi:bell'
+                this.cs.details.bell = _tsi(`${name}: ${this._i.status.doorbell_idle}`, '', 'mdi:bell')
             }
         }
 
         if(this.cc.lightId) {
             const lightState = this._getState(this.cc.lightId, 'off');
-            this.cs.lightState = lightState.state === 'on' ? 'state-on' : '';
-            this.cs.lightText  = lightState.attributes.friendly_name + ': ' +
-                    ( this.cs.lightState === 'state-on' ?   this._i.status.light_on : this._i.status.light_off )
-            this.cs.lightIcon  = 'mdi:lightbulb';
+            const is_on = lightState.state === 'on'
+            this.cs.details.light = _tsi(
+                `${lightState.attributes.friendly_name}: ` + (is_on ?  this._i.status.light_on : this._i.status.light_off),
+                is_on ? 'on' : '',
+                'mdi:lightbulb'
+            )
         }
     }
 
@@ -1028,6 +1041,11 @@ class AarloGlance extends LitElement {
             // Language override?
             lang: config.lang,
 
+            // active camera mode
+            activeView: (_includes( config.global, "active" ) ||
+                            _includes( config.image_view, "active" )),
+            // initial state is muted
+            isMuted: _includes( config.global, "muted" ),
             // numeric icons for library
             numeric: _includes( config.global, 'numeric' ),
             // aspect ratio
@@ -1035,9 +1053,6 @@ class AarloGlance extends LitElement {
                             _includes(config.image_view, 'square')) ? '1x1' : '16x9',
             aspectRatioMultiplier: (_includes(config.global, 'square') ||
                             _includes(config.image_view, 'square')) ? 1 : 0.5625,
-            // active camera mode
-            activeView: (_includes( config.global, "active" ) ||
-                            _includes( config.image_view, "active" )),
 
             // auto play
             autoPlay: _includes( config.image_view, "autoplay" ) ||
@@ -1048,8 +1063,6 @@ class AarloGlance extends LitElement {
             // stream directly from Arlo
             playDirect: _includes( config.image_view, "direct" ) ||
                         _value( config.play_direct, false ),
-            // initial state is muted
-            isMuted: _includes( config.image_view, "muted" ),
 
             // blended library
             blendedMode: _includes( config.library_view, "blended" ),
@@ -1117,7 +1130,7 @@ class AarloGlance extends LitElement {
         _pushIf(image_bottom_right, "next", this._config.entities)
         _pushIf(image_bottom, image_bottom_right.join(","), image_bottom_right)
         
-        image_bottom = _replaceAll(image_bottom.join("|"), "on_off", "on-off")
+        image_bottom = _replaceAll(image_bottom.join("|"), "on_off", "onoff")
         image_bottom = _replaceAll(image_bottom, "battery_level", "battery")
         image_bottom = _replaceAll(image_bottom, "captured_today", "library")
         image_bottom = _replaceAll(image_bottom, "captured", "library")
@@ -1284,6 +1297,7 @@ class AarloGlance extends LitElement {
         return {
             autoPlay:      config.autoPlay,
             autoPlayTimer: null,
+            details:       {},
             lastRecording: null,
             image:         null,
             imageBase:     null,
@@ -1420,6 +1434,7 @@ class AarloGlance extends LitElement {
 
     imageIconClicked(evt) {
         const id = evt.target.id
+        const modified = evt.ctrlKey || evt.shiftKey
 
         if(id.startsWith("camera-motion")) {
             this.moreInfo(this.cc.motionId)
@@ -1430,7 +1445,7 @@ class AarloGlance extends LitElement {
         } else if(id.startsWith("camera-signal")) {
             this.moreInfo(this.cc.signalId)
 
-        } else if(id.startsWith("camera-on-off")) {
+        } else if(id.startsWith("camera-onoff")) {
             this.toggleCamera()
         } else if(id.startsWith("camera-library")) {
             this.openLibrary()
@@ -1440,27 +1455,39 @@ class AarloGlance extends LitElement {
             this.updateSnapshot()
 
         } else if(id.startsWith("camera-door2")) {
-            this.toggleLock(this.cc.door2Id)
+            this.moreInfo(this.cc.door2Id)
         } else if(id.startsWith("camera-lock2")) {
-            this.toggleLock(this.cc.door2LockId)
-        } else if(id.startsWith("camera-bell2")) {
-            if (this.cc.door2BellMuteId) {
-                this.toggleSwitch(this.cc.door2BellMuteId)
+            if(modified) {
+                this.moreInfo(this.cc.door2LockId)
             } else {
+                this.toggleLock(this.cc.door2LockId)
+            }
+        } else if(id.startsWith("camera-bell2")) {
+            if (!this.cc.door2BellMuteId || modified) {
                 this.moreInfo(this.cc.door2BellId)
+            } else {
+                this.toggleSwitch(this.cc.door2BellMuteId)
             }
         } else if(id.startsWith("camera-door")) {
-            this.toggleLock(this.cc.doorId)
+            this.moreInfo(this.cc.doorId)
         } else if(id.startsWith("camera-lock")) {
-            this.toggleLock(this.cc.doorLockId)
-        } else if(id.startsWith("camera-bell")) {
-            if (this.cc.doorBellMuteId) {
-                this.toggleSwitch(this.cc.doorBellMuteId)
+            if(modified) {
+                this.moreInfo(this.cc.doorLockId)
             } else {
+                this.toggleLock(this.cc.doorLockId)
+            }
+        } else if(id.startsWith("camera-bell")) {
+            if (!this.cc.doorBellMuteId || modified) {
                 this.moreInfo(this.cc.doorBellId)
+            } else {
+                this.toggleSwitch(this.cc.doorBellMuteId)
             }
         } else if(id.startsWith("camera-light")) {
-            this.toggleLight(this.cc.lightId)
+            if(modified) {
+                this.moreInfo(this.cc.lightId)
+            } else {
+                this.toggleLight(this.cc.lightId)
+            }
 
         } else if(id.startsWith("camera-previous")) {
             this.previousCameraImage()
@@ -1478,7 +1505,10 @@ class AarloGlance extends LitElement {
             let div = document.createElement("div")
             _array(section).forEach((item) => {
                 let elem
-                if(text_items.includes(item)) {
+                if(item === '' ){
+                    elem = document.createElement("span")
+                    elem.innerHTML = "&nbsp"
+                } else if(text_items.includes(item)) {
                     elem = document.createElement("span")
                     elem.classList.add(`camera-${item}`)
                     elem.classList.add(`camera-text`)
@@ -1515,11 +1545,13 @@ class AarloGlance extends LitElement {
     setupImageView() {
         this.buildImageLayout(this.cc)
         this._set("camera-name", {text: this.cc.name})
+        this._set("camera-previous", {title: this._i.status.previous_camera, icon: "mdi:chevron-left", state: "on"})
+        this._set("camera-next", {title: this._i.status.next_camera, icon: "mdi:chevron-right", state: "on"})
     }
 
     setupImageHandlers() {
 
-        const viewer = this._element("image-viewer")
+        const viewer = this._element("camera-viewer")
 
         if( this.gc.isMobile ) {
             viewer.addEventListener('touchstart', (e) => {
@@ -1546,58 +1578,18 @@ class AarloGlance extends LitElement {
 
     updateImageView() {
 
-        // Nothing there yet...
-        if( !this.isReady() ) {
-            return
+        // Set up entries.
+        for(const item in this.cs.details) {
+            // noinspection JSUnfilteredForInLoop
+            this._set(`camera-${item}`, this.cs.details[item] )
         }
 
         if( this.cs.image !== null ) {
-            this.cs.imageDate     = '';
-            this.cs.imageFullDate = this.cs.imageSource ? this.cs.imageSource : ''
-            if( this.cs.imageFullDate.startsWith('capture/') ) { 
-                this.cs.imageDate     = this.cs.imageFullDate.substr(8);
-                this.cs.imageFullDate = `${this._i.image.automatic_capture} ${this.cs.imageDate}`
-            } else if( this.cs.imageFullDate.startsWith('snapshot/') ) { 
-                this.cs.imageDate     = this.cs.imageFullDate.substr(9);
-                this.cs.imageFullDate = `${this._i.image.snapshot_capture} ${this.cs.imageDate}`
-            }
-            this._set("image-viewer", {src: this.cs.image})
-        } else {
-            this.cs.imageFullDate = ''
-            this.cs.imageDate = ''
-        }
-
-        this._set("image-viewer", {title: this.cs.imageFullDate, alt: this.cs.imageFullDate})
-        this._set("camera-status", {text: this.cs.state })
-        this._set("camera-date", {title: this.cs.imageFullDate, text: this.cs.imageDate})
-
-        this._set("camera-previous", {title: this._i.status.previous_camera, icon: "mdi:chevron-left", state: "on"})
-        this._set("camera-on-off", {title: this.cs.onOffText, icon: this.cs.onOffIcon, state: this.cs.onOffState})
-        this._set("camera-captured", {title: this.cs.capturedText, icon: this.cs.capturedIcon, state: this.cs.capturedState})
-        this._set("camera-battery", {title: this.cs.batteryText, icon: `mdi:${this.cs.batteryIcon}`, state: this.cs.batteryState})
-        this._set("camera-signal", {title: this.cs.signalText, icon: this.cs.signalIcon, state: 'state-update'})
-        this._set("camera-library", {title: this.cs.capturedText, icon: this.cs.capturedIcon, state: this.cs.capturedState})
-
-        this._set("camera-door", {title: this.cs.doorText, icon: this.cs.doorIcon, state: this.cs.doorState})
-        this._set("camera-bell", {title: this.cs.doorBellText, icon: this.cs.doorBellIcon, state: this.cs.doorBellState})
-        this._set("camera-lock", {title: this.cs.doorLockText, icon: this.cs.doorLockIcon, state: this.cs.doorLockState})
-        this._set("camera-door2", {title: this.cs.door2Text, icon: this.cs.door2Icon, state: this.cs.door2State})
-        this._set("camera-bell2", {title: this.cs.door2BellText, icon: this.cs.door2BellIcon, state: this.cs.door2BellState})
-        this._set("camera-lock2", {title: this.cs.door2LockText, icon: this.cs.door2LockIcon, state: this.cs.door2LockState})
-        this._set("camera-light", {title: this.cs.lightText, icon: this.cs.lightIcon, state: this.cs.lightState})
-        this._set("camera-next", {title: this._i.status.next_camera, icon: "mdi:chevron-right", state: "on"})
-
-        this._set("camera-motion", {title: this.cs.motionText, icon: this.cs.motionIcon, state: this.cs.motionState})
-        this._set("camera-sound", {title: this.cs.soundText, icon: this.cs.soundIcon, state: this.cs.soundState})
-        this._set("camera-stream", {title: this.cs.playText, icon: this.cs.playIcon, state: this.cs.playState})
-        this._set("camera-snapshot", {title: this.cs.snapshotText, icon: this.cs.snapshotIcon, state: this.cs.snapshotState}) 
-
-        if( this.cs.image !== null ) {
-            this._show("image-viewer")
+            this._show("camera-viewer")
             this._hide("broken-image")
         } else {
             this._show("broken-image")
-            this._hide("image-viewer")
+            this._hide("camera-viewer")
         }
     }
 
@@ -1610,26 +1602,26 @@ class AarloGlance extends LitElement {
      *
      * It makes no attempt to reload the image.
      */
-    updateImageURL() {
+    generateImageURL() {
         const camera = this._getState(this.cc.id,'unknown');
         this.cs.image = camera.attributes.entity_picture + "&t=" + new Date().getTime()
         this.cs.imageBase = camera.attributes.entity_picture
     }
 
-    updateImageURLLater(seconds = 2) {
+    generateImageURLLater(seconds = 2) {
         setTimeout(() => {
-            this.updateImageURL()
+            this.generateImageURL()
             this.updateImageView()
         }, seconds * 1000);
     }
 
     showImageView() {
         if( this.cs.image !== null ) {
-            this._show("image-viewer")
+            this._show("camera-viewer")
             this._hide("broken-image")
         } else {
             this._show("broken-image")
-            this._hide("image-viewer")
+            this._hide("camera-viewer")
         }
         this._show('top-bar', !!this.cc.image_top)
         this._show('bottom-bar', !!this.cc.image_bottom)
@@ -1640,7 +1632,7 @@ class AarloGlance extends LitElement {
     }
 
     hideImageView() {
-        this._hide("image-viewer")
+        this._hide("camera-viewer")
         this._hide("broken-image")
         this._hide('top-bar')
         this._hide('bottom-bar')
@@ -1654,9 +1646,6 @@ class AarloGlance extends LitElement {
         this._show('library-control-resize',this.lc.sizes.length > 1 )
         this._set("library-control-resize",{ state: "on"} )
         this._set("library-control-close",{ state: "on"} )
-
-        // set state
-        // this.ls.offset = 0
     }
 
     setupLibraryHandlers() {
@@ -1838,11 +1827,6 @@ class AarloGlance extends LitElement {
 
     updateLibraryView() {
 
-        // Nothing there yet...
-        if( !this.isReady() ) {
-            return
-        }
-
         // If camera index has changed then load library
         if ( this.gs.libraryCamera !== this._cameraIndex ) {
             this._log( `library-camera-change` )
@@ -1915,11 +1899,6 @@ class AarloGlance extends LitElement {
     }
 
     updateRecordingView() {
-
-        // Nothing there yet...
-        if( !this.isReady() ) {
-            return
-        }
 
         let video = this._melement( 'video-player' )
         if( video.paused ) {
@@ -2027,11 +2006,6 @@ class AarloGlance extends LitElement {
 
     updateStreamView() {
 
-        // Nothing there yet...
-        if( !this.isReady() ) {
-            return
-        }
-
         // Autostart?
         if ( this.gs.stream === null ) {
             if( this.cs.autoPlay && this.cs.autoPlayTimer === null ) {
@@ -2089,10 +2063,6 @@ class AarloGlance extends LitElement {
         }
     }
 
-    isReady() {
-        return this._ready === true
-    }
-
     /**
      * Get every ready.
      *
@@ -2126,8 +2096,8 @@ class AarloGlance extends LitElement {
         }
 
         // Now wait for the elements to be added to the shadow DOM.
-        if( this._element('image-viewer') === null ) {
-            this_.log( 'waiting for an element ' )
+        if( this._element("camera-viewer") === null ) {
+            this._log( 'waiting for an element ' )
             setTimeout( () => {
                 this.initialSetup( lang, index )
             }, 100);

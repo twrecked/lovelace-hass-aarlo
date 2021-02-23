@@ -15,6 +15,7 @@ export var messages = {
 		stop_stream:       'stop live stream',
 		automatic_capture: 'automatically captured at',
 		snapshot_capture:  'snapshot captured at',
+		feature_disabled:  'camera off, feature disabled'
 	},
 	
 	// library viewer
