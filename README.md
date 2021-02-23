@@ -450,7 +450,8 @@ entities:
     name: front door
   - entity: camera.aarlo_front_camera
     name: front
-image_view: direct,active
+global: active
+image_view: direct
 library_view: blended
 image_top: 'name,status'
 image_bottom: 'motion,library,stream,snapshot,battery'
@@ -477,7 +478,8 @@ entities:
     name: back door
     door: binary_sensor.back_door
     door_lock: lock.back_door_lock
-image_view: direct,active
+global: active
+image_view: direct
 library_view: blended
 image_top: 'name,status'
 image_bottom: 'motion,library,play,snapshot,battery'
