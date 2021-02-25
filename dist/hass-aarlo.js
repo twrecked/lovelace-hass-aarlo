@@ -907,13 +907,13 @@ class AarloGlance extends LitElement {
                         ( captured === "0" ? "" : `${captured} ${this._i.status.captured_something} ${last}, ` ) +
                         this._i.status.library_open,
                 captured !== "0" ? 'on' : '',
-                this.gc.numeric ? 'mdi:numeric-' + (captured > 9 ? "9-plus" : captured) + '-box' : 'mdi:file-video'
+                this.cc.numericView ? 'mdi:numeric-' + (captured > 9 ? "9-plus" : captured) + '-box' : 'mdi:file-video'
             )
         } else {
             this.cs.details.library = _tsi(
                 `${this._i.status.library}: ${this._i.status.library_empty}`,
                 'off',
-                this.gc.numeric ? 'mdi:numeric-0-box' : 'mdi:file-video-outline'
+                this.cc.numericView ? 'mdi:numeric-0-box' : 'mdi:file-video-outline'
             )
         }
 
@@ -1001,6 +1001,15 @@ class AarloGlance extends LitElement {
                 'mdi:lightbulb'
             )
         }
+        if(this.cc.light2Id) {
+            const lightState = this._getState(this.cc.light2Id, 'off');
+            const is_on = lightState.state === 'on'
+            this.cs.details.light2 = _tsi(
+                `${lightState.attributes.friendly_name}: ` + (is_on ?  this._i.status.light_on : this._i.status.light_off),
+                is_on ? 'on' : '',
+                'mdi:lightbulb'
+            )
+        }
     }
 
     updateStatuses() {
@@ -1060,34 +1069,20 @@ class AarloGlance extends LitElement {
 
             // active camera mode
             activeView: (_includes( config.global, "active" ) ||
-                            _includes( config.image_view, "active" )),
+                        _includes( config.image_view, "active" )),
+
             // initial state is muted
             isMuted: _includes( config.global, "muted" ),
-            // numeric icons for library
-            numeric: _includes( config.global, 'numeric' ),
+
             // aspect ratio
             aspectRatio: (_includes(config.global, 'square') ||
-                            _includes(config.image_view, 'square')) ? '1x1' : '16x9',
+                        _includes(config.image_view, 'square')) ? '1x1' : '16x9',
             aspectRatioMultiplier: (_includes(config.global, 'square') ||
-                            _includes(config.image_view, 'square')) ? 1 : 0.5625,
-
-            // auto play
-            autoPlay: _includes( config.image_view, "autoplay" ) ||
-                        _includes( config.image_view, "start-stream" ) ||
-                        _value( config.auto_play, false ),
-            // auto play recording
-            autoPlayRecording: _includes( config.image_view, "start-recording" ),
-            // stream directly from Arlo
-            playDirect: _includes( config.image_view, "direct" ) ||
-                        _value( config.play_direct, false ),
+                        _includes(config.image_view, 'square')) ? 1 : 0.5625,
 
             // blended library
-            blendedMode: _includes( config.library_view, "blended" ),
-            // auto play recording when finished
-            libraryAutoPlay: _includes( config.library_view, "autoplay" ) ||
-                        _includes( config.image_view, "start-recording" ),
-            // download videos?
-            libraryDownload: _includes( config.library_view, "download" ),
+            blendedMode: _includes(config.global, 'blended') ||
+                        _includes( config.library_view, "blended" ),
 
             // modal window multiplier
             modalMultiplier: _value_float( config.modal_multiplier, 0.8 ),
@@ -1195,24 +1190,20 @@ class AarloGlance extends LitElement {
 
         // What happens when we click on image
         const image_click = config.image_click ? config.image_click : ""
-        cc.imageClickStream = image_click.includes("live") ||
-            image_click.includes("play") ||
-            image_click.includes("stream")
-        cc.imageClickModal  = image_click.includes("modal")
-        cc.imageClickSmart  = image_click.includes("smart")
-        cc.imageAutoPlay    = image_click.includes("autoplay")
+        cc.directPlay    = image_click.includes("direct") || _value( config.play_direct, false )
+        cc.modalPlayer   = image_click.includes("modal")
+        cc.smartPlayer   = image_click.includes("smart")
+        cc.autoPlay      = image_click.includes("autoplay") || _value( config.auto_play, false )
+
+        cc.playStream    = image_click.includes("live") ||
+                    image_click.includes("play") ||
+                    image_click.includes("stream")
 
         // snapshot updates
         cc.snapshotTimeouts = config.snapshot_retry ? config.snapshot_retry : [ 2, 5 ]
 
-        // modal window multiplier
-        cc.modalMultiplier = config.modal_multiplier ? parseFloat(config.modal_multiplier) : 0.8;
-
         // stream directly from Arlo
         cc.playDirectFromArlo = config.play_direct ? config.play_direct : false;
-
-        // auto play
-        cc.autoPlay = config.auto_play ? config.auto_play : false
 
         // camera and sensors
         cc.id              = config.camera_id ? config.camera_id : 'camera.' + prefix + camera;
@@ -1255,7 +1246,6 @@ class AarloGlance extends LitElement {
             return
         }
         const camera = entity.replace( 'camera.aarlo_','' )
-        const prefix = "aarlo_"
 
         let cc = {}
 
@@ -1266,38 +1256,44 @@ class AarloGlance extends LitElement {
         cc.image_top = config.image_top
         cc.image_bottom = config.image_bottom
 
-        // What does clicking the image do?
-        const image_click = _array( config.image_click )
-        cc.imageClickModal  = image_click.includes("modal")
-        cc.imageClickSmart  = image_click.includes("smart")
-        cc.imageClickStream = image_click.includes("stream")
+        // How do we display recordings or stream?
+        cc.directPlay        = _includes(config.image_view, "direct")
+        cc.modalPlayer       = _includes(config.image_view, "modal")
+        cc.numericView       = _includes(config.image_view, 'numeric')
+        cc.smartPlayer       = _includes(config.image_view, "smart")
+        cc.autoPlay          = _includes(config.image_view, 'start-stream')
+        cc.autoPlayRecording = _includes(config.image_view, 'start-recording')
+
+        // Does clicking show the live stream or last recording?
+        cc.playStream = _includes( config.image_click, "stream")
 
         // snapshot updates
         cc.snapshotTimeouts = _array( config.snapshot_retry, [ 2, 5 ] )
 
         // camera and sensors
-        cc.id              = config.camera_id ? config.camera_id : 'camera.' + prefix + camera;
-        cc.motionId        = config.motion_id ? config.motion_id : 'binary_sensor.' + prefix + 'motion_' + camera;
-        cc.soundId         = config.sound_id ? config.sound_id : 'binary_sensor.' + prefix + 'sound_' + camera;
-        cc.batteryId       = config.battery_id ? config.battery_id : 'sensor.' + prefix + 'battery_level_' + camera;
-        cc.signalId        = config.signal_id ? config.signal_id : 'sensor.' + prefix + 'signal_strength_' + camera;
-        cc.capturedTodayId = config.capture_id ? config.capture_id : 'sensor.' + prefix + 'captured_today_' + camera;
-        cc.lastCaptureId   = config.last_id ? config.last_id : 'sensor.' + prefix + 'last_' + camera;
+        cc.id              = _value(config.camera_id,  `camera.aarlo_${camera}`)
+        cc.motionId        = _value(config.motion_id,  `binary_sensor.aarlo_motion_${camera}`)
+        cc.soundId         = _value(config.sound_id,   `binary_sensor.aarlo_sound_${camera}`)
+        cc.batteryId       = _value(config.battery_id, `sensor.aarlo_battery_level_${camera}`)
+        cc.signalId        = _value(config.signal_id,  `sensor.aarlo_signal_strength_${camera}`)
+        cc.capturedTodayId = _value(config.capture_id, `sensor.aarlo_captured_today_${camera}`)
+        cc.lastCaptureId   = _value(config.last_id,    `sensor.aarlo_last_${camera}`)
 
         // door definition
-        cc.doorId         = config.door ? config.door: null;
-        cc.doorBellId     = config.door_bell ? config.door_bell : null;
-        cc.doorBellMuteId = config.door_bell_mute ? config.door_bell_mute : null;
-        cc.doorLockId     = config.door_lock ? config.door_lock : null;
+        cc.doorId         = _value(config.door)
+        cc.doorBellId     = _value(config.door_bell)
+        cc.doorBellMuteId = _value(config.door_bell_mute)
+        cc.doorLockId     = _value(config.door_lock)
 
         // door2 definition
-        cc.door2Id         = config.door2 ? config.door2: null;
-        cc.door2BellId     = config.door2_bell ? config.door2_bell : null;
-        cc.door2BellMuteId = config.door2_bell_mute ? config.door2_bell_mute : null;
-        cc.door2LockId     = config.door2_lock ? config.door2_lock : null;
+        cc.door2Id         = _value(config.door2)
+        cc.door2BellId     = _value(config.door2_bell)
+        cc.door2BellMuteId = _value(config.door2_bell_mute)
+        cc.door2LockId     = _value(config.door2_lock)
 
-        // light definition
-        cc.lightId     = config.light ? config.light: null;
+        // light definitions
+        cc.lightId  = _value(config.light)
+        cc.light2Id = _value(config.light2)
 
         return cc
     }
@@ -1328,8 +1324,10 @@ class AarloGlance extends LitElement {
 
         return {
             // What to when video clicked
-            imageClickModal: _includes( config.library_click, "modal"),
-            imageClickSmart: _includes( config.library_click, "smart" ),
+            download:          _includes(config.library_view, "download"),
+            modalPlayer:       _includes(config.library_view, "modal"),
+            smartPlayer:       _includes(config.library_view, "smart"),
+            autoPlayRecording: _includes(config.library_view, 'start-recording'),
 
             // How many recordings to show
             sizes:      sizes,
@@ -1360,7 +1358,8 @@ class AarloGlance extends LitElement {
     setConfig(config) {
 
         // save then check new config
-        this._config = _mergeArrays(config, {})
+        // this._config = _mergeArrays(config, {})
+        this._config = config
 
         this.gc = this.getGlobalConfig( config )
         this.gs = this.getGlobalState( config )
@@ -1498,6 +1497,12 @@ class AarloGlance extends LitElement {
                 this.moreInfo(this.cc.doorBellId)
             } else {
                 this.toggleSwitch(this.cc.doorBellMuteId)
+            }
+        } else if(id.startsWith("camera-light2")) {
+            if(modified) {
+                this.moreInfo(this.cc.light2Id)
+            } else {
+                this.toggleLight(this.cc.light2Id)
             }
         } else if(id.startsWith("camera-light")) {
             if(modified) {
@@ -2170,7 +2175,7 @@ class AarloGlance extends LitElement {
     async wsStartStream() {
         try {
             return await this._hass.callWS({
-                type: this.gc.playDirect ? "aarlo_stream_url" : "camera/stream",
+                type: this.cc.directPlay ? "aarlo_stream_url" : "camera/stream",
                 entity_id: this.cc.id,
             })
         } catch (err) {
@@ -2228,9 +2233,9 @@ class AarloGlance extends LitElement {
     }
 
     getViewType( c ) {
-        if( c.imageClickSmart ) {
+        if( c.smartPlayer ) {
             return this.gc.isMobile ? "" : "modal"
-        } else if( c.imageClickModal ) {
+        } else if( c.modalPlayer ) {
             return "modal"
         } 
         return ""
@@ -2239,8 +2244,8 @@ class AarloGlance extends LitElement {
     playStream( ) {
         this.cs.autoPlayTimer = null
         if ( this.gs.stream === null ) {
-            if( this.gs.autoPlay ) {
-                this.cs.autoPlay = this.gs.autoPlay
+            if( this.cc.autoPlay ) {
+                this.cs.autoPlay = this.cc.autoPlay
             }
             this._melement('video-player').muted = this.gs.isMuted
             this.wsStartStream()
@@ -2430,7 +2435,7 @@ class AarloGlance extends LitElement {
     }
 
     imageClicked() {
-        if ( this.cc.imageClickStream ) {
+        if ( this.cc.playStream ) {
             this.playStream()
         } else {
             this.playLatestRecording()
@@ -2582,7 +2587,7 @@ class AarloGlance extends LitElement {
     }
 
     showDownloadIcon(index) {
-        if( this.gc.libraryDownload ) {
+        if( this.lc.download ) {
             this._show(`library-a-${index}`)
         }
     }
