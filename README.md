@@ -164,32 +164,35 @@ entities:
 
 | Name       | Type | Required | Supported Values                            |
 |------------|------|----------|---------------------------------------------|
-| global     | list | No       | active, muted, numeric, square              |
+| global     | list | No       | active, muted, square, blended              |
 
 These are the options that determine the overall behaviour of the card.
-- `active`; for multi camera cards, the image will change to the most recently
-  updated camera
-- `muted`; start in a muted state, mute state is remember across recordings
-  and streams
-- `numeric`; show the library count as a number, works up to `9`, after which
-  `9+` is shown
-- `square`; use a square image; useful for Arlo Video Doorbells; this affects
-  the library view as well.
+  - `active`; for multi camera cards, the image will change to the most recently
+    updated camera
+  - `muted`; start in a muted state, mute state is remember across recordings
+    and streams
+  - `square`; use a square image; useful for Arlo Video Doorbells; this affects
+    the library view as well.
+  - `blended`; for multi camera cards; the library view will display all camera
+    recordings spliced together
 
 
 #### Image Options
 
-| Name       | Type | Required | Supported Values                            |
-|------------|------|----------|---------------------------------------------|
-| image_view | list | No       | start-stream, start-recording, direct       |
+| Name       | Type | Required | Supported Values                                    |
+|------------|------|----------|-----------------------------------------------------|
+| image_view | list | No       | start-stream, start-recording, direct, modal, smart |
 
 These are the options that determine the overall behaviour of the card when
 showing the image view.
-- `start-stream`; the card will start streaming when opened
-- `start-recording`; _not implemented yet_, the card will play recording when
-  finished
-- `direct`; when streaming the card will access Arlo directly rather than go
-  through Home Assistant
+  - `start-stream`; the card will start streaming when opened
+  - `start-recording`; _not implemented yet_, the card will play recording when
+    finished
+  - `direct`; when streaming the card will access Arlo directly rather than go
+    through Home Assistant
+  - `modal`; open the recording or stream in a modal window
+  - `smart`; open the recording or stream in a modal window on a desktop
+    machine, show inline otherwise.
 
 
 | Name         | Type | Required | Supported Values                                                                        |
@@ -246,12 +249,9 @@ binary_sensor:
 
 | Name        | Type | Required | Supported Values                |
 |-------------|------|----------|---------------------------------|
-| image_click | list | No       | modal, smart, stream, recording |
+| image_click | list | No       | stream, recording               |
 
 This option determines what happens when you click the image
-  - `modal`; open the recording or stream in a modal window
-  - `smart`; open the recording or stream in a modal window on a desktop machine,
-    shown in line otherwise.
   - `stream`; start a live stream
   - `recording`; play the last recording
 
@@ -264,24 +264,16 @@ snapshot image doesn't update all the time try adding extra time outs.
 
 #### Library Options
 
-| Name         | Type | Required | Supported Values                   |
-|--------------|------|----------|------------------------------------|
-| library_view | list | No       | blended, start-recording, download |
+| Name         | Type | Required | Supported Values                                 |
+|--------------|------|----------|--------------------------------------------------|
+| library_view | list | No       | blended, start-recording, download, modal, smart |
 
 This option determines the overall behaviour of the card when showing the
 library view.
-  - `blended`; for multi camera cards; the library view will display all camera
-    recordings spliced together
   - `start-recording`; _not implemented yet_, automatically show the recording when
     finished.
   - `download`; show an icon to download the video when the mouse hovers over
     the recording thumbnail
-
-| Name          | Type | Required | Supported Values                |
-|---------------|------|----------|---------------------------------|
-| library_click | list | No       | modal, smart                    |
-
-This option determine what happens when you click the image
   - `modal`; open the recording or stream in a modal window
   - `smart`; open the recording or stream in a modal window on a desktop
     machine, show inline otherwise.
@@ -450,9 +442,8 @@ entities:
     name: front door
   - entity: camera.aarlo_front_camera
     name: front
-global: active
+global: active,blended
 image_view: direct
-library_view: blended
 image_top: 'name,status'
 image_bottom: 'motion,library,stream,snapshot,battery'
 image_click: 'recordings'
@@ -478,9 +469,8 @@ entities:
     name: back door
     door: binary_sensor.back_door
     door_lock: lock.back_door_lock
-global: active
+global: active,blended
 image_view: direct
-library_view: blended
 image_top: 'name,status'
 image_bottom: 'motion,library,play,snapshot,battery'
 image_click: 'recordings'
