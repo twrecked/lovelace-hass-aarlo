@@ -179,9 +179,9 @@ These are the options that determine the overall behaviour of the card.
 
 #### Image Options
 
-| Name       | Type | Required | Supported Values                                    |
-|------------|------|----------|-----------------------------------------------------|
-| image_view | list | No       | start-stream, start-recording, direct, modal, smart |
+| Name       | Type | Required | Supported Values                                             |
+|------------|------|----------|--------------------------------------------------------------|
+| image_view | list | No       | start-stream, start-recording, direct, modal, smart, numeric |
 
 These are the options that determine the overall behaviour of the card when
 showing the image view.
@@ -193,6 +193,9 @@ showing the image view.
   - `modal`; open the recording or stream in a modal window
   - `smart`; open the recording or stream in a modal window on a desktop
     machine, show inline otherwise.
+  - `numeric`;  have the library display the number of entries. After nine it
+    will display 9+.
+
 
 
 | Name         | Type | Required | Supported Values                                                                        |
