@@ -1325,6 +1325,7 @@ class AarloGlance extends LitElement {
         return {
             // What to when video clicked
             download:          _includes(config.library_view, "download"),
+            duration:          _includes(config.library_view, "duration"),
             modalPlayer:       _includes(config.library_view, "modal"),
             smartPlayer:       _includes(config.library_view, "smart"),
             autoPlayRecording: _includes(config.library_view, 'start-recording'),
@@ -1606,13 +1607,6 @@ class AarloGlance extends LitElement {
             this._set(`camera-${item}`, this.cs.details[item] )
         }
 
-        if( this.cs.image !== null ) {
-            this._show("camera-viewer")
-            this._hide("broken-image")
-        } else {
-            this._show("broken-image")
-            this._hide("camera-viewer")
-        }
     }
 
     /**
@@ -1778,8 +1772,13 @@ class AarloGlance extends LitElement {
             const bid = `library-box-${i}`
             const video = this.ls.recordings[j]
             let captured_text = `${this._i.library.captured}: ${video.created_at_pretty}`
+            if( this.lc.duration ) {
+                const minutes = Math.floor(video.duration / 60)
+                const seconds = video.duration % 60
+                captured_text += `\n${this._i.library.duration}: ${minutes}:${seconds.toString().padStart(2,'0')}`
+            }
             if ( video.trigger && video.trigger !== '' ) {
-                captured_text += ` (${this._i.trigger[video.trigger.toLowerCase()]})`
+                captured_text += `\n${this._i.library.reason}: ${this._i.trigger[video.trigger.toLowerCase()]}`
             }
             this._set( id,{title: captured_text, alt: captured_text, src: video.thumbnail} )
             this._show( id )
@@ -2430,7 +2429,9 @@ class AarloGlance extends LitElement {
 
     imageFailed() {
         this.cs.details.viewer = {title: "", alt: "", src: null}
+        this.cs.image = null
         this.updateImageView()
+        this.showImageView()
         this._log("image load failed")
     }
 
@@ -2600,7 +2601,7 @@ class AarloGlance extends LitElement {
 // Bring in our custom scripts
 const scripts = [
     "https://cdn.jsdelivr.net/npm/hls.js@latest",
-    "https://cdn.dashjs.org/v3.1.1/dash.all.min.js",
+    "https://cdn.dashjs.org/v3.2.1/dash.all.min.js",
 ]
 function load_script( number ) {
     if ( number < scripts.length ) {

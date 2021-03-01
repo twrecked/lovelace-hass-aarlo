@@ -26,6 +26,8 @@ export var messages = {
 		next_page:     'Nächste Seite',
 		last_page:     'Letzte Seite',
 		captured:      'aufgenommen',
+		duration:      'duration',
+		reason:        'reason',
 	},
 
 	// video/stream viewer

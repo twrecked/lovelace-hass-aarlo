@@ -267,9 +267,9 @@ snapshot image doesn't update all the time try adding extra time outs.
 
 #### Library Options
 
-| Name         | Type | Required | Supported Values                                 |
-|--------------|------|----------|--------------------------------------------------|
-| library_view | list | No       | blended, start-recording, download, modal, smart |
+| Name         | Type | Required | Supported Values                                  |
+|--------------|------|----------|---------------------------------------------------|
+| library_view | list | No       | start-recording, download, modal, smart, duration |
 
 This option determines the overall behaviour of the card when showing the
 library view.
@@ -280,6 +280,7 @@ library view.
   - `modal`; open the recording or stream in a modal window
   - `smart`; open the recording or stream in a modal window on a desktop
     machine, show inline otherwise.
+  - `duration`; show how long the recording is
 
 | Name         | Type         | Required | Default |
 |--------------|--------------|----------|---------|

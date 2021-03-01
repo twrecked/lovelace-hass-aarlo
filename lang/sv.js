@@ -27,7 +27,9 @@ export var messages = {
 		next_page:     'nästa sida',
 		last_page:     'sista sidan',
 		captured:      'tagen',
-	},
+		duration:      'duration',
+		reason:        'reason',
+},
 
 	// video/stream viewer
 	video: {

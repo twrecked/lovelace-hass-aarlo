@@ -26,6 +26,8 @@ export var messages = {
 		next_page:     'pagina sussessiva',
 		last_page:     'ultima pagina',
 		captured:      'catturata',
+		duration:      'duration',
+		reason:        'reason',
 	},
 
 	// video/stream viewer

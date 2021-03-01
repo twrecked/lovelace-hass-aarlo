@@ -23,6 +23,8 @@ export var messages = {
 		next_page:     'prochaine page',
 		last_page:     'dernière page',
 		captured:      'capturée',
+		duration:      'duration',
+		reason:        'reason',
 	},
 
 	// video/stream viewer
