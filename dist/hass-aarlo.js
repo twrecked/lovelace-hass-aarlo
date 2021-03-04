@@ -1063,6 +1063,8 @@ class AarloGlance extends LitElement {
             // GLOBAL config
             // Mobile? see here: https://developer.mozilla.org/en-US/docs/Web/HTTP/Browser_detection_using_the_user_agent
             isMobile: navigator.userAgent.includes("Mobi"),
+            // HA App
+            isHAApp: navigator.userAgent.includes("HomeAssistant"),
 
             // Language override?
             lang: config.lang,
@@ -1568,8 +1570,13 @@ class AarloGlance extends LitElement {
     setupImageView() {
         this.buildImageLayout(this.cc)
         this._set("camera-name", {text: this.cc.name})
-        this._set("camera-previous", {title: this._i.status.previous_camera, icon: "mdi:chevron-left", state: "on"})
-        this._set("camera-next", {title: this._i.status.next_camera, icon: "mdi:chevron-right", state: "on"})
+        if( this.gc.isMobile ) {
+            this._hide("camera-previous")
+            this._hide("camera-next")
+        } else {
+            this._set("camera-previous", {title: this._i.status.previous_camera, icon: "mdi:chevron-left", state: "on"})
+            this._set("camera-next", {title: this._i.status.next_camera, icon: "mdi:chevron-right", state: "on"})
+        }
     }
 
     setupImageHandlers() {
