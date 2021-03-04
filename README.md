@@ -164,7 +164,7 @@ entities:
 
 | Name       | Type | Required | Supported Values                            |
 |------------|------|----------|---------------------------------------------|
-| global     | list | No       | active, muted, square, blended              |
+| global     | list | No       | active, muted, square, blended, small, tiny |
 
 These are the options that determine the overall behaviour of the card.
   - `active`; for multi camera cards, the image will change to the most recently
@@ -175,6 +175,8 @@ These are the options that determine the overall behaviour of the card.
     the library view as well.
   - `blended`; for multi camera cards; the library view will display all camera
     recordings spliced together
+  - `small`; use smaller fonts and icons
+  - `tiny`; use even smaller fonts and icons
 
 
 #### Image Options
