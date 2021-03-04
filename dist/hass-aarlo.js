@@ -1127,13 +1127,12 @@ class AarloGlance extends LitElement {
         }
     }
 
-    getGlobalState( config ) {
+    getGlobalState( _config ) {
         return {
-            autoplay: _value( config.autoPlay, false ),
             dash: null,
             hls: null,
             libraryCamera: -1,
-            isMuted: _value(config.isMuted, false),
+            isMuted: this.gc.isMuted,
             poster: '',
             recording: null,
             stream: null,
