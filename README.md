@@ -301,6 +301,19 @@ This option sets the library sizes that will highlight the object that caused
 the recording. The default value is `library_size`. This is useful for hiding
 the highlight for larger library sizes.
 
+| Name            | Type      | Required | Default   |
+|-----------------|-----------|----------|-----------|
+| library_animal  | css color | no       | orangered |
+| library_vehicle | css color | no       | yellow    |
+| library_person  | css color | no       | lime      |
+| library_package | css color | no       | cyan      |
+
+These options determine the color of the highligh box.
+  - `library_animal`; color to use when highlighting an animal
+  - `library_vehicle`; color to use when highlighting a vehicle
+  - `library_person`; color to use when highlighting a person
+  - `library_package`; color to use when highlighting a package
+
 | Name            | Type         | Required | Default |
 |-----------------|--------------|----------|---------|
 | max_recordings  | Integer      | No       | 100     |

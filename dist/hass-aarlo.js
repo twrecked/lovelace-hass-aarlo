@@ -1368,6 +1368,7 @@ class AarloGlance extends LitElement {
                 "Animal":  _value( config.library_animal, 'orangered' ),
                 "Vehicle": _value( config.library_vehicle, 'yellow' ),
                 "Person":  _value( config.library_person, 'lime' ),
+                "Package":  _value( config.library_package, 'cyan' ),
             },
         }
     }

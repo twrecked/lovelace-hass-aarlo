@@ -72,7 +72,7 @@ export var messages = {
 		animal:  "animale",
 		vehicle: "veicolo",
 		person:  "persona",
-		parcel:  "pacco"
+		package: "pacco"
 	},
 
 	// camera states
