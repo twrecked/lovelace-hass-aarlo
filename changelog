@@ -1,3 +1,6 @@
+0.2.0b2: remove alert() that can happen anytime
+0.2.0b1: use package not parcel
+...
 0.2-alpha.3: multiple language support
        ui size hint
        max library download size
