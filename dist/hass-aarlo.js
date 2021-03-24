@@ -898,7 +898,7 @@ class AarloGlance extends LitElement {
             this.cs.details.motion = _tsi(
                 `${this._i.status.motion}: ${has_motion ? this._i.status.detected : this._i.status.clear}`,
                 has_motion ? 'on' : '',
-                "mdi:run-fast"
+                has_motion ? "mdi:run" : "mdi:walk",
             )
         } else {
             this.cs.details.motion = _tsi(this._i.image.feature_disabled, 'off', "mdi:walk")
