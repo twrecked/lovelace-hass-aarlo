@@ -1,3 +1,6 @@
+0.2.0b4: replace alert() with logs
+       use HA icons
+0.2.0b3: better mouse handling
 0.2.0b2: remove alert() that can happen anytime
 0.2.0b1: use package not parcel
 ...
