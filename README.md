@@ -89,7 +89,7 @@ resources:
     url: /local/aarlo-glance.js
 ```
 
-The card type is `aarlo-glance.js`.
+The card type is `custom:aarlo-glance`.
 
 
 <a name="how-it-looks"></a>
