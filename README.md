@@ -63,6 +63,14 @@ Many thanks to:
 <a name="installation"></a>
 ## Installation
 
+Use one of the following 2 ways to install the card, I recommend 
+**HACS**.
+
+If, after installation, you can't see the card, you might need to clear the
+browser cache and reload the page. On Chrome you can force this with
+`CTRL+SHIFT+I` to open the developer tools and then `CTRL+SHIFT+R` to reload
+the page.
+
 <a name="installation-hacs"></a>
 #### HACS
 [![hacs_badge](https://img.shields.io/badge/HACS-Default-orange.svg?style=for-the-badge)](https://github.com/custom-components/hacs)
@@ -74,6 +82,8 @@ HACS and the home assistant interface.
 
 <a name="installation-from-script"></a>
 #### From Script
+
+You don't need to run this if you used **HACS** to install.
 
 ```sh
 install /config
