@@ -7,8 +7,6 @@
  *   image element data
  * - setConfig(); called at startup; we read out config data and store inside
  *   `?c` variables.
- * - render(); called at startup; we start initialSetup() and return the
- *   skeleton HTML for the card.
  * - initialSetup(); loops until HTML is in place then set up which individual
  *   elements are present (eg, motion sensor if asked for) and then displays
  *   the image card.
@@ -34,11 +32,6 @@
  * - this._ls; all library states
  */
 
-
-const LitElement = Object.getPrototypeOf(
-        customElements.get("ha-panel-lovelace")
-    );
-const html = LitElement.prototype.html;
 
 function _real(value) {
     return value !== undefined && value !== null
@@ -110,16 +103,16 @@ function _tsi(title, state, icon ) {
 // }
 
 // noinspection JSUnresolvedVariable,CssUnknownTarget,CssUnresolvedCustomProperty,HtmlRequiredAltAttribute,RequiredAttributes,JSFileReferences
-class AarloGlance extends LitElement {
+class AarloGlance extends HTMLElement {
 
     constructor() {
         super();
 
         // State and config.
-        this._ready = false
+        this._ready = "stopped"
         this._hass = null;
         this._config = null;
-        this._version = "0.2.0b5"
+        this._version = "0.3.0a1"
 
         // Internationalisation.
         this._i = null
@@ -134,8 +127,8 @@ class AarloGlance extends LitElement {
         this._cameraIndex = 0
     }
 
-    static get styleTemplate() {
-        return html`
+    render() {
+        this.innerHTML = `
             <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
             <style>
                 ha-card {
@@ -305,13 +298,6 @@ class AarloGlance extends LitElement {
                     cursor: pointer;
                 }
             </style>
-        `;
-    }
-
-    render() {
-        this.initialSetup()
-        return html`
-            ${AarloGlance.styleTemplate}
             <div class="w3-modal"
                  id="${this._id('modal-viewer')}"
                  style="display:none">
@@ -330,20 +316,15 @@ class AarloGlance extends LitElement {
                         <div class="box box-bottom"
                                id="${this._id('modal-video-controls')}">
                             <div>
-                                <ha-icon id="${this._id('modal-video-door-lock')}"
-                                         @click="${() => { this.toggleLock(this.cc.doorLockId); }}">
+                                <ha-icon id="${this._id('modal-video-door-lock')}">
                                 </ha-icon>
-                                <ha-icon id="${this._id('modal-video-light-on')}"
-                                         @click="${() => { this.toggleLight(this.cc.lightId); }}">
+                                <ha-icon id="${this._id('modal-video-light-on')}">
                                 </ha-icon>
-                                <ha-icon id="${this._id('modal-video-toggle-sound')}"
-                                         @click="${() => { this.controlToggleSound(); }}">
+                                <ha-icon id="${this._id('modal-video-toggle-sound')}">
                                 </ha-icon>
-                                <ha-icon id="${this._id('modal-video-stop')}"
-                                         @click="${() => { this.controlStop(); }}">
+                                <ha-icon id="${this._id('modal-video-stop')}">
                                 </ha-icon>
-                                <ha-icon id="${this._id('modal-video-play-pause')}"
-                                         @click="${() => { this.controlPlayPause(); }}">
+                                <ha-icon id="${this._id('modal-video-play-pause')}">
                                 </ha-icon>
                             </div>
                             <div class='slidecontainer'>
@@ -352,8 +333,7 @@ class AarloGlance extends LitElement {
                                        type="range" value="0" min="1" max="100">
                             </div>
                             <div>
-                                <ha-icon id="${this._id('modal-video-full-screen')}"
-                                         @click="${() => { this.controlFullScreen(); }}">
+                                <ha-icon id="${this._id('modal-video-full-screen')}">
                                 </ha-icon>
                             </div>
                         </div>
@@ -370,8 +350,7 @@ class AarloGlance extends LitElement {
                     </video>
                     <img class="aarlo-image"
                          id="${this._id('camera-viewer')}"
-                         style="display:none"
-                         @click="${() => { this.imageClicked(); }}">
+                         style="display:none">
                     <div class="aarlo-image"
                          id="${this._id('library-viewer')}"
                          style="display:none">
@@ -394,32 +373,26 @@ class AarloGlance extends LitElement {
                      style="display:none">
                     <div>
                         <ha-icon id="${this._id('library-control-first')}"
-                                 class="aarlo-icon-${this._sizeSuffix()}"
-                                 @click="${() => { this.firstLibraryPage(); }}">
+                                 class="aarlo-icon-${this._sizeSuffix()}">
                         </ha-icon>
                         <ha-icon id="${this._id('library-control-previous')}"
-                                 class="aarlo-icon-${this._sizeSuffix()}"
-                                 @click="${() => { this.previousLibraryPage(); }}">
+                                 class="aarlo-icon-${this._sizeSuffix()}">
                         </ha-icon>
                     </div>
                     <div style="margin-left: auto; margin-right: auto">
                         <ha-icon id="${this._id('library-control-resize')}"
-                                 class="aarlo-icon-${this._sizeSuffix()}"
-                                 @click="${() => { this.resizeLibrary() }}">
+                                 class="aarlo-icon-${this._sizeSuffix()}">
                         </ha-icon>
                         <ha-icon id="${this._id('library-control-close')}"
-                                 class="aarlo-icon-${this._sizeSuffix()}"
-                                 @click="${() => { this.closeLibrary() }}">
+                                 class="aarlo-icon-${this._sizeSuffix()}">
                         </ha-icon>
                     </div>
                     <div>
                         <ha-icon id="${this._id('library-control-next')}"
-                                 class="aarlo-icon-${this._sizeSuffix()}"
-                                 @click="${() => { this.nextLibraryPage() }}">
+                                 class="aarlo-icon-${this._sizeSuffix()}">
                         </ha-icon>
                         <ha-icon id="${this._id('library-control-last')}"
-                                 class="aarlo-icon-${this._sizeSuffix()}"
-                                 @click="${() => { this.lastLibraryPage(); }}">
+                                 class="aarlo-icon-${this._sizeSuffix()}">
                         </ha-icon>
                     </div>
                 </div>
@@ -427,20 +400,15 @@ class AarloGlance extends LitElement {
                      id="${this._id('video-controls')}"
                      style="display:none">
                     <div>
-                        <ha-icon id="${this._id('video-door-lock')}"
-                                 @click="${() => { this.toggleLock(this.cc.doorLockId); }}">
+                        <ha-icon id="${this._id('video-door-lock')}">
                         </ha-icon>
-                        <ha-icon id="${this._id('video-light-on')}"
-                                 @click="${() => { this.toggleLight(this.cc.lightId); }}">
+                        <ha-icon id="${this._id('video-light-on')}">
                         </ha-icon>
-                        <ha-icon id="${this._id('video-toggle-sound')}"
-                                 @click="${() => { this.controlToggleSound(); }}">
+                        <ha-icon id="${this._id('video-toggle-sound')}">
                         </ha-icon>
-                        <ha-icon id="${this._id('video-stop')}"
-                                 @click="${() => { this.controlStop(); }}">
+                        <ha-icon id="${this._id('video-stop')}">
                         </ha-icon>
-                        <ha-icon id="${this._id('video-play-pause')}"
-                                 @click="${() => { this.controlPlayPause(); }}">
+                        <ha-icon id="${this._id('video-play-pause')}">
                         </ha-icon>
                     </div>
                     <div class='slidecontainer'>
@@ -449,9 +417,7 @@ class AarloGlance extends LitElement {
                                type="range" value="0" min="1" max="100">
                     </div>
                     <div>
-                        <ha-icon 
-                                 id="${this._id('video-full-screen')}"
-                                 @click="${() => { this.controlFullScreen(); }}">
+                        <ha-icon id="${this._id('video-full-screen')}">
                         </ha-icon>
                     </div>
                 </div>
@@ -470,7 +436,12 @@ class AarloGlance extends LitElement {
 
     set hass( hass ) {
         this._hass = hass;
-        if ( this._ready ) {
+        if ( this._ready === "stopped" ) {
+            this._ready = "starting"
+            this.initialSetup()
+            this.render()
+        }
+        if ( this._ready === "ready" ) {
             this.updateView()
         }
     }
@@ -486,7 +457,7 @@ class AarloGlance extends LitElement {
             composed: true,
         });
         event.detail = { entityId: id };
-        this.shadowRoot.dispatchEvent(event);
+        this.dispatchEvent(event);
         return event;
     }
 
@@ -510,27 +481,27 @@ class AarloGlance extends LitElement {
     }
 
     /**
-     * Look for card element in shadow dom.
+     * Look for card element in document.
      *
      * @param id The element or `null`
     */
     _element( id ) {
-        return this.shadowRoot.getElementById( this._id(id) )
+        return this.querySelector( "#" + this._id(id) )
     }
 
     /**
-     * Look for modal card element in shadow dom.
+     * Look for modal card element in document.
      *
      * Automatically chooses modal name if modal window open.
      *
      * @param id The element or `null`
     */
     _melement( id ) {
-        return this.shadowRoot.getElementById( this._mid(id) )
+        return this.querySelector( "#" + this._mid(id) )
     }
 
     __show( element, show ) {
-        if ( element ) { element.style.display = show ? '' : 'none' }
+        if ( element ) { element.style.display = (show ? '' : 'none') }
     }
     _show( id, show = true ) {
         this.__show( this._element(id), show )
@@ -1006,7 +977,7 @@ class AarloGlance extends LitElement {
                     this.cs.details.bell2 = _tsi(`${name}: ${this._i.status.doorbell_mute}`, '', 'mdi:bell')
                 }
             } else {
-                this.cs.details.bell = _tsi(`${name}: ${this._i.status.doorbell_idle}`, '', 'mdi:bell')
+                this.cs.details.bell2 = _tsi(`${name}: ${this._i.status.doorbell_idle}`, '', 'mdi:bell')
             }
         }
 
@@ -1606,7 +1577,10 @@ class AarloGlance extends LitElement {
 
         viewer.addEventListener('error', () => {
             this.imageFailed();
-        })
+        });
+        viewer.addEventListener('click', () => {
+            this.imageClicked();
+        });
 
         if( this.gc.isMobile ) {
             viewer.addEventListener('touchstart', (e) => {
@@ -1686,14 +1660,45 @@ class AarloGlance extends LitElement {
         this._hide('bottom-bar')
     }
 
+    libraryIconClicked(evt) {
+        const id = evt.target.id;
+
+        if(id.startsWith("library-control-close")) {
+            this.closeLibrary();
+        } else if(id.startsWith("library-control-resize")) {
+            this.resizeLibrary();
+        } else if(id.startsWith("library-control-first")) {
+            this.firstLibraryPage();
+        } else if(id.startsWith("library-control-previous")) {
+            this.previousLibraryPage();
+        } else if(id.startsWith("library-control-next")) {
+            this.nextLibraryPage();
+        } else if(id.startsWith("library-control-last")) {
+            this.lastLibraryPage();
+        }
+    }
+
     setupLibraryView() {
-        this._show("library-control-first" )
-        this._show("library-control-previous" )
-        this._show("library-control-next" )
-        this._show("library-control-last" )
-        this._show('library-control-resize',this.lc.sizes.length > 1 )
-        this._set("library-control-resize",{ state: "on"} )
-        this._set("library-control-close",{ state: "on"} )
+        ["library-control-first", "library-control-previous", "library-control-next", "library-control-last"]
+            .forEach( (e) => {
+                this._show(e);
+                this._element(e).addEventListener('click', (evt) => {
+                    this.libraryIconClicked(evt)
+                });
+            });
+
+        this._show('library-control-resize',this.lc.sizes.length > 1 );
+        this._element("library-control-resize").addEventListener('click', (evt) => {
+            this.libraryIconClicked(evt);
+        });
+
+        ["library-control-resize", "library-control-close"]
+            .forEach( (e) => {
+                this._set(e,{ state: "on"} );
+                this._element(e).addEventListener('click', (evt) => {
+                    this.libraryIconClicked(evt)
+                });
+            });
     }
 
     setupLibraryHandlers() {
@@ -1915,19 +1920,49 @@ class AarloGlance extends LitElement {
 
     // RECORDING VIEW
 
+    videoIconClicked(evt) {
+        const id = evt.target.id;
+
+        if(id.includes("video-play-pause")) {
+            this.controlPlayPause();
+        } else if(id.includes("video-toggle-sound")) {
+            this.controlToggleSound();
+        } else if(id.includes("video-stop")) {
+            this.controlStop();
+        } else if(id.includes("video-door-lock")) {
+            this.toggleLock(this.cc.doorLockId);
+        } else if(id.includes("video-light-on")) {
+            this.toggleLight(this.cc.lightId);
+        } else if(id.includes("video-full-screen")) {
+            this.controlFullScreen();
+        }
+    }
+
     setupRecordingView() {
-        this._show("video-stop")
-        this._show("video-full-screen")
-        this._show("modal-video-stop")
-        this._show("modal-video-full-screen")
-        this._show("modal-video-door-lock", this.cc.doorLockId )
-        this._show("modal-video-light-on", this.cc.lightId )
+        ["video-play-pause", "video-toggle-sound", "video-stop", "video-door-lock",
+                "modal-video-play-pause", "modal-video-toggle-sound", "modal-video-stop", "modal-video-door-lock"]
+            .forEach( (e) => {
+                this._show(e);
+                this._element(e).addEventListener('click', (evt) => {
+                    this.videoIconClicked(evt)
+                });
+            });
 
-        this._set ("video-stop", {title: this._i.video.stop, icon: "mdi:stop"} )
-        this._set ("video-full-screen", {title: this._i.video.fullscreen, icon: "mdi:fullscreen"} )
+        ["video-stop", "modal-video-stop"]
+            .forEach( (e) => {
+                this._set(e,{title: this._i.video.stop, icon: "mdi:stop"});
+                this._element(e).addEventListener('click', (evt) => {
+                    this.videoIconClicked(evt);
+                });
+            });
 
-        this._set ("modal-video-stop", {title: this._i.video.stop, icon: "mdi:stop"} )
-        this._set ("modal-video-full-screen", {title: this._i.video.fullscreen, icon: "mdi:fullscreen"} )
+        ["video-full-screen", "modal-video-full-screen"]
+            .forEach( (e) => {
+                this._set(e,{title: this._i.video.fullscreen, icon: "mdi:fullscreen"});
+                this._element(e).addEventListener('click', (evt) => {
+                    this.videoIconClicked(evt);
+                });
+            });
     }
 
     setupRecordingPlayer() {
@@ -1941,24 +1976,24 @@ class AarloGlance extends LitElement {
     setupRecordingHandlers() {
         [ this._element( "video-player" ), this._element( "modal-video-player" )]
             .forEach( (player) => {
-                player.addEventListener( 'ended', (evt) => {
+                player.addEventListener( 'ended', (_evt) => {
                     this.videoEnded()
-                })
-                player.addEventListener( 'click', (evt) => {
+                });
+                player.addEventListener( 'click', (_evt) => {
                     this.videoClicked()
-                })
-                player.addEventListener( 'mouseover', (evt) => {
+                });
+                player.addEventListener( 'mouseover', (_evt) => {
                     this.videoMouseEvent()
-                })
-                player.addEventListener( 'mousemove', (evt) => {
+                });
+                player.addEventListener( 'mousemove', (_evt) => {
                     this.videoMouseEvent()
-                })
+                });
                 player.addEventListener( 'loadedmetadata', (evt) => {
                     this.setUpSeekBar();
                     this.startVideo( evt.target )
                     this.showVideoControls(4);
-                })
-            })
+                });
+            });
     }
 
     updateRecordingView() {
@@ -2062,6 +2097,8 @@ class AarloGlance extends LitElement {
 
         this._mhide("video-play-pause")
         this._mhide("video-seek")
+        this._mshow("video-door-lock", this.cc.doorLockId !== null);
+        this._mshow("video-light-on", this.cc.lightId !== null);
         this.showVideoControls(4);
 
         this._mset('video-player', {poster: this.gs.poster})
@@ -2079,8 +2116,8 @@ class AarloGlance extends LitElement {
             return
         }
 
-        this._mset( "video-door-lock", {title: this.cs.doorLockText, icon: this.cs.doorLockIcon, state: this.cs.doorLockState} )
-        this._mset( "video-light-on", {title: this.cs.lightText, icon: this.cs.lightIcon, state: this.cs.lightState} )
+        this._mset("video-door-lock", this.cs.details.lock);
+        this._mset("video-light-on", this.cs.details.light);
 
         if( this._melement( 'video-player' ).muted ) {
             this._mset("video-toggle-sound", {icon:"mdi:volume-off"})
@@ -2140,7 +2177,7 @@ class AarloGlance extends LitElement {
      * @param lang_loaded true if language is loaded
      * @param lib_loaded true if libraries are loaded
      */
-    initialSetup( lang_loaded = false, lib_loaded = 0 ) {
+    initialSetup( lang_loaded = false, lib_loaded = false ) {
 
         // Load language pack
         if( !lang_loaded ) {
@@ -2162,7 +2199,7 @@ class AarloGlance extends LitElement {
         if( this._element("camera-viewer") === null ) {
             this._log( 'waiting for an element ' )
             setTimeout( () => {
-                this.initialSetup( lang, index )
+                this.initialSetup( true, true )
             }, 100);
             return
         }
@@ -2171,7 +2208,7 @@ class AarloGlance extends LitElement {
         //  - language packs are in
         //  - library are loaded
         //  - DOM is ready
-        this._ready = true
+        this._ready = "ready"
 
         // Set initial state
         this.updateStatuses()

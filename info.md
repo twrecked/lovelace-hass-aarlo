@@ -2,12 +2,12 @@
 
 Lovelace card designed specifically for the [AArlo Integration](https://github.com/twrecked/hass-aarlo).
 
-## Version 0.2
+## Version 0.3
 
-**Be warned, 0.2 is in alpha**
+**Be warned, 0.3 is in alpha**
 
 It's working for me, but it's very alpha so be prepared to return to
-version 0.1 if things go wrong.
+version 0.3 if things go wrong.
 
 I've put it out there so people can try it if they want. The underlying
 architecture is very different and (I hope) a lot more efficient.

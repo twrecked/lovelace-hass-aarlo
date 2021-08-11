@@ -1,3 +1,7 @@
+0.3.0a0: moved to HTMLElement
+       fixed lock/light in stream player
+       fixed bell2 display
+
 0.2.0b5: fix plugin icon
 0.2.0b4: replace alert() with logs
        use HA icons
