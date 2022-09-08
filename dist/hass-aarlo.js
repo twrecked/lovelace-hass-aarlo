@@ -152,7 +152,7 @@ class AarloGlance extends LitElement {
                     right: 0;
                     background-color: rgba(0, 0, 0, 0.4);
                     padding: 4px 8px;
-                    color: blue;
+                    color: white;
                     display: flex;
                     justify-content: space-between;
                 }
