@@ -574,11 +574,14 @@ class AarloGlance extends LitElement {
     __icon( element, icon ) {
         if ( element ) { element.icon = icon }
     }
-    __state( element, state ) {
+    __state( element, state, is_device ) {
         let color = ""
         switch( state ) {
             case "on":
-                color =  "blue"
+                if ( is_device = "true" ) {
+                  color =  "#FDD835"
+                } else {
+                  color = "white"
                 break
             case "state-on":
                 color = "white"
@@ -612,11 +615,11 @@ class AarloGlance extends LitElement {
      *
      * It gets called a lot.
      */
-    __set( element, title, text, icon, state, src, alt, poster ) {
+    __set( element, title, text, icon, state, src, alt, poster, is_device ) {
         if (_real(title))  { this.__title( element, title ) }
         if (_real(text))   { this.__text ( element, text ) }
         if (_real(icon))   { this.__icon ( element, icon ) }
-        if (_real(state))  { this.__state( element, state ) }
+        if (_real(state))  { this.__state( element, state, is_device ) }
         if (_real(src))    { this.__src( element, src ) }
         if (_real(alt))    { this.__alt( element, alt ) }
         if (_real(poster)) { this.__poster( element, poster ) }
@@ -641,8 +644,8 @@ class AarloGlance extends LitElement {
      * @param dictionary - Object containing changes. Not all entries need to
      *     be set.
      */
-    _mset( id, { title, text, icon, state, src, alt, poster } = {} ) {
-        this.__set( this._melement(id), title, text, icon, state, src, alt, poster )
+    _mset( id, { title, text, icon, state, src, alt, poster, is_device } = {} ) {
+        this.__set( this._melement(id), title, text, icon, state, src, alt, poster, is_device )
     }
 
     _widthHeight(id, width, height, width_suffix = '' ) {
@@ -2083,8 +2086,8 @@ class AarloGlance extends LitElement {
             return
         }
 
-        this._mset( "video-door-lock", {title: this.cs.doorLockText, icon: this.cs.doorLockIcon, state: this.cs.doorLockState} )
-        this._mset( "video-light-on", {title: this.cs.lightText, icon: this.cs.lightIcon, state: this.cs.lightState} )
+        this._mset( "video-door-lock", {title: this.cs.doorLockText, icon: this.cs.doorLockIcon, state: this.cs.doorLockState, is_device: "true"} )
+        this._mset( "video-light-on", {title: this.cs.lightText, icon: this.cs.lightIcon, state: this.cs.lightState, is_device: "true"} )
 
         if( this._melement( 'video-player' ).muted ) {
             this._mset("video-toggle-sound", {icon:"mdi:volume-off"})
