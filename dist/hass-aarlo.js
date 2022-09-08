@@ -578,7 +578,7 @@ class AarloGlance extends LitElement {
         let color = ""
         switch( state ) {
             case "on":
-                if ( is_device = "true" ) {
+                if ( is_device == "true" ) {
                   color =  "#FDD835"
                   break
                 } else {
