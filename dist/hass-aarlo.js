@@ -119,7 +119,7 @@ class AarloGlance extends LitElement {
         this._ready = false
         this._hass = null;
         this._config = null;
-        this._version = "0.2.0b5"
+        this._version = "0.2.0b5w1"
 
         // Internationalisation.
         this._i = null
