@@ -580,9 +580,11 @@ class AarloGlance extends LitElement {
             case "on":
                 if ( is_device = "true" ) {
                   color =  "#FDD835"
+                  break
                 } else {
                   color = "white"
-                break
+                  break
+                }
             case "state-on":
                 color = "white"
                 break
