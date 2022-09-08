@@ -578,7 +578,7 @@ class AarloGlance extends LitElement {
         let color = ""
         switch( state ) {
             case "on":
-                color =  "var(ha-picture-icon-button-on-color);"
+                color =  "blue"
                 break
             case "state-on":
                 color = "white"
