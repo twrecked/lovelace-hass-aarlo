@@ -119,7 +119,7 @@ class AarloGlance extends LitElement {
         this._ready = false
         this._hass = null;
         this._config = null;
-        this._version = "0.2.0b5w1"
+        this._version = "0.2.0b5w2"
 
         // Internationalisation.
         this._i = null
@@ -150,7 +150,7 @@ class AarloGlance extends LitElement {
                     position: absolute;
                     left: 0;
                     right: 0;
-                    background-color: rgba(0, 0, 0, 0.4);
+                    background-color: rgba(0, 0, 0, 0.3);
                     padding: 4px 8px;
                     color: white;
                     display: flex;
