@@ -2,6 +2,8 @@
  * @module Lovelace class for accessing Arlo camera through the AArlo
  * module.
  *
+ * this._version = "0.3.0a1"
+ *
  * Startup Notes:
  * - hass(); called at startup; set initial internal status and then updates
  *   image element data
@@ -112,7 +114,6 @@ class AarloGlance extends HTMLElement {
         this._ready = "stopped"
         this._hass = null;
         this._config = null;
-        this._version = "0.3.0a1"
 
         // Internationalisation.
         this._i = null
@@ -315,27 +316,6 @@ class AarloGlance extends HTMLElement {
                         </video>
                         <div class="box box-bottom"
                                id="${this._id('modal-video-controls')}">
-                            <div>
-                                <ha-icon id="${this._id('modal-video-door-lock')}">
-                                </ha-icon>
-                                <ha-icon id="${this._id('modal-video-light-on')}">
-                                </ha-icon>
-                                <ha-icon id="${this._id('modal-video-toggle-sound')}">
-                                </ha-icon>
-                                <ha-icon id="${this._id('modal-video-stop')}">
-                                </ha-icon>
-                                <ha-icon id="${this._id('modal-video-play-pause')}">
-                                </ha-icon>
-                            </div>
-                            <div class='slidecontainer'>
-                                <input class="slider"
-                                       id="${this._id('modal-video-seek')}"
-                                       type="range" value="0" min="1" max="100">
-                            </div>
-                            <div>
-                                <ha-icon id="${this._id('modal-video-full-screen')}">
-                                </ha-icon>
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -399,27 +379,6 @@ class AarloGlance extends HTMLElement {
                 <div class="box box-bottom"
                      id="${this._id('video-controls')}"
                      style="display:none">
-                    <div>
-                        <ha-icon id="${this._id('video-door-lock')}">
-                        </ha-icon>
-                        <ha-icon id="${this._id('video-light-on')}">
-                        </ha-icon>
-                        <ha-icon id="${this._id('video-toggle-sound')}">
-                        </ha-icon>
-                        <ha-icon id="${this._id('video-stop')}">
-                        </ha-icon>
-                        <ha-icon id="${this._id('video-play-pause')}">
-                        </ha-icon>
-                    </div>
-                    <div class='slidecontainer'>
-                        <input class="slider"
-                               id="${this._id('video-seek')}"
-                               type="range" value="0" min="1" max="100">
-                    </div>
-                    <div>
-                        <ha-icon id="${this._id('video-full-screen')}">
-                        </ha-icon>
-                    </div>
                 </div>
             </ha-card>`
     }
@@ -1018,7 +977,6 @@ class AarloGlance extends HTMLElement {
     }
 
     checkConfig() {
-
         if ( this._hass === null ) {
             return;
         }
@@ -1043,6 +1001,12 @@ class AarloGlance extends HTMLElement {
         }
         if ( this.cc.door2LockId && !(this.cc.door2LockId in this._hass.states) ) {
             this.throwError( 'unknown door lock (#2)' )
+        }
+        if ( this.cc.lightId && !(this.cc.lightId in this._hass.states) ) {
+            this.throwError( 'unknown light' )
+        }
+        if ( this.cc.light2Id && !(this.cc.light2Id in this._hass.states) ) {
+            this.throwError( 'unknown light (#2)' )
         }
     }
 
@@ -1102,6 +1066,7 @@ class AarloGlance extends HTMLElement {
             poster: '',
             recording: null,
             stream: null,
+            streamPaused: false,
         }
     }
 
@@ -1391,7 +1356,7 @@ class AarloGlance extends HTMLElement {
             this._cameraIndex = 0
         }
  
-        //this.checkConfig()
+        this.checkConfig()
 
         // web item id suffix
         this.gc.idSuffix = _replaceAll( this.cc.id,'.','-' )
@@ -1557,6 +1522,55 @@ class AarloGlance extends HTMLElement {
         if( config.image_bottom ) {
             this.buildImageRow(this._element('bottom-bar'), config.image_bottom)
         }
+    }
+
+    buildVideoIcon(item, prefix) {
+        let elem = document.createElement("ha-icon")
+        elem.classList.add(`aarlo-icon-${this._sizeSuffix()}`)
+        elem.addEventListener('click', (evt) => {
+            this.videoIconClicked(evt)
+        })
+        elem.id = this._id(`${prefix}${item}`)
+        return elem
+    }
+
+    buildVideoSeek(prefix) {
+        let slider = document.createElement('input');
+        slider.type = 'range';
+        slider.min = "1";
+        slider.max = "100";
+        slider.value = "0";
+        slider.classList.add('slider')
+        slider.id = this._id(`${prefix}video-seek`);
+        return slider
+    }
+
+    buildVideoRow(element, prefix) {
+        element.innerHTML = ''
+
+        let div = document.createElement("div");
+        ["video-door-lock", "video-door2-lock", "video-light-on", "video-light2-on", "video-toggle-sound", "video-play-pause", "video-stop"]
+            .forEach((item) => {
+                div.appendChild(this.buildVideoIcon(item, prefix))
+            });
+        element.appendChild(div)
+
+        div = document.createElement("div");
+        div.classList.add('slidecontainer')
+        div.appendChild(this.buildVideoSeek(prefix))
+        element.appendChild(div)
+
+        div = document.createElement("div");
+        ["video-full-screen"]
+            .forEach((item) => {
+                div.appendChild(this.buildVideoIcon(item, prefix))
+            });
+        element.appendChild(div)
+    }
+
+    buildVideoLayout() {
+        this.buildVideoRow(this._element('video-controls'), "")
+        this.buildVideoRow(this._element('modal-video-controls'), "modal-")
     }
 
     setupImageView() {
@@ -1931,38 +1945,25 @@ class AarloGlance extends HTMLElement {
             this.controlStop();
         } else if(id.includes("video-door-lock")) {
             this.toggleLock(this.cc.doorLockId);
+        } else if(id.includes("video-door2-lock")) {
+            this.toggleLock(this.cc.door2LockId);
         } else if(id.includes("video-light-on")) {
             this.toggleLight(this.cc.lightId);
+        } else if(id.includes("video-light2-on")) {
+            this.toggleLight(this.cc.light2Id);
         } else if(id.includes("video-full-screen")) {
             this.controlFullScreen();
         }
     }
 
+    /**
+     * Setup the callbacks on recording/stream view
+     */
     setupRecordingView() {
-        ["video-play-pause", "video-toggle-sound", "video-stop", "video-door-lock",
-                "modal-video-play-pause", "modal-video-toggle-sound", "modal-video-stop", "modal-video-door-lock"]
-            .forEach( (e) => {
-                this._show(e);
-                this._element(e).addEventListener('click', (evt) => {
-                    this.videoIconClicked(evt)
-                });
-            });
+        this.buildVideoLayout()
 
-        ["video-stop", "modal-video-stop"]
-            .forEach( (e) => {
-                this._set(e,{title: this._i.video.stop, icon: "mdi:stop"});
-                this._element(e).addEventListener('click', (evt) => {
-                    this.videoIconClicked(evt);
-                });
-            });
-
-        ["video-full-screen", "modal-video-full-screen"]
-            .forEach( (e) => {
-                this._set(e,{title: this._i.video.fullscreen, icon: "mdi:fullscreen"});
-                this._element(e).addEventListener('click', (evt) => {
-                    this.videoIconClicked(evt);
-                });
-            });
+        this._set("video-stop",{title: this._i.video.stop, icon: "mdi:stop"});
+        this._set("video-full-screen",{title: this._i.video.fullscreen, icon: "mdi:fullscreen"});
     }
 
     setupRecordingPlayer() {
@@ -1970,7 +1971,9 @@ class AarloGlance extends HTMLElement {
         this._mshow("video-seek")
         this._mshow("video-play-pause")
         this._mhide("video-door-lock")
+        this._mhide("video-door2-lock")
         this._mhide("video-light-on")
+        this._mhide("video-light2-on")
     }
 
     setupRecordingHandlers() {
@@ -1997,6 +2000,8 @@ class AarloGlance extends HTMLElement {
     }
 
     updateRecordingView() {
+        this._mset("video-stop",{title: this._i.video.stop, icon: "mdi:stop"});
+        this._mset("video-full-screen",{title: this._i.video.fullscreen, icon: "mdi:fullscreen"});
 
         let video = this._melement( 'video-player' )
         if( video.paused ) {
@@ -2088,7 +2093,6 @@ class AarloGlance extends HTMLElement {
     }
 
     setupStreamPlayer() {
-
         if ( this.gs.stream.includes('egressToken') ) {
             this.setMPEGStreamElementData()
         } else {
@@ -2098,13 +2102,17 @@ class AarloGlance extends HTMLElement {
         this._mhide("video-play-pause")
         this._mhide("video-seek")
         this._mshow("video-door-lock", this.cc.doorLockId !== null);
+        this._mshow("video-door2-lock", this.cc.door2LockId !== null);
         this._mshow("video-light-on", this.cc.lightId !== null);
+        this._mshow("video-light2-on", this.cc.light2Id !== null);
         this.showVideoControls(4);
 
         this._mset('video-player', {poster: this.gs.poster})
     }
 
     updateStreamView() {
+        this._mset("video-stop",{title: this._i.video.stop, icon: "mdi:stop"});
+        this._mset("video-full-screen",{title: this._i.video.fullscreen, icon: "mdi:fullscreen"});
 
         // Autostart?
         if ( this.gs.stream === null ) {
@@ -2117,7 +2125,9 @@ class AarloGlance extends HTMLElement {
         }
 
         this._mset("video-door-lock", this.cs.details.lock);
+        this._mset("video-door2-lock", this.cs.details.lock2);
         this._mset("video-light-on", this.cs.details.light);
+        this._mset("video-light2-on", this.cs.details.light2);
 
         if( this._melement( 'video-player' ).muted ) {
             this._mset("video-toggle-sound", {icon:"mdi:volume-off"})
@@ -2167,7 +2177,7 @@ class AarloGlance extends HTMLElement {
      * Get every ready.
      *
      * Run when render() is called. The function will keep calling
-     * itself until initialisation is complete. What is does:
+     * itself until initialization is complete. What is does:
      *  - load the card's language pack
      *  - load the camera libraries
      *  - wait for the render to be added to the DOM
@@ -2630,10 +2640,13 @@ class AarloGlance extends HTMLElement {
         });
         seekBar.addEventListener( "mousedown", () => {
             this.showVideoControls(0);
+            this.gs.streamPaused = video.paused
             video.pause();
         });
         seekBar.addEventListener( "mouseup", () => {
-            video.play();
+            if (!this.gs.streamPaused) {
+                video.play();
+            }
             this.hideVideoControlsLater()
         });
     }
