@@ -50,11 +50,6 @@ function _array( config, value = [] ) {
     }
     return config
 }
-function _pushIf( array, value, cond ) {
-    if(cond) {
-        array.push(value)
-    }
-}
 function _value( config, value = null ) {
     return config ? config : value
 }
@@ -67,6 +62,7 @@ function _value_float( config, value = 0 ) {
 function _includes( config, item, value = false ) {
     return config ? config.includes(item) : value
 }
+
 /**
  * Replace all of `from` with `to` and return the new string.
  *
@@ -96,13 +92,6 @@ function _tsi(title, state, icon ) {
         icon:  icon
     }
 }
-
-// function _either_or( config, item, true_value = true, false_value = false ) {
-//     if (config && item in config) {
-//         return config[item] ? true_value : false_value
-//     }
-//     return false_value
-// }
 
 // noinspection JSUnresolvedVariable,CssUnknownTarget,CssUnresolvedCustomProperty,HtmlRequiredAltAttribute,RequiredAttributes,JSFileReferences
 class AarloGlance extends HTMLElement {
@@ -351,30 +340,6 @@ class AarloGlance extends HTMLElement {
                 <div class="box box-bottom"
                      id="${this._id('library-controls')}"
                      style="display:none">
-                    <div>
-                        <ha-icon id="${this._id('library-control-first')}"
-                                 class="aarlo-icon-${this._sizeSuffix()}">
-                        </ha-icon>
-                        <ha-icon id="${this._id('library-control-previous')}"
-                                 class="aarlo-icon-${this._sizeSuffix()}">
-                        </ha-icon>
-                    </div>
-                    <div style="margin-left: auto; margin-right: auto">
-                        <ha-icon id="${this._id('library-control-resize')}"
-                                 class="aarlo-icon-${this._sizeSuffix()}">
-                        </ha-icon>
-                        <ha-icon id="${this._id('library-control-close')}"
-                                 class="aarlo-icon-${this._sizeSuffix()}">
-                        </ha-icon>
-                    </div>
-                    <div>
-                        <ha-icon id="${this._id('library-control-next')}"
-                                 class="aarlo-icon-${this._sizeSuffix()}">
-                        </ha-icon>
-                        <ha-icon id="${this._id('library-control-last')}"
-                                 class="aarlo-icon-${this._sizeSuffix()}">
-                        </ha-icon>
-                    </div>
                 </div>
                 <div class="box box-bottom"
                      id="${this._id('video-controls')}"
@@ -586,8 +551,7 @@ class AarloGlance extends HTMLElement {
     _sizeSuffix() {
         if( this.gc.small ) {
             return "small"
-        }
-        else if( this.gc.tiny ) {
+        } else if( this.gc.tiny ) {
             return "tiny"
         }
         return "medium"
@@ -681,6 +645,7 @@ class AarloGlance extends HTMLElement {
                 .toLowerCase()
         return new_what in this._i[section] ? this._i[section][new_what] : what
     }
+
     _getState(_id, default_value = '') {
         return this._hass !== null && _id in this._hass.states ?
             this._hass.states[_id] : {
@@ -746,10 +711,10 @@ class AarloGlance extends HTMLElement {
             let date = ""
             let full_date = this.cs.imageSource ? this.cs.imageSource : ''
             if( full_date.startsWith('capture/') ) { 
-                date      = full_date.substr(8);
+                date      = full_date.substring(8);
                 full_date = `${this._i.image.automatic_capture} ${date}`
             } else if( full_date.startsWith('snapshot/') ) { 
-                date      = full_date.substr(9);
+                date      = full_date.substring(9);
                 full_date = `${this._i.image.snapshot_capture} ${date}`
             }
             this.cs.details.viewer = {title: full_date, alt: full_date, src: this.cs.image}
@@ -1018,6 +983,8 @@ class AarloGlance extends HTMLElement {
             isMobile: navigator.userAgent.includes("Mobi"),
             // HA App
             isHAApp: navigator.userAgent.includes("HomeAssistant"),
+            // Is IOS
+            isApple: navigator.userAgent.includes("(iPhone") || navigator.userAgent.includes("(iPad"),
 
             // Language override?
             lang: config.lang,
@@ -1068,130 +1035,6 @@ class AarloGlance extends HTMLElement {
             stream: null,
             streamPaused: false,
         }
-    }
-
-    convertOldLayout(config,cc) {
-        if( config.image_top || config.image_bottom ) {
-            return
-        }
-
-        const items = ["on_off","motion","sound","library","captured","captured_today",
-                        "play","snapshot","battery","battery_level","signal_strength"]
-
-        let image_top = []
-        _pushIf(image_top, "name", config.top_title)
-        _pushIf(image_top, "date", config.top_date)
-        _pushIf(image_top, "status", config.top_status)
-
-        let image_bottom = []
-        let image_bottom_left = []
-        items.forEach( (item) => {
-            _pushIf(image_bottom_left, item, config.show.includes(item))
-        })
-        _pushIf(image_bottom, image_bottom_left.join(","), image_bottom_left)
-
-        let image_bottom_right = []
-        _pushIf(image_bottom_right, "door", cc.doorId)
-        _pushIf(image_bottom_right, "bell", cc.doorBellId)
-        _pushIf(image_bottom_right, "lock", cc.doorLockId)
-        _pushIf(image_bottom_right, "door2", cc.door2Id)
-        _pushIf(image_bottom_right, "bell2", cc.door2BellId)
-        _pushIf(image_bottom_right, "lock2", cc.door2LockId)
-        _pushIf(image_bottom_right, "light", cc.lightId)
-        _pushIf(image_bottom_right, "next", this._config.entities)
-        _pushIf(image_bottom, image_bottom_right.join(","), image_bottom_right)
-        
-        image_bottom = _replaceAll(image_bottom.join("|"), "on_off", "onoff")
-        image_bottom = _replaceAll(image_bottom, "battery_level", "battery")
-        image_bottom = _replaceAll(image_bottom, "captured_today", "library")
-        image_bottom = _replaceAll(image_bottom, "captured", "library")
-        image_bottom = _replaceAll(image_bottom, "signal_strength", "signal")
-
-        config.image_top = image_top.join("|")
-        config.image_bottom = image_bottom
-    }
-
-    getCameraConfigOld( global, local ) {
-        const config = _mergeArrays( global, local )
-
-        // find camera
-        let camera = ""
-        if( config.entity ) {
-            camera = config.entity.replace( 'camera.','' );
-        }
-        if( config.camera ) {
-            camera = config.camera
-        }
-        if( camera === "" ) {
-            this.throwError( 'missing a camera definition' )
-            return
-        }
-        if( !config.show ) {
-            this.throwError( 'missing show components' );
-            return
-        }
-
-        // see if aarlo prefix, remove from custom names if not present
-        let prefix = "";
-        if ( camera.startsWith( 'aarlo_' ) ) {
-            camera = camera.replace( 'aarlo_','' )
-            prefix = "aarlo_"
-        }
-        if( config.prefix ) {
-            prefix = config.prefix;
-        }
-
-        let cc = {}
-
-        // Grab name if there
-        cc.name = config.name ? config.name : null
-
-        // What happens when we click on image
-        const image_click = config.image_click ? config.image_click : ""
-        cc.directPlay    = image_click.includes("direct") || _value( config.play_direct, false )
-        cc.modalPlayer   = image_click.includes("modal")
-        cc.smartPlayer   = image_click.includes("smart")
-        cc.autoPlay      = image_click.includes("autoplay") || _value( config.auto_play, false )
-
-        cc.playStream    = image_click.includes("live") ||
-                    image_click.includes("play") ||
-                    image_click.includes("stream")
-
-        // snapshot updates
-        cc.snapshotTimeouts = config.snapshot_retry ? config.snapshot_retry : [ 2, 5 ]
-
-        // stream directly from Arlo
-        cc.playDirectFromArlo = config.play_direct ? config.play_direct : false;
-
-        // camera and sensors
-        cc.id              = config.camera_id ? config.camera_id : 'camera.' + prefix + camera;
-        cc.motionId        = config.motion_id ? config.motion_id : 'binary_sensor.' + prefix + 'motion_' + camera;
-        cc.soundId         = config.sound_id ? config.sound_id : 'binary_sensor.' + prefix + 'sound_' + camera;
-        cc.batteryId       = config.battery_id ? config.battery_id : 'sensor.' + prefix + 'battery_level_' + camera;
-        cc.signalId        = config.signal_id ? config.signal_id : 'sensor.' + prefix + 'signal_strength_' + camera;
-        cc.capturedTodayId = config.capture_id ? config.capture_id : 'sensor.' + prefix + 'captured_today_' + camera;
-        cc.lastCaptureId   = config.last_id ? config.last_id : 'sensor.' + prefix + 'last_' + camera;
-
-        // door definition
-        cc.doorId         = config.door ? config.door: null;
-        cc.doorBellId     = config.door_bell ? config.door_bell : null;
-        cc.doorBellMuteId = config.door_bell_mute ? config.door_bell_mute : null;
-        cc.doorLockId     = config.door_lock ? config.door_lock : null;
-
-        // door2 definition
-        cc.door2Id         = config.door2 ? config.door2: null;
-        cc.door2BellId     = config.door2_bell ? config.door2_bell : null;
-        cc.door2BellMuteId = config.door2_bell_mute ? config.door2_bell_mute : null;
-        cc.door2LockId     = config.door2_lock ? config.door2_lock : null;
-
-        // light definition
-        cc.lightId     = config.light ? config.light: null;
-
-        this.convertOldLayout(config,cc)
-        cc.image_top = config.image_top
-        cc.image_bottom = config.image_bottom
-
-        return cc
     }
 
     getCameraConfigNew( global, local ) {
@@ -1258,7 +1101,8 @@ class AarloGlance extends HTMLElement {
 
     getCameraConfig( global, local ) {
         if( "show" in global ) {
-            return this.getCameraConfigOld( global, local )
+            this.throwError( 'the old configuration is no longer support' )
+            return {}
         } else {
             return this.getCameraConfigNew( global, local )
         }
@@ -1375,17 +1219,12 @@ class AarloGlance extends HTMLElement {
         this.cs.modalWidth = Math.round(width)
         this.cs.modalHeight = Math.round(height)
 
-        let topOffset = window.pageYOffset
+        let topOffset = window.scrollY
         if( topOffset !== 0 ) {
             this.cs.modalTop = Math.round( topOffset + ( (window.innerHeight - height) / 2 ) )
         } else {
             this.cs.modalTop = null
         }
-    }
-
-    repositionModal() {
-        this.getModalDimensions()
-        this._paddingTop( "modal-viewer", this.cs.modalTop )
     }
 
     setModalElementData() {
@@ -1408,133 +1247,66 @@ class AarloGlance extends HTMLElement {
         this._element('modal-viewer').style.display = 'none'
     }
 
-    imageIconClicked(evt) {
-        const id = evt.target.id
-        const modified = evt.ctrlKey || evt.shiftKey
+    buildIcon(item, prefix, listener) {
+        let elem = document.createElement("ha-icon")
+        elem.classList.add(`aarlo-icon-${this._sizeSuffix()}`)
+        elem.addEventListener('click', listener);
+        elem.id = this._id(`${prefix}${item}`)
+        return elem
+    }
 
-        if(id.startsWith("camera-motion")) {
-            this.moreInfo(this.cc.motionId)
-        } else if(id.startsWith("camera-sound")) {
-            this.moreInfo(this.cc.soundId)
-        } else if(id.startsWith("camera-battery")) {
-            this.moreInfo(this.cc.batteryId)
-        } else if(id.startsWith("camera-signal")) {
-            this.moreInfo(this.cc.signalId)
+    buildText(item, prefix) {
+        let elem = document.createElement("span")
+        elem.classList.add(`${prefix}-${item}`)
+        elem.classList.add(`aarlo-text-${this._sizeSuffix()}`)
+        elem.id = this._id(`${prefix}${item}`)
+        return elem
+    }
 
-        } else if(id.startsWith("camera-onoff")) {
-            this.toggleCamera()
-        } else if(id.startsWith("camera-library")) {
-            this.openLibrary()
-        } else if(id.startsWith("camera-stream")) {
-            this.showOrStopStream()
-        } else if(id.startsWith("camera-snapshot")) {
-            this.updateSnapshot()
-
-        } else if(id.startsWith("camera-door2")) {
-            this.moreInfo(this.cc.door2Id)
-        } else if(id.startsWith("camera-lock2")) {
-            if(modified) {
-                this.moreInfo(this.cc.door2LockId)
-            } else {
-                this.toggleLock(this.cc.door2LockId)
-            }
-        } else if(id.startsWith("camera-bell2")) {
-            if (!this.cc.door2BellMuteId || modified) {
-                this.moreInfo(this.cc.door2BellId)
-            } else {
-                this.toggleSwitch(this.cc.door2BellMuteId)
-            }
-        } else if(id.startsWith("camera-door")) {
-            this.moreInfo(this.cc.doorId)
-        } else if(id.startsWith("camera-lock")) {
-            if(modified) {
-                this.moreInfo(this.cc.doorLockId)
-            } else {
-                this.toggleLock(this.cc.doorLockId)
-            }
-        } else if(id.startsWith("camera-bell")) {
-            if (!this.cc.doorBellMuteId || modified) {
-                this.moreInfo(this.cc.doorBellId)
-            } else {
-                this.toggleSwitch(this.cc.doorBellMuteId)
-            }
-        } else if(id.startsWith("camera-light2")) {
-            if(modified) {
-                this.moreInfo(this.cc.light2Id)
-            } else {
-                this.toggleLight(this.cc.light2Id)
-            }
-        } else if(id.startsWith("camera-light")) {
-            if(modified) {
-                this.moreInfo(this.cc.lightId)
-            } else {
-                this.toggleLight(this.cc.lightId)
-            }
-
-        } else if(id.startsWith("camera-previous")) {
-            this.previousCameraImage()
-        } else if(id.startsWith("camera-next")) {
-            this.nextCameraImage()
-        } else {
-            this._log("something clicked")
-        }
+    buildGap() {
+        let elem = document.createElement("span")
+        elem.innerHTML = "&nbsp"
+        return elem
     }
 
     buildImageRow(element, sections) {
-        let text_items = ["name","date","status"]
+        let text_items = ["name", "date", "status"]
         element.innerHTML = ''
-        _array(sections).forEach((section,index,array) => {
+        _array(sections).forEach((section, index, array) => {
             let div = document.createElement("div")
             _array(section).forEach((item) => {
-                let elem
-                if(item === '' ){
-                    elem = document.createElement("span")
-                    elem.innerHTML = "&nbsp"
-                } else if(text_items.includes(item)) {
-                    elem = document.createElement("span")
-                    elem.classList.add(`camera-${item}`)
-                    elem.classList.add(`aarlo-text-${this._sizeSuffix()}`)
+                if (item === '') {
+                    div.appendChild(this.buildGap())
+                } else if (text_items.includes(item)) {
+                    div.appendChild(this.buildText(item, "camera-"))
                 } else {
-                    elem = document.createElement("ha-icon")
-                    elem.classList.add(`aarlo-icon-${this._sizeSuffix()}`)
-                    elem.addEventListener('click', (evt) => {
+                    div.appendChild(this.buildIcon(item, "camera-", (evt) => {
                         this.imageIconClicked(evt)
-                    })
+                    }))
                 }
-                elem.id = this._id(`camera-${item}`)
-                div.appendChild(elem)
             })
 
             // Set div alignment
-            if( index === 0 ) {
+            if (index === 0) {
                 div.classList.add(`box-align-left`)
-            } else if(index === array.length - 1) {
+            } else if (index === array.length - 1) {
                 div.classList.add(`box-align-right`)
             }
             element.appendChild(div)
         })
     }
 
-    buildImageLayout(config) {
-        if( config.image_top ) {
-            this.buildImageRow(this._element('top-bar'), config.image_top)
-        }
-        if( config.image_bottom ) {
-            this.buildImageRow(this._element('bottom-bar'), config.image_bottom)
-        }
+    buildVideoIconDiv(items, prefix) {
+        let div = document.createElement("div");
+        items.forEach((item) => {
+            div.appendChild(this.buildIcon(item, prefix, (evt) => {
+                this.videoIconClicked(evt)
+            }));
+        });
+        return div;
     }
 
-    buildVideoIcon(item, prefix) {
-        let elem = document.createElement("ha-icon")
-        elem.classList.add(`aarlo-icon-${this._sizeSuffix()}`)
-        elem.addEventListener('click', (evt) => {
-            this.videoIconClicked(evt)
-        })
-        elem.id = this._id(`${prefix}${item}`)
-        return elem
-    }
-
-    buildVideoSeek(prefix) {
+    buildVideoSeekDiv(prefix) {
         let slider = document.createElement('input');
         slider.type = 'range';
         slider.min = "1";
@@ -1542,40 +1314,118 @@ class AarloGlance extends HTMLElement {
         slider.value = "0";
         slider.classList.add('slider')
         slider.id = this._id(`${prefix}video-seek`);
-        return slider
+
+        let div = document.createElement("div")
+        div.appendChild(slider)
+        return div
     }
 
-    buildVideoRow(element, prefix) {
+    buildVideoControl(element, prefix) {
         element.innerHTML = ''
-
-        let div = document.createElement("div");
-        ["video-door-lock", "video-door2-lock", "video-light-on", "video-light2-on", "video-toggle-sound", "video-play-pause", "video-stop"]
-            .forEach((item) => {
-                div.appendChild(this.buildVideoIcon(item, prefix))
-            });
-        element.appendChild(div)
-
-        div = document.createElement("div");
-        div.classList.add('slidecontainer')
-        div.appendChild(this.buildVideoSeek(prefix))
-        element.appendChild(div)
-
-        div = document.createElement("div");
-        ["video-full-screen"]
-            .forEach((item) => {
-                div.appendChild(this.buildVideoIcon(item, prefix))
-            });
-        element.appendChild(div)
+        element.appendChild(this.buildVideoIconDiv(["video-door-lock", "video-door2-lock",
+                        "video-light-on", "video-light2-on", "video-toggle-sound", "video-play-pause", "video-stop"],
+                        prefix));
+        element.appendChild(this.buildVideoSeekDiv(prefix));
+        element.appendChild(this.buildVideoIconDiv(["video-full-screen"], prefix));
     }
 
-    buildVideoLayout() {
-        this.buildVideoRow(this._element('video-controls'), "")
-        this.buildVideoRow(this._element('modal-video-controls'), "modal-")
+    buildLibraryIconDiv(items, prefix = "") {
+        let div = document.createElement("div");
+        items.forEach((item) => {
+            div.appendChild(this.buildIcon(item, prefix, (evt) => {
+                this.libraryIconClicked(evt)
+            }));
+        });
+        return div;
+    }
+
+    buildLibraryControl(element, prefix) {
+        element.innerHTML = ''
+        element.appendChild(this.buildLibraryIconDiv(["library-control-first", "library-control-previous"], prefix))
+        element.appendChild(this.buildLibraryIconDiv(["library-control-resize", "library-control-close"], prefix))
+        element.appendChild(this.buildLibraryIconDiv(["library-control-next", "library-control-last"], prefix))
+    }
+
+    imageIconClicked(evt) {
+        const id = evt.target.id
+        const modified = evt.ctrlKey || evt.shiftKey
+
+        if (id.startsWith("camera-motion")) {
+            this.moreInfo(this.cc.motionId)
+        } else if (id.startsWith("camera-sound")) {
+            this.moreInfo(this.cc.soundId)
+        } else if (id.startsWith("camera-battery")) {
+            this.moreInfo(this.cc.batteryId)
+        } else if (id.startsWith("camera-signal")) {
+            this.moreInfo(this.cc.signalId)
+
+        } else if (id.startsWith("camera-onoff")) {
+            this.toggleCamera()
+        } else if (id.startsWith("camera-library")) {
+            this.openLibrary()
+        } else if (id.startsWith("camera-stream")) {
+            this.showOrStopStream()
+        } else if (id.startsWith("camera-snapshot")) {
+            this.updateSnapshot()
+
+        } else if (id.startsWith("camera-door2")) {
+            this.moreInfo(this.cc.door2Id)
+        } else if (id.startsWith("camera-lock2")) {
+            if (modified) {
+                this.moreInfo(this.cc.door2LockId)
+            } else {
+                this.toggleLock(this.cc.door2LockId)
+            }
+        } else if (id.startsWith("camera-bell2")) {
+            if (!this.cc.door2BellMuteId || modified) {
+                this.moreInfo(this.cc.door2BellId)
+            } else {
+                this.toggleSwitch(this.cc.door2BellMuteId)
+            }
+        } else if (id.startsWith("camera-door")) {
+            this.moreInfo(this.cc.doorId)
+        } else if (id.startsWith("camera-lock")) {
+            if (modified) {
+                this.moreInfo(this.cc.doorLockId)
+            } else {
+                this.toggleLock(this.cc.doorLockId)
+            }
+        } else if (id.startsWith("camera-bell")) {
+            if (!this.cc.doorBellMuteId || modified) {
+                this.moreInfo(this.cc.doorBellId)
+            } else {
+                this.toggleSwitch(this.cc.doorBellMuteId)
+            }
+        } else if (id.startsWith("camera-light2")) {
+            if (modified) {
+                this.moreInfo(this.cc.light2Id)
+            } else {
+                this.toggleLight(this.cc.light2Id)
+            }
+        } else if (id.startsWith("camera-light")) {
+            if (modified) {
+                this.moreInfo(this.cc.lightId)
+            } else {
+                this.toggleLight(this.cc.lightId)
+            }
+
+        } else if (id.startsWith("camera-previous")) {
+            this.previousCameraImage()
+        } else if (id.startsWith("camera-next")) {
+            this.nextCameraImage()
+        } else {
+            this._log("something clicked")
+        }
     }
 
     setupImageView() {
-        this.buildImageLayout(this.cc)
-        this._set("camera-name", {text: this.cc.name})
+        if( this.cc.image_top ) {
+            this.buildImageRow(this._element('top-bar'), this.cc.image_top)
+        }
+        if( this.cc.image_bottom ) {
+            this.buildImageRow(this._element('bottom-bar'), this.cc.image_bottom)
+        }
+
         if( this.gc.isMobile ) {
             this._hide("camera-previous")
             this._hide("camera-next")
@@ -1586,7 +1436,6 @@ class AarloGlance extends HTMLElement {
     }
 
     setupImageHandlers() {
-
         const viewer = this._element("camera-viewer")
 
         viewer.addEventListener('error', () => {
@@ -1620,13 +1469,12 @@ class AarloGlance extends HTMLElement {
     }
 
     updateImageView() {
+        this._set("camera-name", {text: this.cc.name})
 
-        // Set up entries.
-        for(const item in this.cs.details) {
+        for (const item in this.cs.details) {
             // noinspection JSUnfilteredForInLoop
-            this._set(`camera-${item}`, this.cs.details[item] )
+            this._set(`camera-${item}`, this.cs.details[item])
         }
-
     }
 
     /**
@@ -1693,26 +1541,8 @@ class AarloGlance extends HTMLElement {
     }
 
     setupLibraryView() {
-        ["library-control-first", "library-control-previous", "library-control-next", "library-control-last"]
-            .forEach( (e) => {
-                this._show(e);
-                this._element(e).addEventListener('click', (evt) => {
-                    this.libraryIconClicked(evt)
-                });
-            });
-
-        this._show('library-control-resize',this.lc.sizes.length > 1 );
-        this._element("library-control-resize").addEventListener('click', (evt) => {
-            this.libraryIconClicked(evt);
-        });
-
-        ["library-control-resize", "library-control-close"]
-            .forEach( (e) => {
-                this._set(e,{ state: "on"} );
-                this._element(e).addEventListener('click', (evt) => {
-                    this.libraryIconClicked(evt)
-                });
-            });
+        this.buildLibraryControl(this._element('library-controls'), "")
+        // TODO maybe modal?
     }
 
     setupLibraryHandlers() {
@@ -1743,7 +1573,6 @@ class AarloGlance extends HTMLElement {
     }
 
     _updateLibraryHTML() {
-
         // update library state to reflect the new layout
         this.gs.librarySize = this.lc.sizes[this.ls.sizeIndex]
         this.ls.gridCount = this.gs.librarySize * this.gs.librarySize
@@ -1806,7 +1635,6 @@ class AarloGlance extends HTMLElement {
     }
 
     _updateLibraryView() {
-   
         // Massage offset so it fits in library.
         if( this.ls.offset + this.ls.gridCount > this.ls.recordings.length ) {
             this.ls.offset = Math.max(this.ls.recordings.length - this.ls.gridCount, 0)
@@ -1898,6 +1726,7 @@ class AarloGlance extends HTMLElement {
     }
 
     updateLibraryView() {
+        this._show('library-control-resize',this.lc.sizes.length > 1 );
 
         // If camera index has changed then load library
         if ( this.gs.libraryCamera !== this._cameraIndex ) {
@@ -1937,21 +1766,21 @@ class AarloGlance extends HTMLElement {
     videoIconClicked(evt) {
         const id = evt.target.id;
 
-        if(id.includes("video-play-pause")) {
+        if (id.includes("video-play-pause")) {
             this.controlPlayPause();
-        } else if(id.includes("video-toggle-sound")) {
+        } else if (id.includes("video-toggle-sound")) {
             this.controlToggleSound();
-        } else if(id.includes("video-stop")) {
+        } else if (id.includes("video-stop")) {
             this.controlStop();
-        } else if(id.includes("video-door-lock")) {
+        } else if (id.includes("video-door-lock")) {
             this.toggleLock(this.cc.doorLockId);
-        } else if(id.includes("video-door2-lock")) {
+        } else if (id.includes("video-door2-lock")) {
             this.toggleLock(this.cc.door2LockId);
-        } else if(id.includes("video-light-on")) {
+        } else if (id.includes("video-light-on")) {
             this.toggleLight(this.cc.lightId);
-        } else if(id.includes("video-light2-on")) {
+        } else if (id.includes("video-light2-on")) {
             this.toggleLight(this.cc.light2Id);
-        } else if(id.includes("video-full-screen")) {
+        } else if (id.includes("video-full-screen")) {
             this.controlFullScreen();
         }
     }
@@ -1959,26 +1788,15 @@ class AarloGlance extends HTMLElement {
     /**
      * Setup the callbacks on recording/stream view
      */
-    setupRecordingView() {
-        this.buildVideoLayout()
-
-        this._set("video-stop",{title: this._i.video.stop, icon: "mdi:stop"});
-        this._set("video-full-screen",{title: this._i.video.fullscreen, icon: "mdi:fullscreen"});
+    setupVideoView() {
+        // this.buildVideoControls()
+        this.buildVideoControl(this._element('video-controls'), "")
+        this.buildVideoControl(this._element('modal-video-controls'), "modal-")
     }
 
-    setupRecordingPlayer() {
-        this._mset( 'video-player',{src: this.gs.recording, poster: this.gs.poster} )
-        this._mshow("video-seek")
-        this._mshow("video-play-pause")
-        this._mhide("video-door-lock")
-        this._mhide("video-door2-lock")
-        this._mhide("video-light-on")
-        this._mhide("video-light2-on")
-    }
-
-    setupRecordingHandlers() {
-        [ this._element( "video-player" ), this._element( "modal-video-player" )]
-            .forEach( (player) => {
+    setupVideoHandlers() {
+        [this._element( "video-player" ), this._element( "modal-video-player" )]
+            .forEach((player) => {
                 player.addEventListener( 'ended', (_evt) => {
                     this.videoEnded()
                 });
@@ -1997,6 +1815,17 @@ class AarloGlance extends HTMLElement {
                     this.showVideoControls(4);
                 });
             });
+    }
+
+
+    setupRecordingPlayer() {
+        this._mset( 'video-player',{src: this.gs.recording, poster: this.gs.poster} )
+        this._mshow("video-seek")
+        this._mshow("video-play-pause")
+        this._mhide("video-door-lock")
+        this._mhide("video-door2-lock")
+        this._mhide("video-light-on")
+        this._mhide("video-light2-on")
     }
 
     updateRecordingView() {
@@ -2086,10 +1915,6 @@ class AarloGlance extends HTMLElement {
             this.gs.dash.reset();
             this.gs.dash = null;
         }
-    }
-
-    // Handled in setupRecordingView
-    setupStreamView() {
     }
 
     setupStreamPlayer() {
@@ -2226,12 +2051,10 @@ class AarloGlance extends HTMLElement {
         // Install the static stuff.
         this.setupImageView()
         this.setupLibraryView()
-        this.setupRecordingView()
-        this.setupStreamView()
-
+        this.setupVideoView()
         this.setupImageHandlers()
         this.setupLibraryHandlers()
-        this.setupRecordingHandlers()
+        this.setupVideoHandlers()
 
         // And go...
         this.updateImageView()
@@ -2262,8 +2085,17 @@ class AarloGlance extends HTMLElement {
 
     async wsStartStream() {
         try {
+            // direct where supported
+            if (this.cc.directPlay && !this.gc.isApple) {
+                return await this._hass.callWS({
+                    type: "aarlo_stream_url",
+                    entity_id: this.cc.id,
+                    user_agent: navigator.userAgent,
+                })
+            }
+            // via Home Assistant otherwise
             return await this._hass.callWS({
-                type: this.cc.directPlay ? "aarlo_stream_url" : "camera/stream",
+                type: "camera/stream",
                 entity_id: this.cc.id,
             })
         } catch (err) {

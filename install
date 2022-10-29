@@ -15,7 +15,7 @@ if [[ -z "${DEST}" ]]; then
 	exit 1
 fi	
 if [[ ! -d "${DEST}" ]]; then
-	echo "*** please make sure the destination directory exists"
+	echo "*** please make sure the destination directory ${DEST} exists"
 	exit 1
 fi
 
