@@ -23,6 +23,8 @@ if [[ -n "${ECHO}" ]]; then
 	echo "**** would run the following commands, use './install go $1' to do the work"
 fi
 
+echo -- installing
 ${ECHO} mkdir -p "${DEST}/www"
 ${ECHO} cp -afv dist/hass-aarlo.js "${DEST}/www/aarlo-glance.js"
+echo -- finished at "$(date '+%A at %H:%M:%S')"
 
