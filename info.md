@@ -7,7 +7,7 @@ Lovelace card designed specifically for the [AArlo Integration](https://github.c
 **Be warned, 0.3 is in alpha**
 
 It's working for me, but it's very alpha so be prepared to return to
-version 0.3 if things go wrong.
+version 0.2 if things go wrong.
 
 I've put it out there so people can try it if they want. The underlying
 architecture is very different and (I hope) a lot more efficient.
