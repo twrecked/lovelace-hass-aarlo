@@ -15,7 +15,7 @@ if [[ -z "${DEST}" ]]; then
 	exit 1
 fi	
 if [[ ! -d "${DEST}" ]]; then
-	echo "*** please make sure the destination directory exists"
+	echo "*** please make sure the destination directory ${DEST} exists"
 	exit 1
 fi
 
@@ -23,6 +23,8 @@ if [[ -n "${ECHO}" ]]; then
 	echo "**** would run the following commands, use './install go $1' to do the work"
 fi
 
+echo -- installing
 ${ECHO} mkdir -p "${DEST}/www"
 ${ECHO} cp -afv dist/hass-aarlo.js "${DEST}/www/aarlo-glance.js"
+echo -- finished at "$(date '+%A at %H:%M:%S')"
 

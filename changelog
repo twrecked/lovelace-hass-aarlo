@@ -1,3 +1,10 @@
+0.3.0a1: set up stream view programatically
+  add both locks and lights to the stream view
+  remove old configuration support
+0.3.0a0: moved to HTMLElement
+       fixed lock/light in stream player
+       fixed bell2 display
+
 0.2.0b5: fix plugin icon
 0.2.0b4: replace alert() with logs
        use HA icons
