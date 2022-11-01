@@ -2,8 +2,6 @@
  * @module Lovelace class for accessing Arlo camera through the AArlo
  * module.
  *
- * this._version = "0.3.0a1"
- *
  * Startup Notes:
  * - hass(); called at startup; set initial internal status and then updates
  *   image element data
@@ -105,6 +103,9 @@ class AarloGlance extends HTMLElement {
 
     constructor() {
         super();
+
+        // current version
+        this._version = "0.3.0a1"
 
         // State and config.
         this._ready = "stopped"
@@ -1061,6 +1062,12 @@ class AarloGlance extends HTMLElement {
 
         // Grab name if there
         cc.name = _value( config.name, null )
+
+        // Get the version out.
+        if ("version" in config) {
+            this.throwError(`version: ${this._version}`)
+            return
+        }
 
         // Save layout
         cc.image_top = config.image_top
