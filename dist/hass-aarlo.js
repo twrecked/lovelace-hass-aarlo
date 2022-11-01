@@ -60,7 +60,14 @@ function _value_float( config, value = 0 ) {
     return parseFloat( _value( config, value ) )
 }
 function _includes( config, item, value = false ) {
-    return config ? config.includes(item) : value
+    if (config) {
+        config.split(",").forEach((citem) => {
+            if (citem === item) {
+                value = true;
+            }
+        })
+    }
+    return value;
 }
 
 /**
@@ -985,6 +992,8 @@ class AarloGlance extends HTMLElement {
             isHAApp: navigator.userAgent.includes("HomeAssistant"),
             // Is IOS
             isApple: navigator.userAgent.includes("(iPhone") || navigator.userAgent.includes("(iPad"),
+            // Is Android
+            isAndroid: navigator.userAgent.includes("Android"),
 
             // Language override?
             lang: config.lang,
@@ -1058,10 +1067,11 @@ class AarloGlance extends HTMLElement {
         cc.image_bottom = config.image_bottom
 
         // How do we display recordings or stream?
-        cc.directPlay        = _includes(config.image_view, "direct")
+        cc.arloPlay          = _includes(config.image_view, "arlo-stream")
+        cc.haPlay            = _includes(config.image_view, "ha-stream")
         cc.modalPlayer       = _includes(config.image_view, "modal")
+        cc.smartPlayer       = _includes(config.image_view, "smart-modal")
         cc.numericView       = _includes(config.image_view, 'numeric')
-        cc.smartPlayer       = _includes(config.image_view, "smart")
         cc.autoPlay          = _includes(config.image_view, 'start-stream')
         cc.autoPlayRecording = _includes(config.image_view, 'start-recording')
 
@@ -1129,7 +1139,7 @@ class AarloGlance extends HTMLElement {
             download:          _includes(config.library_view, "download"),
             duration:          _includes(config.library_view, "duration"),
             modalPlayer:       _includes(config.library_view, "modal"),
-            smartPlayer:       _includes(config.library_view, "smart"),
+            smartPlayer:       _includes(config.library_view, "smart-modal"),
             autoPlayRecording: _includes(config.library_view, 'start-recording'),
 
             // How many recordings to show
@@ -2085,15 +2095,43 @@ class AarloGlance extends HTMLElement {
 
     async wsStartStream() {
         try {
-            // direct where supported
-            if (this.cc.directPlay && !this.gc.isApple) {
+            /**
+             * Smart Playback
+             * If we're not on a mobile Apple device we can stream directly from
+             * Arlo. We need to manipulate the user agent on Android devices to
+             * stop it returning an rstp stream.
+             * Note, we could pass back the default user_agent of 'linux' but I'm
+             * hoping MACs will get HLS eventually...
+             * XXX Talking of which, test on a MAC?
+             */
+            if (!this.cc.arloPlay && !this.cc.haPlay) {
+                if (!this.gc.isApple) {
+                    let ua = this.gc.isAndroid ? "linux" : navigator.userAgent;
+                    return await this._hass.callWS({
+                        type: "aarlo_stream_url",
+                        entity_id: this.cc.id,
+                        user_agent: ua,
+                    });
+                }
+            }
+
+            /**
+             * Direct Playback
+             * Force direct playing from Arlo. This only really works for web
+             * browsers currently.
+             */
+            if (this.cc.arloPlay) {
                 return await this._hass.callWS({
                     type: "aarlo_stream_url",
                     entity_id: this.cc.id,
                     user_agent: navigator.userAgent,
                 })
             }
-            // via Home Assistant otherwise
+
+            /**
+             * Home Assistant Playback
+             * Fall back to this...
+             */
             return await this._hass.callWS({
                 type: "camera/stream",
                 entity_id: this.cc.id,

@@ -15,6 +15,13 @@ architecture is very different and (I hope) a lot more efficient.
 **The "Old Configuration" format has been deprecated, this code throw an error
 if it detects the old style.** 
 
+`smart` has been replaced with `smart-modal`
+
+`direct` is ignored, the default is a _smart stream_ mode where it chooses to
+stream directly from Arlo if it thinks it can. `arlo-stream` replaces `direct` and `ha-stream` is
+new.
+
+### Localisation
 The card now supports localisation with English, French, German and Spanish 
 provided at the moment. If anybody fancies translating into other languages,
 look at `en.js`
@@ -193,23 +200,27 @@ These are the options that determine the overall behaviour of the card.
 
 #### Image Options
 
-| Name       | Type | Required | Supported Values                                             |
-|------------|------|----------|--------------------------------------------------------------|
-| image_view | list | No       | start-stream, start-recording, direct, modal, smart, numeric |
+| Name       | Type | Required | Supported Values                                                                   |
+|------------|------|----------|------------------------------------------------------------------------------------|
+| image_view | list | No       | start-stream, start-recording, arlo-stream, ha-stream, modal, smart-modal, numeric |
 
 These are the options that determine the overall behaviour of the card when
 showing the image view.
   - `start-stream`; the card will start streaming when opened
   - `start-recording`; _not implemented yet_, the card will play recording when
     finished
-  - `direct`; when streaming the card will access Arlo directly rather than go
-    through Home Assistant
+  - `arlo-stream`; when streaming the card will access Arlo directly rather
+    than go through Home Assistant
+  - `ha-stream`; when streaming the card will always go through Arlo directly
   - `modal`; open the recording or stream in a modal window
-  - `smart`; open the recording or stream in a modal window on a desktop
+  - `smart-modal`; open the recording or stream in a modal window on a desktop
     machine, show inline otherwise.
   - `numeric`;  have the library display the number of entries. After nine it
     will display 9+.
 
+You only need to specify `arlo-stream` or `ha-stream` if you run into streaming
+issues, the card will try to do the correct thing if neither of these is
+specified.
 
 
 | Name         | Type | Required | Supported Values                                                                        |
@@ -281,9 +292,9 @@ snapshot image doesn't update all the time try adding extra time outs.
 
 #### Library Options
 
-| Name         | Type | Required | Supported Values                                  |
-|--------------|------|----------|---------------------------------------------------|
-| library_view | list | No       | start-recording, download, modal, smart, duration |
+| Name         | Type | Required | Supported Values                                        |
+|--------------|------|----------|---------------------------------------------------------|
+| library_view | list | No       | start-recording, download, modal, smart-modal, duration |
 
 This option determines the overall behaviour of the card when showing the
 library view.
@@ -292,7 +303,7 @@ library view.
   - `download`; show an icon to download the video when the mouse hovers over
     the recording thumbnail
   - `modal`; open the recording or stream in a modal window
-  - `smart`; open the recording or stream in a modal window on a desktop
+  - `smart-modal`; open the recording or stream in a modal window on a desktop
     machine, show inline otherwise.
   - `duration`; show how long the recording is
 
