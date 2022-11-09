@@ -261,7 +261,7 @@ class AarloGlance extends HTMLElement {
                     width: 14px;
                 }
                 .aarlo-broken-image {
-                    background: grey url("https://cdn.drawception.com/drawings/aSPjXhJbbr.png") center/36px
+                    background: grey url("/static/images/image-broken.svg") center/36px
                     no-repeat;
                 }
                 .slidecontainer {
@@ -1508,8 +1508,8 @@ class AarloGlance extends HTMLElement {
      */
     generateImageURL() {
         const camera = this._getState(this.cc.id,'unknown');
-        this.cs.image = window.location.origin + camera.attributes.entity_picture + "&t=" + new Date().getTime()
-        this.cs.imageBase = window.location.origin + camera.attributes.entity_picture
+        this.cs.image = camera.attributes.entity_picture + "&t=" + new Date().getTime()
+        this.cs.imageBase = camera.attributes.entity_picture
     }
 
     generateImageURLLater(seconds = 2) {
