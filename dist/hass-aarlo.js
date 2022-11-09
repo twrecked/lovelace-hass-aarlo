@@ -1508,8 +1508,6 @@ class AarloGlance extends HTMLElement {
      */
     generateImageURL() {    
         const camera = this._getState(this.cc.id,'unknown');
-        /** this.cs.image = this.hass.url camera.attributes.entity_picture + "&t=" + new Date().getTime()
-        */
         this.cs.image = this.hass.url + camera.attributes.entity_picture
         this.cs.imageBase = this.hass.url + camera.attributes.entity_picture
     }
