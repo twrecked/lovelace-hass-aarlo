@@ -1506,9 +1506,9 @@ class AarloGlance extends HTMLElement {
      *
      * It makes no attempt to reload the image.
      */
-    generateImageURL() {    
+    generateImageURL() {
         const camera = this._getState(this.cc.id,'unknown');
-        this.cs.image = this.hass.url + camera.attributes.entity_picture
+        this.cs.image = this.hass.url + camera.attributes.entity_picture + "&t=" + new Date().getTime()
         this.cs.imageBase = this.hass.url + camera.attributes.entity_picture
     }
 
