@@ -261,7 +261,7 @@ class AarloGlance extends HTMLElement {
                     width: 14px;
                 }
                 .aarlo-broken-image {
-                    background: grey url("/static/images/image-broken.svg", window.location.origin) center/36px
+                    background: grey url("https://cdn.drawception.com/drawings/aSPjXhJbbr.png") center/36px
                     no-repeat;
                 }
                 .slidecontainer {
