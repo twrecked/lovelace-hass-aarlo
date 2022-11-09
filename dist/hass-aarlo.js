@@ -1508,13 +1508,7 @@ class AarloGlance extends HTMLElement {
      */
     generateImageURL() {
         const camera = this._getState(this.cc.id,'unknown');
-        const data = hass.callWS({
-            type: 'auth/sign_path',
-            path: camera.attributes.entity_picture + "&t=" + new Date().getTime()
-        });
-        this.cs.image = data
-
-        // this.cs.image = camera.attributes.entity_picture + "&t=" + new Date().getTime()
+        this.cs.image = camera.attributes.entity_picture + "&t=" + new Date().getTime()
         this.cs.imageBase = camera.attributes.entity_picture
     }
 
