@@ -1507,7 +1507,6 @@ class AarloGlance extends HTMLElement {
      * It makes no attempt to reload the image.
      */
     generateImageURL() {
-        from homeassistant.helpers.network import get_url
         const instance_url = get_url(hass)
 
         const camera = this._getState(this.cc.id,'unknown');
