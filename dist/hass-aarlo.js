@@ -1526,8 +1526,10 @@ class AarloGlance extends HTMLElement {
             this._show("camera-viewer")
             this._hide("broken-image")
         } else {
-            this._show("broken-image")
-            this._hide("camera-viewer")
+            //this._show("broken-image")
+            //this._hide("camera-viewer")
+            this._show("camera-viewer")
+            this._hide("broken-image")
         }
         this._show('top-bar', !!this.cc.image_top)
         this._show('bottom-bar', !!this.cc.image_bottom)
