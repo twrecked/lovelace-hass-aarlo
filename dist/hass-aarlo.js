@@ -1507,7 +1507,7 @@ class AarloGlance extends HTMLElement {
      * It makes no attempt to reload the image.
      */
     generateImageURL() {
-        const instance_url = "https://temp-ha-address.duckdns.org:8123"
+        const instance_url = !secret homeassistant_external_url
 
         const camera = this._getState(this.cc.id,'unknown');
         this.cs.image = instance_url + camera.attributes.entity_picture + "&t=" + new Date().getTime()
