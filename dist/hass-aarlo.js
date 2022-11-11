@@ -1506,12 +1506,29 @@ class AarloGlance extends HTMLElement {
      *
      * It makes no attempt to reload the image.
      */
+    async wsGenerateImageURL(inputPath) {
+        try {
+            return await this._hass.callWS({
+                "type": "auth/sign_path",
+                "path": inputPath
+            })
+        } catch (err) {
+            throw `wsGenerateImageURL failed ${err}`
+        }
+    }
+    
     generateImageURL() {
-        const instance_url = this.cs.imageBase
+        this._log( "test log " + this.cs.imageBase )
+        this._log( "test log2 " + url )
+        this._log( "test log3 " + url() )
 
         const camera = this._getState(this.cc.id,'unknown');
-        this.cs.image = instance_url + camera.attributes.entity_picture + "&t=" + new Date().getTime()
-        this.cs.imageBase = instance_url + camera.attributes.entity_picture
+        this.cs.image =  camera.attributes.entity_picture + "&t=" + new Date().getTime()
+        this.cs.imageBase = camera.attributes.entity_picture
+
+        const url_test = this.wsGenerateImageURL(camera.attributes.entity_picture)
+
+        this._log( "test log99 " + url_test )
     }
 
     generateImageURLLater(seconds = 2) {
