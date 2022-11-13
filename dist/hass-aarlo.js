@@ -1508,14 +1508,12 @@ class AarloGlance extends HTMLElement {
      */
 
     generateImageURL() {
-        this._log( "test log2 " + this.cs.imageBase )
-
         const camera = this._getState(this.cc.id,'unknown');
-       
-        // this.cs.image = camera.attributes.entity_picture + "&t=" + new Date().getTime()
+
+        // For cast compatibility, use hassUrl()
+        // matches https://github.com/home-assistant/frontend/blob/dev/src/panels/lovelace/components/hui-image.ts
         this.cs.image = this._hass.hassUrl(camera.attributes.entity_picture + "&t=" + new Date().getTime()) 
         this.cs.imageBase = camera.attributes.entity_picture
-
     }
 
     generateImageURLLater(seconds = 2) {
@@ -1530,10 +1528,8 @@ class AarloGlance extends HTMLElement {
             this._show("camera-viewer")
             this._hide("broken-image")
         } else {
-            //this._show("broken-image")
-            //this._hide("camera-viewer")
-            this._show("camera-viewer")
-            this._hide("broken-image")
+            this._show("broken-image")
+            this._hide("camera-viewer")
         }
         this._show('top-bar', !!this.cc.image_top)
         this._show('bottom-bar', !!this.cc.image_bottom)
