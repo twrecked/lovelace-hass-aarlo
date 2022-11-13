@@ -1512,6 +1512,7 @@ class AarloGlance extends HTMLElement {
                 "type": "auth/sign_path",
                 "path": inputPath
             });
+            this._log( "test log97 " + returnPath )
             return returnPath
         } catch (err) {
             throw `wsGenerateImageURL failed ${err}`
