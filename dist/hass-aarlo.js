@@ -1521,12 +1521,18 @@ class AarloGlance extends HTMLElement {
         this._log( "test log " + this.cs.imageBase )
 
         const camera = this._getState(this.cc.id,'unknown');
+        
         const url_test = this.wsGenerateImageURL(camera.attributes.entity_picture)
+        .then()
+        .catch( (e) => {
+            this._log( e )
+        })
+        
         this.cs.image =  camera.attributes.entity_picture + "&t=" + new Date().getTime()
         this.cs.imageBase = camera.attributes.entity_picture
 
         this._log( "test log98 " + url_test )
-        this._log( "test log99 " + url_test.path )
+        this._log( "test log99 " + url_test.path ) 
     }
 
     generateImageURLLater(seconds = 2) {
