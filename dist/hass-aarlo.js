@@ -1508,10 +1508,11 @@ class AarloGlance extends HTMLElement {
      */
     async wsGenerateImageURL(inputPath) {
         try {
-            return await this._hass.callWS({
+            const returnPath = await this._hass.callWS({
                 "type": "auth/sign_path",
                 "path": inputPath
-            })
+            });
+            return returnPath
         } catch (err) {
             throw `wsGenerateImageURL failed ${err}`
         }
@@ -2180,7 +2181,7 @@ class AarloGlance extends HTMLElement {
         try {
             return await this._hass.callWS({
                 type: "aarlo_stop_activity",
-                entity_id: this.cc.id,
+                entity_id: this.cc.id,ws
             })
         } catch (err) {
             throw `wsStopStream failed ${err}`
