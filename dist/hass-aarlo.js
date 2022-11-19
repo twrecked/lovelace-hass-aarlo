@@ -479,6 +479,7 @@ class AarloGlance extends HTMLElement {
     }
     __state( element, state ) {
         let color = ""
+        this._log("logging state of: " + state + " " + element)
         switch( state ) {
             case "device-on":
               color =  "#FDD835"
