@@ -464,6 +464,23 @@ class AarloGlance extends HTMLElement {
     }
     __text( element, text ) {
         if ( element ) { element.innerText = text }
+        //let color = "white"
+        //switch( text ) {
+        //    case "Idle":
+        //        color = "red"
+        //        break
+        //    case "idle":
+        //        color = "yellow"
+        //        break
+        //    case "Streaming":
+        //    case "Recording":
+        //        color = "blue"
+        //        break
+        //}
+        //if ( element ) { 
+        //    element.innerText = text 
+        //    element.style.color = color
+        //}
     }
     __alt( element, alt ) {
         if ( element ) { element.alt = alt }
@@ -479,7 +496,6 @@ class AarloGlance extends HTMLElement {
     }
     __state( element, state ) {
         let color = ""
-        this._log( state )
         switch( state ) {
             case "device-on":
               color =  "#FDD835"
