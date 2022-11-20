@@ -141,7 +141,6 @@ class AarloGlance extends HTMLElement {
                     position: absolute;
                     left: 0;
                     right: 0;
-                    background-color: rgba(0, 0, 0, 0.3);
                     padding: 4px 8px;
                     color: white;
                     display: flex;
@@ -149,9 +148,11 @@ class AarloGlance extends HTMLElement {
                 }
                 .box-top {
                     top: 0;
+                    background-color: transparent;
                 }
                 .box-bottom {
                     bottom: 0;
+                    background-color: rgba(0, 0, 0, 0.2);
                 }
                 .box-align-left {
                     margin-left: 4px;
@@ -463,24 +464,24 @@ class AarloGlance extends HTMLElement {
         if ( element ) { element.title = title }
     }
     __text( element, text ) {
-        if ( element ) { element.innerText = text }
-        //let color = "white"
-        //switch( text ) {
-        //    case "Idle":
-        //        color = "red"
-        //        break
-        //    case "idle":
-        //        color = "yellow"
-        //        break
-        //    case "Streaming":
-        //    case "Recording":
-        //        color = "blue"
-        //        break
-        //}
-        //if ( element ) { 
-        //    element.innerText = text 
-        //    element.style.color = color
-        //}
+        //if ( element ) { element.innerText = text }
+        let color = "white"
+        switch( text ) {
+            case "Idle":
+                color = "red"
+                break
+            case "Recently Active":
+                color = "white"
+                break
+            case "Streaming":
+            case "Recording":
+                color = "#FDD835"
+                break
+        }
+        if ( element ) { 
+            element.innerText = text 
+            element.style.color = color
+        }
     }
     __alt( element, alt ) {
         if ( element ) { element.alt = alt }
