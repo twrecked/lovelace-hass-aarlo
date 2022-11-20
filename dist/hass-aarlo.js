@@ -468,7 +468,7 @@ class AarloGlance extends HTMLElement {
         let color = "white"
         switch( text ) {
             case "Idle":
-                color = "red"
+                color = "transparent"
                 break
             case "Recently Active":
                 color = "white"
