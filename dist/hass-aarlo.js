@@ -465,22 +465,31 @@ class AarloGlance extends HTMLElement {
     }
     __text( element, text ) {
         //if ( element ) { element.innerText = text }
+        //if ( element ) { element.innerText = text }
         let color = "white"
+        let backgroundColor = "transparent"
+        let padding = "0px"
         switch( text ) {
             case "Idle":
                 color = "transparent"
                 break
             case "Recently Active":
                 color = "white"
+                backgroundColor = "rgba(0, 0, 0, 0.2)"
+                padding = "0px 4px 0px"
                 break
             case "Streaming":
             case "Recording":
                 color = "#FDD835"
+                backgroundColor = "rgba(0, 0, 0, 0.2)"
+                padding = "0px 4px 0px"
                 break
         }
         if ( element ) { 
             element.innerText = text 
             element.style.color = color
+            element.style.background = backgroundColor
+            element.style.padding = padding
         }
     }
     __alt( element, alt ) {
