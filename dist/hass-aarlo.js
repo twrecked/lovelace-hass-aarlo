@@ -466,34 +466,39 @@ class AarloGlance extends HTMLElement {
     __text( element, text ) {
         //if ( element ) { element.innerText = text }
         //if ( element ) { element.innerText = text }
-        let color = "white"
-        //let backgroundColor = "transparent"
-        //let padding = "0px"
+        let color = ""
+        let fontSize = ""
+        let backgroundColor = ""
+        let padding = ""
         let textShadow = ""
         switch( text ) {
+            case "Off":
+                fontSize = "14px"
+                break
             case "Idle":
                 color = "transparent"
+                fontSize = "14px"
                 break
             case "Recently Active":
-                color = "white"
-                //backgroundColor = "rgba(0, 0, 0, 0.2)"
-                //padding = "0px 4px 0px"
-                textShadow = "-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000"
+                text = "Recent Activity"
+                backgroundColor = "rgba(0, 0, 0, 0.3)"
+                padding = "0px 2px 0px"
+                fontSize = "14px"
                 break
             case "Streaming":
             case "Recording":
                 color = "#FDD835"
-                //backgroundColor = "rgba(0, 0, 0, 0.2)"
-                //padding = "0px 4px 0px"
-                textShadow = "-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000"
+                backgroundColor = "rgba(0, 0, 0, 0.3)"
+                padding = "0px 2px 0px"
+                fontSize = "14px"
                 break
         }
         if ( element ) { 
             element.innerText = text 
             element.style.color = color
-            //element.style.background = backgroundColor
-            //element.style.padding = padding
-            element.style.setProperty('text-shadow',textShadow)
+            element.style.background = backgroundColor
+            element.style.padding = padding
+            element.style.setProperty('font-size',fontSize)
         }
     }
     __alt( element, alt ) {
