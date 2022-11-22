@@ -467,29 +467,33 @@ class AarloGlance extends HTMLElement {
         //if ( element ) { element.innerText = text }
         //if ( element ) { element.innerText = text }
         let color = "white"
-        let backgroundColor = "transparent"
-        let padding = "0px"
+        //let backgroundColor = "transparent"
+        //let padding = "0px"
+        let textShadow = ""
         switch( text ) {
             case "Idle":
                 color = "transparent"
                 break
             case "Recently Active":
                 color = "white"
-                backgroundColor = "rgba(0, 0, 0, 0.2)"
-                padding = "0px 4px 0px"
+                //backgroundColor = "rgba(0, 0, 0, 0.2)"
+                //padding = "0px 4px 0px"
+                textShadow = "-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000"
                 break
             case "Streaming":
             case "Recording":
                 color = "#FDD835"
-                backgroundColor = "rgba(0, 0, 0, 0.2)"
-                padding = "0px 4px 0px"
+                //backgroundColor = "rgba(0, 0, 0, 0.2)"
+                //padding = "0px 4px 0px"
+                textShadow = "-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000"
                 break
         }
         if ( element ) { 
             element.innerText = text 
             element.style.color = color
-            element.style.background = backgroundColor
-            element.style.padding = padding
+            //element.style.background = backgroundColor
+            //element.style.padding = padding
+            element.style.setProperty('text-shadow',textShadow)
         }
     }
     __alt( element, alt ) {
