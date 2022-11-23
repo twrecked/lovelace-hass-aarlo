@@ -810,17 +810,17 @@ class AarloGlance extends HTMLElement {
         }
 
         if ( this.cs.state !== 'off' ) {
-            if ( this.cs.state == 'Recording' ) {
-                this.cs.details.statusIcon = _tsi(`${camera_active}: ${this._i.statusIcon.recording}`, 'warn', 'mdi:run')
-            } else if ( this.cs.state == 'Streaming' ) {
-                this.cs.details.statusIcon = _tsi(`${camera_active}: ${this._i.statusIcon.streaming}`, 'warn', 'mdi:mdiAccountEye')
-            } else if ( this.cs.state == "Recently Active") {
-                this.cs.details.statusIcon = _tsi(`${camera_active}: ${this._i.statusIcon.recent}`, 'on', 'mdi:walk')
+            if ( this.cs.details.status === 'Recording' ) {
+                this.cs.details.statusIcon = _tsi(`Status: ${this.cs.details.status}`, 'warn', 'mdi:run')
+            } else if ( this.cs.details.status === 'Streaming' ) {
+                this.cs.details.statusIcon = _tsi(`Status: ${this.cs.details.status}`, 'warn', 'mdi:mdiAccountEye')
+            } else if ( this.cs.details.status === "Recently Active") {
+                this.cs.details.statusIcon = _tsi(`Status: ${this.cs.details.status}`, 'on', 'mdi:walk')
             } else {
-                this.cs.details.statusIcon = _tsi(`${camera_active}: ${this._i.statusIcon.idle}`, '', 'mdi:walk')
+                this.cs.details.statusIcon = _tsi(`Status: ${this.cs.details.status}`, '', 'mdi:walk')
             }
         } else {
-            this.cs.details.statusIcon = _tsi(this._i.image.statusIcon.off, 'off', 'mdi:camera-off')
+            this.cs.details.statusIcon = _tsi(`${this.cs.details.status}`, 'off', 'mdi:camera-off')
         }
 
         if(this.cs.state !== 'off') {
