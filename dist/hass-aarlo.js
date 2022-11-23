@@ -482,7 +482,7 @@ class AarloGlance extends HTMLElement {
         let color = ""
         switch( state ) {
             case "device-on":
-              color =  "#FDD835"
+              color =  "var(--state-icon-active-color)"
               break
             case "on":
             case "state-on":
@@ -490,7 +490,7 @@ class AarloGlance extends HTMLElement {
                 break
             case "warn":
             case "state-warn":
-                color = "orange"
+                color = "var(--warning-color)"
                 break
             case "error":
             case "state-error":
