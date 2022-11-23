@@ -464,42 +464,7 @@ class AarloGlance extends HTMLElement {
         if ( element ) { element.title = title }
     }
     __text( element, text ) {
-        //if ( element ) { element.innerText = text }
-        //if ( element ) { element.innerText = text }
-        let color = ""
-        let fontSize = ""
-        let backgroundColor = ""
-        let padding = ""
-        let textShadow = ""
-        switch( text ) {
-            case "Off":
-                fontSize = "14px"
-                break
-            case "Idle":
-                color = "transparent"
-                fontSize = "14px"
-                break
-            case "Recently Active":
-                text = "Recent Activity"
-                backgroundColor = "rgba(0, 0, 0, 0.3)"
-                padding = "0px 2px 0px"
-                fontSize = "14px"
-                break
-            case "Streaming":
-            case "Recording":
-                color = "#FDD835"
-                backgroundColor = "rgba(0, 0, 0, 0.3)"
-                padding = "0px 2px 0px"
-                fontSize = "14px"
-                break
-        }
-        if ( element ) { 
-            element.innerText = text 
-            element.style.color = color
-            element.style.background = backgroundColor
-            element.style.padding = padding
-            element.style.setProperty('font-size',fontSize)
-        }
+        if ( element ) { element.innerText = text }
     }
     __alt( element, alt ) {
         if ( element ) { element.alt = alt }
@@ -810,17 +775,17 @@ class AarloGlance extends HTMLElement {
         }
 
         if ( this.cs.state !== 'off' ) {
-            if ( this.cs.details.status === 'Recording' ) {
-                this.cs.details.statusIcon = _tsi(`Status: ${this.cs.details.status}`, 'warn', 'mdi:run')
-            } else if ( this.cs.details.status === 'Streaming' ) {
-                this.cs.details.statusIcon = _tsi(`Status: ${this.cs.details.status}`, 'warn', 'mdi:mdiAccountEye')
-            } else if ( this.cs.details.status === "Recently Active") {
-                this.cs.details.statusIcon = _tsi(`Status: ${this.cs.details.status}`, 'on', 'mdi:walk')
+            if ( this.cs.state === 'recording' ) {
+                this.cs.details.statusIcon = _tsi(`Status: ${this.cs.state}`, 'warn', 'mdi:run')
+            } else if ( this.cs.state === 'streaming' ) {
+                this.cs.details.statusIcon = _tsi(`Status: ${this.cs.state}`, 'warn', 'mdi:run')
+            } else if ( this.cs.state === "recently active") {
+                this.cs.details.statusIcon = _tsi(`Status: ${this.cs.state}`, 'on', 'mdi:walk')
             } else {
-                this.cs.details.statusIcon = _tsi(`Status: ${this.cs.details.status}`, '', 'mdi:walk')
+                this.cs.details.statusIcon = _tsi(`Status: ${this.cs.state}`, '', 'mdi:walk')
             }
         } else {
-            this.cs.details.statusIcon = _tsi(`${this.cs.details.status}`, 'off', 'mdi:camera-off')
+            this.cs.details.statusIcon = _tsi(`${this.cs.state}`, 'off', 'mdi:walk')
         }
 
         if(this.cs.state !== 'off') {
