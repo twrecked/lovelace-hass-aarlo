@@ -809,6 +809,20 @@ class AarloGlance extends HTMLElement {
             this.cs.details.onoff = _tsi(this._i.image.turn_camera_off, '', 'mdi:camera-off')
         }
 
+        if ( this.cs.state !== 'off' ) {
+            if ( this.cs.state == 'Recording' ) {
+                this.cs.details.statusIcon = _tsi(`${camera_active}: ${this._i.statusIcon.recording}`, 'warn', 'mdi:run')
+            } else if ( this.cs.state == 'Streaming' ) {
+                this.cs.details.statusIcon = _tsi(`${camera_active}: ${this._i.statusIcon.streaming}`, 'warn', 'mdi:mdiAccountEye')
+            } else if ( this.cs.state == "Recently Active") {
+                this.cs.details.statusIcon = _tsi(`${camera_active}: ${this._i.statusIcon.recent}`, 'on', 'mdi:walk')
+            } else {
+                this.cs.details.statusIcon = _tsi(`${camera_active}: ${this._i.statusIcon.idle}`, '', 'mdi:walk')
+            }
+        } else {
+            this.cs.details.statusIcon = _tsi(this._i.image.statusIcon.off, 'off', 'mdi:camera-off')
+        }
+
         if(this.cs.state !== 'off') {
             this.cs.details.snapshot = _tsi(this._i.image.take_a_snapshot, '', 'mdi:camera-enhance')
         } else {
@@ -1135,6 +1149,9 @@ class AarloGlance extends HTMLElement {
         cc.signalId        = _value(config.signal_id,  `sensor.aarlo_signal_strength_${camera}`)
         cc.capturedTodayId = _value(config.capture_id, `sensor.aarlo_captured_today_${camera}`)
         cc.lastCaptureId   = _value(config.last_id,    `sensor.aarlo_last_${camera}`)
+
+        // status icon
+        cc.statusIcon = cc.id
 
         // door definition
         cc.doorId         = _value(config.door)
