@@ -464,7 +464,21 @@ class AarloGlance extends HTMLElement {
         if ( element ) { element.title = title }
     }
     __text( element, text ) {
-        if ( element ) { element.innerText = text }
+        //if ( element ) { element.innerText = text }
+        let color = ""
+        if (this.cs.state === `recording`) {
+            color = "var(--state-icon-active-color)"
+        }
+        if (this.cs.state === `streaming`) {
+            color = "var(--state-icon-active-color)"
+        }
+        if (this.cs.state === `recently active`) {
+            color = "white"
+        }
+        if ( element ) { 
+            element.innerText = text
+            element.style.color = color
+        }
     }
     __alt( element, alt ) {
         if ( element ) { element.alt = alt }
@@ -776,9 +790,9 @@ class AarloGlance extends HTMLElement {
 
         if ( this.cs.state !== 'off' ) {
             if ( this.cs.state === 'recording' ) {
-                this.cs.details.statusIcon = _tsi(`Status: ${this.cs.state}`, 'warn', 'mdi:run')
+                this.cs.details.statusIcon = _tsi(`Status: ${this.cs.state}`, 'device-on', 'mdi:run')
             } else if ( this.cs.state === 'streaming' ) {
-                this.cs.details.statusIcon = _tsi(`Status: ${this.cs.state}`, 'warn', 'mdi:run')
+                this.cs.details.statusIcon = _tsi(`Status: ${this.cs.state}`, 'device-on', 'mdi:play-box')
             } else if ( this.cs.state === "recently active") {
                 this.cs.details.statusIcon = _tsi(`Status: ${this.cs.state}`, 'on', 'mdi:walk')
             } else {
