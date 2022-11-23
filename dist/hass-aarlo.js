@@ -790,9 +790,9 @@ class AarloGlance extends HTMLElement {
 
         if ( this.cs.state !== 'off' ) {
             if ( this.cs.state === 'recording' ) {
-                this.cs.details.statusIcon = _tsi(`Status: ${this.cs.state}`, 'device-on', 'mdi:run')
+                this.cs.details.statusIcon = _tsi(`Status: ${this.cs.state}`, 'device-on', 'mdi:run-fast')
             } else if ( this.cs.state === 'streaming' ) {
-                this.cs.details.statusIcon = _tsi(`Status: ${this.cs.state}`, 'device-on', 'mdi:play-box')
+                this.cs.details.statusIcon = _tsi(`Status: ${this.cs.state}`, 'device-on', 'mdi:eye')
             } else if ( this.cs.state === "recently active") {
                 this.cs.details.statusIcon = _tsi(`Status: ${this.cs.state}`, 'on', 'mdi:walk')
             } else {
