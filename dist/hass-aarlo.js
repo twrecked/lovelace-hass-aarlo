@@ -796,7 +796,7 @@ class AarloGlance extends HTMLElement {
             } else if ( this.cs.state === "recently active") {
                 this.cs.details.statusIcon = _tsi(`Status: ${this.cs.state}`, 'on', 'mdi:walk')
             } else {
-                this.cs.details.statusIcon = _tsi(`Status: ${this.cs.state}`, '', 'mdi:walk')
+                this.cs.details.statusIcon = _tsi(`Status: ${this.cs.state}`, '', 'mdi:border-radius')
             }
         } else {
             this.cs.details.statusIcon = _tsi(`${this.cs.state}`, 'off', 'mdi:walk')
