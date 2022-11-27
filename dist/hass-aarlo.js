@@ -1405,7 +1405,7 @@ class AarloGlance extends HTMLElement {
 
         if (id.startsWith("camera-motion")) {
             this.moreInfo(this.cc.motionId)
-        } else if (id.startsWith("statusIcon")) {
+        } else if (id.startsWith("camera-statusIcon")) {
             this.moreInfo(this.cc.motionId)
         } else if (id.startsWith("camera-sound")) {
             this.moreInfo(this.cc.soundId)
