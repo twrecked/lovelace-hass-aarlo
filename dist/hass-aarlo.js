@@ -788,6 +788,7 @@ class AarloGlance extends HTMLElement {
             this.cs.details.onoff = _tsi(this._i.image.turn_camera_off, '', 'mdi:camera-off')
         }
 
+        // STATUSICON
         if ( this.cs.state !== 'off' ) {
             if ( this.cs.state === 'recording' ) {
                 this.cs.details.statusIcon = _tsi(`Status: ${this.cs.state}`, 'device-on', 'mdi:run-fast')
@@ -1403,6 +1404,8 @@ class AarloGlance extends HTMLElement {
         const modified = evt.ctrlKey || evt.shiftKey
 
         if (id.startsWith("camera-motion")) {
+            this.moreInfo(this.cc.motionId)
+        } else if (id.startsWith("statusIcon")) {
             this.moreInfo(this.cc.motionId)
         } else if (id.startsWith("camera-sound")) {
             this.moreInfo(this.cc.soundId)
