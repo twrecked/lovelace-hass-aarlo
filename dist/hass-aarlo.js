@@ -468,9 +468,11 @@ class AarloGlance extends HTMLElement {
         let color = ""
         if (this.cs.state === `recording`) {
             color = "var(--state-icon-active-color, white)"
+            text = "Recording"
         }
         if (this.cs.state === `streaming`) {
             color = "var(--state-icon-active-color, white)"
+            text = "Streaming"
         }
         if (this.cs.state === `recently active`) {
             color = "white"
