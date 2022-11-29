@@ -806,7 +806,7 @@ class AarloGlance extends HTMLElement {
         }
 
         if(this.cs.state !== 'off') {
-            this.cs.details.snapshot = _tsi(this._i.image.take_a_snapshot, '', 'mdi:camera-enhance')
+            this.cs.details.snapshot = _tsi(this._i.image.take_a_snapshot, 'on', 'mdi:camera-enhance')
         } else {
             this.cs.details.snapshot = _tsi(this._i.image.feature_disabled, 'off', 'mdi:camera-off')
         }
