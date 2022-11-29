@@ -806,7 +806,7 @@ class AarloGlance extends HTMLElement {
         }
 
         if(this.cs.state !== 'off') {
-            this.cs.details.snapshot = _tsi(this._i.image.take_a_snapshot, 'on', 'mdi:camera-enhance')
+            this.cs.details.snapshot = _tsi(this._i.image.take_a_snapshot, 'on', 'mdi:camera-enhance-outline')
         } else {
             this.cs.details.snapshot = _tsi(this._i.image.feature_disabled, 'off', 'mdi:camera-off')
         }
@@ -863,7 +863,7 @@ class AarloGlance extends HTMLElement {
                         ( captured === "0" ? "" : `${captured} ${this._i.status.captured_something} ${last}, ` ) +
                         this._i.status.library_open,
                 captured !== "0" ? 'on' : '',
-                this.cc.numericView ? 'mdi:numeric-' + (captured > 9 ? "9-plus" : captured) + '-box' : 'mdi:file-video'
+                this.cc.numericView ? 'mdi:numeric-' + (captured > 9 ? "9-plus" : captured) + '-box' : 'mdi:camera-burst' 
             )
         } else {
             this.cs.details.library = _tsi(
