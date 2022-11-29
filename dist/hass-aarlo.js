@@ -779,7 +779,7 @@ class AarloGlance extends HTMLElement {
         if (this.cs.state === 'off') {
             this.cs.details.stream = _tsi(this._i.image.feature_disabled, 'off', 'mdi:play')
         } else if(this.cs.state !== 'streaming') {
-            this.cs.details.stream = _tsi(this._i.image.start_stream, 'on', 'mdi:play')
+            this.cs.details.stream = _tsi(this._i.image.start_stream, '', 'mdi:play')
         } else {
             this.cs.details.stream = _tsi(this._i.image.stop_stream, 'on', 'mdi:stop')
         }
@@ -806,7 +806,7 @@ class AarloGlance extends HTMLElement {
         }
 
         if(this.cs.state !== 'off') {
-            this.cs.details.snapshot = _tsi(this._i.image.take_a_snapshot, 'on', 'mdi:camera-enhance-outline')
+            this.cs.details.snapshot = _tsi(this._i.image.take_a_snapshot, '', 'mdi:camera-enhance')
         } else {
             this.cs.details.snapshot = _tsi(this._i.image.feature_disabled, 'off', 'mdi:camera-off')
         }
