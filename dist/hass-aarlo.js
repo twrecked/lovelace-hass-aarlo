@@ -1546,7 +1546,7 @@ class AarloGlance extends HTMLElement {
 
     generateImageURL() {
         const camera = this._getState(this.cc.id,'unknown');
-
+        
         // For cast compatibility, use hassUrl()
         // matches https://github.com/home-assistant/frontend/blob/dev/src/panels/lovelace/components/hui-image.ts
         this.cs.image = this._hass.hassUrl(camera.attributes.entity_picture + "&t=" + new Date().getTime()) 
