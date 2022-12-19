@@ -467,11 +467,11 @@ class AarloGlance extends HTMLElement {
         //if ( element ) { element.innerText = text }
         let color = ""
         if (this.cs.state === `recording`) {
-            color = "var(--state-icon-active-color, white)"
+            color = "var(--state-binary-sensor-color, white)"
             text = "Recording"
         }
         if (this.cs.state === `streaming`) {
-            color = "var(--state-icon-active-color, white)"
+            color = "var(--state-binary-sensor-color, white)"
             text = "Streaming"
         }
         if (this.cs.state === `recently active`) {
@@ -498,7 +498,7 @@ class AarloGlance extends HTMLElement {
         let color = ""
         switch( state ) {
             case "device-on":
-              color =  "var(--state-icon-active-color, white)"
+              color =  "var(--state-binary-sensor-color, white)"
               break
             case "on":
             case "state-on":
