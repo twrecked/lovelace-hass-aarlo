@@ -792,17 +792,21 @@ class AarloGlance extends HTMLElement {
 
         // STATUSICON
         if ( this.cs.state !== 'off' ) {
-            if ( this.cs.state === 'recording' ) {
+            if ( this.cs.state === 'idle' ) {
+                this.cs.details.statusIcon = _tsi(`Status: ${this.cs.state}`, '', 'mdi:image-filter-center-focus')
+            } else if ( this.cs.state === "recently active") {
+                this.cs.details.statusIcon = _tsi(`Status: ${this.cs.state}`, 'on', 'mdi:walk')
+            } else if ( this.cs.state === 'recording' ) {
                 this.cs.details.statusIcon = _tsi(`Status: ${this.cs.state}`, 'device-on', 'mdi:run-fast')
             } else if ( this.cs.state === 'streaming' ) {
                 this.cs.details.statusIcon = _tsi(`Status: ${this.cs.state}`, 'device-on', 'mdi:eye')
-            } else if ( this.cs.state === "recently active") {
-                this.cs.details.statusIcon = _tsi(`Status: ${this.cs.state}`, 'on', 'mdi:walk')
+            } else if ( this.cs.state === "offline, too cold") {
+                this.cs.details.statusIcon = _tsi(`Status: ${this.cs.state}`, 'off', 'mdi:thermometer-chevron-down')
             } else {
-                this.cs.details.statusIcon = _tsi(`Status: ${this.cs.state}`, '', 'mdi:image-filter-center-focus')
+                this.cs.details.statusIcon = _tsi(`${this.cs.state}`, 'off', 'mdi:cctv-off')
             }
         } else {
-            this.cs.details.statusIcon = _tsi(`${this.cs.state}`, 'off', 'mdi:walk')
+            this.cs.details.statusIcon = _tsi(`${this.cs.state}`, 'off', 'mdi:cctv-off')
         }
 
         if(this.cs.state !== 'off') {
