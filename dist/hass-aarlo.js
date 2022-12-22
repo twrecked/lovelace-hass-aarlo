@@ -469,13 +469,13 @@ class AarloGlance extends HTMLElement {
         if (this.cs.state === `recording`) {
             color = "var(--state-binary-sensor-color, white)"
             text = "Recording"
-        }
-        if (this.cs.state === `streaming`) {
+        } else if (this.cs.state === `streaming`) {
             color = "var(--state-binary-sensor-color, white)"
             text = "Streaming"
-        }
-        if (this.cs.state === `recently active`) {
+        } else if (this.cs.state === `recently active`) {
             color = "white"
+        } else if (this.cs.state === 'offline, too cold') {
+            color = "#a9a9a9"
         }
         if ( element ) { 
             element.innerText = text
