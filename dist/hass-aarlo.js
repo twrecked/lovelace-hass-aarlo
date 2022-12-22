@@ -801,7 +801,7 @@ class AarloGlance extends HTMLElement {
             } else if ( this.cs.state === 'streaming' ) {
                 this.cs.details.statusIcon = _tsi(`Status: ${this.cs.state}`, 'device-on', 'mdi:eye')
             } else if ( this.cs.state === "offline, too cold") {
-                this.cs.details.statusIcon = _tsi(`Status: ${this.cs.state}`, 'off', 'mdi:thermometer-chevron-down')
+                this.cs.details.statusIcon = _tsi(`Status: ${this.cs.state}`, '', 'mdi:thermometer-chevron-down')
             } else {
                 this.cs.details.statusIcon = _tsi(`${this.cs.state}`, 'off', 'mdi:cctv-off')
             }
