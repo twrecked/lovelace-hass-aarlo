@@ -105,7 +105,7 @@ class AarloGlance extends HTMLElement {
         super();
 
         // current version
-        this._version = "0.3.0a1"
+        this._version = "0.3.0a2"
 
         // State and config.
         this._ready = "stopped"
@@ -1683,7 +1683,7 @@ class AarloGlance extends HTMLElement {
             this._show( id )
 
             // highlight is on at this level and we have something?
-            if( show_triggers && video.trigger !== null ) {
+            if( show_triggers && video.trigger !== null && video.trigger_region !== null ) {
                 const coords = video.trigger_region.split(",")
 
                 let box = this._element( bid )
