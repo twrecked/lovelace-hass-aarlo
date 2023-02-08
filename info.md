@@ -2,6 +2,11 @@
 
 Lovelace card designed specifically for the [AArlo Integration](https://github.com/twrecked/hass-aarlo).
 
+### **Breaking Changes**
+
+**The "Old Configuration" format has been deprecated, this code throws an error
+if it detects the old style.**
+
 ## Version 0.3
 
 **Be warned, 0.3 is in alpha**
