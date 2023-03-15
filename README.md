@@ -136,6 +136,11 @@ to the next page, **<** to the previous and **X** closes the window.
 <a name="configuration"></a>
 ## Configuration
 
+__From version 0.2 onwards the configuration settings have changed.__
+
+_To continue using the previous configuration make sure to leave the `show`
+option in your settings._
+
 #### Card Type
 
 | Name | Value                 | Description                            |
