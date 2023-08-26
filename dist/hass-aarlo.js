@@ -765,9 +765,9 @@ class AarloGlance extends HTMLElement {
         }
 
         if ( this.cs.state === 'off' ) {
-            this.cs.details.onoff = _tsi(this._i.image.turn_camera_on, 'state-on', 'mdi:camera')
+            this.cs.details.onoff = _tsi(this._i.image.turn_camera_on, 'state-on', 'mdi:power')
         } else {
-            this.cs.details.onoff = _tsi(this._i.image.turn_camera_off, '', 'mdi:camera-off')
+            this.cs.details.onoff = _tsi(this._i.image.turn_camera_off, '', 'mdi:power')
         }
 
         if(this.cs.state !== 'off') {
