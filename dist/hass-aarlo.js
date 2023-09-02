@@ -784,7 +784,7 @@ class AarloGlance extends HTMLElement {
             const prefix = camera.attributes.charging ? 'battery-charging' : 'battery';
             this.cs.details.battery = _tsi(
                 `${this._i.status.battery_strength}: ${battery.state}%`,
-                battery.state < 25 ? 'state-warn' : ( battery.state < 15 ? 'state-error' : 'state-update' ),
+                battery.state < 15 ? 'state-error' : ( battery.state < 25 ? 'state-warn' : 'state-update' ),
                 `mdi:${prefix}` + (battery.state < 10 ? '-outline' :
                             (battery.state > 90 ? '' : '-' + Math.round(battery.state/10) + '0' ))
             )
