@@ -105,7 +105,7 @@ class AarloGlance extends HTMLElement {
         super();
 
         // current version
-        this._version = "0.3.0a2"
+        this._version = "0.3.0b3"
 
         // State and config.
         this._ready = "stopped"
@@ -758,10 +758,8 @@ class AarloGlance extends HTMLElement {
         // FUNCTIONS
         if (this.cs.state === 'off') {
             this.cs.details.stream = _tsi(this._i.image.feature_disabled, 'off', 'mdi:play')
-        } else if(this.cs.state !== 'streaming') {
-            this.cs.details.stream = _tsi(this._i.image.start_stream, 'on', 'mdi:play')
         } else {
-            this.cs.details.stream = _tsi(this._i.image.stop_stream, 'on', 'mdi:stop')
+            this.cs.details.stream = _tsi(this._i.image.start_stream, 'on', 'mdi:play')
         }
 
         if ( this.cs.state === 'off' ) {
@@ -2246,8 +2244,7 @@ class AarloGlance extends HTMLElement {
     }
 
     showOrStopStream() {
-        const camera = this._getState(this.cc.id,'unknown');
-        if ( camera.state === 'streaming' ) {
+        if (this.gs.stream !== null) {
             this.stopStream()
         } else {
             this.gs.viewer = this.getViewType( this.cc )
