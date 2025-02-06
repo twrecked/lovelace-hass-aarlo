@@ -44,7 +44,7 @@ export var messages = {
 		captured:           'capturée',
 		captured_nothing:   'rien aujourd’hui',
 		captured_something: 'clips d’aujourd’hui, capturés à',
-		clear:              'sans mouvement',
+		clear:              'aucun',
 		plugged_in:         'branchée',
 		signal_strength:    'intensité du signal',
 		motion:             'mouvement',
