@@ -2,13 +2,10 @@
 
 ## Version 0.3
 
-### **Be warned, 0.3 is in beta**
+**Be warned, 0.3 is beta**
 
-It's working for me, but it's beta so be prepared to return to
-version 0.2 if things go wrong.
-
-I've put it out there so people can try it if they want. The underlying
-architecture is very different and (I hope) a lot more efficient.
+It's working for me, but be prepared to return to version 0.2 if things go
+wrong.
 
 ### **Breaking Changes**
 

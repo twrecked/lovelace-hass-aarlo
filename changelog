@@ -1,3 +1,5 @@
+0.3.0b4:
+  bump revision and make proper release
 0.3.0b3:
   fix HACS install
 0.3.0a2: check for region null value
