@@ -206,7 +206,7 @@ showing the image view.
     finished
   - `arlo-stream`; when streaming the card will access Arlo directly rather
     than go through Home Assistant
-  - `ha-stream`; when streaming the card will always go through Arlo directly
+  - `ha-stream`; when streaming the card will always go through Home Assistant
   - `modal`; open the recording or stream in a modal window
   - `smart-modal`; open the recording or stream in a modal window on a desktop
     machine, show inline otherwise.
