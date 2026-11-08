@@ -1,5 +1,12 @@
 0.4.0.alpha.1:
-  initial 0.4.0 alpha release
+  embed default english dictionary for instant offline loading
+  remove external w3schools stylesheet dependency
+  modernize javascript practices and stream error handling
+  add Home Assistant card picker discovery (window.customCards)
+  add stub config and layout options for Sections/Grid dashboard views
+  implement element lifecycle (connectedCallback/disconnectedCallback)
+  optimize state change updates by watching monitored entities
+  remove deprecated pre-0.3 configuration checks and methods
 0.3.0b4:
   bump revision and make proper release
 0.3.0b3:

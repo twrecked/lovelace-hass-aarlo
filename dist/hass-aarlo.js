@@ -1248,16 +1248,16 @@ class AarloGlance extends HTMLElement {
         }
     }
 
-    getCameraConfigNew( global, local ) {
+    getCameraConfig( global, local ) {
         const config = _mergeArrays( global, local )
 
         // Find entity and determine camera name.
         const entity = config.entity
-        if ( !entity.startsWith( 'camera.aarlo_' ) ) {
-            this.throwError( "new config only works with aarlo entity names" )
-            return
+        if ( !entity || !entity.startsWith( 'camera.' ) ) {
+            this.throwError( "config requires an aarlo camera entity (e.g. camera.aarlo_kitchen)" )
+            return {}
         }
-        const camera = entity.replace( 'camera.aarlo_','' )
+        const camera = entity.startsWith('camera.aarlo_') ? entity.replace( 'camera.aarlo_','' ) : entity.replace('camera.', '')
 
         let cc = {}
 
@@ -1267,7 +1267,7 @@ class AarloGlance extends HTMLElement {
         // Get the version out.
         if ("version" in config) {
             this.throwError(`version: ${this._version}`)
-            return
+            return {}
         }
 
         // Save layout
@@ -1315,15 +1315,6 @@ class AarloGlance extends HTMLElement {
         cc.light2Id = _value(config.light2)
 
         return cc
-    }
-
-    getCameraConfig( global, local ) {
-        if( "show" in global ) {
-            this.throwError( 'the old configuration is no longer support' )
-            return {}
-        } else {
-            return this.getCameraConfigNew( global, local )
-        }
     }
 
     getCameraState( config ) {

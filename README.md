@@ -2,28 +2,10 @@
 
 ## Version 0.4
 
-**Be warned, 0.4 is alpha**
-
-It's working for me, but be prepared to return to version 0.2 if things go
-wrong.
-
-### **Breaking Changes**
-
-**The "Old Configuration" format has been deprecated, this code throw an error
-if it detects the old style.** 
-
-`smart` has been replaced with `smart-modal`
-
-`direct` is ignored, the default is a _smart stream_ mode where it chooses to
-stream directly from Arlo if it thinks it can. `arlo-stream` replaces `direct` and `ha-stream` is
-new.
+Lovelace card designed specifically for the [AArlo Integration](https://github.com/twrecked/hass-aarlo).
 
 ### Localisation
-The card now supports localisation with English, French, German and Spanish 
-provided at the moment. If anybody fancies translating into other languages,
-look at `en.js`
-[here](https://github.com/twrecked/lovelace-hass-aarlo/tree/master/lang), you
-just need to translate the strings in quotes.
+The card supports localisation with English, French, German, Spanish, Danish, Italian, Portuguese (Brazil), and Swedish provided. English is bundled directly for instant offline loading. If you would like to translate into additional languages, look at `en.js` [here](https://github.com/twrecked/lovelace-hass-aarlo/tree/master/lang).
 
 
 ## Table of Contents

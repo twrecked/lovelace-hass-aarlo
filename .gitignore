@@ -110,3 +110,16 @@ venv.bak/
 *.rej
 *.orig
 *.diff
+
+# local scratch and diffs
+*.diff
+*.dioff
+*.figg
+*.tgz
+*.yaml
+swipe.js
+ratio
+test
+notes.md
+config.md
+rel.md
