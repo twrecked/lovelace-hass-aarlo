@@ -95,6 +95,8 @@ function _tsi(title, state, icon ) {
     }
 }
 
+const CARD_VERSION = "0.4.0.alpha.1";
+
 const DEFAULT_MESSAGES = {
     author: {
         name: "twrecked",
@@ -180,7 +182,7 @@ class AarloGlance extends HTMLElement {
         super();
 
         // current version
-        this._version = "0.4.0.alpha.1"
+        this._version = CARD_VERSION
 
         // State and config.
         this._ready = "stopped"
@@ -2806,6 +2808,12 @@ function loadScript(src) {
 if (!customElements.get('aarlo-glance')) {
     customElements.define('aarlo-glance', AarloGlance);
 }
+
+console.info(
+    `%c AARLO-GLANCE %c ${CARD_VERSION} `,
+    "color: white; background: #03a9f4; font-weight: 700;",
+    "color: #03a9f4; background: white; font-weight: 700;"
+);
 
 window.customCards = window.customCards || [];
 if (!window.customCards.some(card => card.type === "aarlo-glance")) {
