@@ -27,6 +27,7 @@
 - **Lifecycle Cleanups (`connectedCallback` & `disconnectedCallback`):** Properly pauses video playback, destroys HLS/DASH media players, and cancels active timeouts when navigating away from the dashboard tab, preventing orphaned streams and memory leaks.
 - **State Change Throttling:** Added `_hasMonitoredEntitiesChanged()` to inspect watched camera and sensor entities, skipping unnecessary DOM queries and re-rendering when unrelated HA entities update.
 - **Robust Video Controls:** Video playback and fullscreen requests now handle promise rejections cleanly, with added support for iOS Safari `webkitEnterFullscreen`.
+- **Home Assistant Streaming by Default:** Stream requests now default to Home Assistant proxying (`ha-stream`), receiving RTSPS into Home Assistant and serving HLS to the browser. This eliminates the CORS and timeout failures common with direct Arlo DASH streams. Direct cloud streaming remains available via `arlo-stream`.
 
 ### 4. Configuration Simplification
 - **Removed Deprecated Configuration Checks:** Completely removed legacy pre-0.3 `show` error checks and unified camera configuration parsing into `getCameraConfig`.

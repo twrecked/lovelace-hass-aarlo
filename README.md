@@ -183,18 +183,15 @@ showing the image view.
   - `start-stream`; the card will start streaming when opened
   - `start-recording`; _not implemented yet_, the card will play recording when
     finished
-  - `arlo-stream`; when streaming the card will access Arlo directly rather
-    than go through Home Assistant
-  - `ha-stream`; when streaming the card will always go through Home Assistant
+  - `ha-stream`; (default) stream proxied through Home Assistant using native HLS
+  - `arlo-stream`; stream directly from Arlo Cloud using MPEG-DASH
   - `modal`; open the recording or stream in a modal window
   - `smart-modal`; open the recording or stream in a modal window on a desktop
     machine, show inline otherwise.
   - `numeric`;  have the library display the number of entries. After nine it
     will display 9+.
 
-You only need to specify `arlo-stream` or `ha-stream` if you run into streaming
-issues, the card will try to do the correct thing if neither of these is
-specified.
+Home Assistant streaming (`ha-stream`) is the default and recommended mode as it avoids browser CORS issues and works reliably across all devices. `arlo-stream` remains available to force direct Arlo Cloud streaming.
 
 
 | Name         | Type | Required | Supported Values                                                                        |

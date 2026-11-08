@@ -2301,48 +2301,28 @@ class AarloGlance extends HTMLElement {
     async wsStartStream() {
         try {
             /**
-             * Smart Playback
-             * If we're not on a mobile Apple device we can stream directly from
-             * Arlo. We need to manipulate the user agent on Android devices to
-             * stop it returning an rstp stream.
-             * Note, we could pass back the default user_agent of 'linux' but I'm
-             * hoping MACs will get HLS eventually...
-             * XXX Talking of which, test on a MAC?
-             */
-            if (!this.cc.arloPlay && !this.cc.haPlay) {
-                if (!this.gc.isApple) {
-                    let ua = this.gc.isAndroid ? "linux" : navigator.userAgent;
-                    return await this._hass.callWS({
-                        type: "aarlo_stream_url",
-                        entity_id: this.cc.id,
-                        user_agent: ua,
-                    });
-                }
-            }
-
-            /**
-             * Direct Playback
-             * Force direct playing from Arlo. This only really works for web
-             * browsers currently.
+             * Direct Arlo Cloud Playback
+             * Only when explicitly requested via `arlo-stream` in image_view.
              */
             if (this.cc.arloPlay) {
+                let ua = this.gc.isAndroid ? "linux" : navigator.userAgent;
                 return await this._hass.callWS({
                     type: "aarlo_stream_url",
                     entity_id: this.cc.id,
-                    user_agent: navigator.userAgent,
-                })
+                    user_agent: ua,
+                });
             }
 
             /**
-             * Home Assistant Playback
-             * Fall back to this...
+             * Home Assistant Playback (Default)
+             * Standard HLS stream proxied through Home Assistant.
              */
             return await this._hass.callWS({
                 type: "camera/stream",
                 entity_id: this.cc.id,
-            })
+            });
         } catch (err) {
-            throw new Error(`wsStartStream failed: ${err}`)
+            throw new Error(`wsStartStream failed: ${err}`);
         }
     }
 

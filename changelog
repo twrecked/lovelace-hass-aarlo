@@ -7,6 +7,7 @@
   implement element lifecycle (connectedCallback/disconnectedCallback)
   optimize state change updates by watching monitored entities
   remove deprecated pre-0.3 configuration checks and methods
+  default to ha-stream for reliable HLS playback via Home Assistant
 0.3.0b4:
   bump revision and make proper release
 0.3.0b3:
