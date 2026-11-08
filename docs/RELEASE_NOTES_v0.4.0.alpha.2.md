@@ -15,7 +15,7 @@
   - **Camera Entity**: Dropdown picker with search and icons.
   - **Display Name**: Optional text override.
   - **Click Action**: Selector for "Live Stream" vs. "Last Recording".
-  - **Widget Overlays**: Direct text editing for `image_top` and `image_bottom`.
+  - **Widget Overlays**: Clean multi-select chip pickers for Top Bar (Left/Right) and Bottom Bar (Left/Right), automatically managing widget selection and pipe-separated (`|`) alignment without manual string typing.
   - **Connected Smart Devices**: Native entity selectors for Door Lock, Light, Doorbell Sensor, Doorbell Mute Switch, and Door Contact Sensor.
   - **Library Grid Sizes & Diagnostics**: Easily configure grid cycle dimensions and toggle debug logging.
 

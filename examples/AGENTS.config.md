@@ -62,6 +62,7 @@ entities:
 * `name`: Optional display name override. If omitted, uses Home Assistant's `friendly_name`.
 
 ### 2.2 Bar Layout: `image_top` and `image_bottom`
+*(Note: In the Lovelace Visual Editor, these are conveniently configured via four multi-select chip selectors: Top Left, Top Right, Bottom Left, and Bottom Right, which automatically generate the pipe-separated strings below).*
 Controls the widgets displayed along the top and bottom overlays of the camera preview.
 * Can be formatted as a comma-separated string or a YAML list.
 * Use `|` (pipe) to separate left-aligned widgets from right-aligned widgets:

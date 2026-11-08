@@ -2789,6 +2789,33 @@ function loadScript(src) {
     }
 })();
 
+const TOP_WIDGET_OPTIONS = [
+    { value: "name", label: "Camera Name" },
+    { value: "status", label: "Status (Idle/Streaming/etc)" },
+    { value: "date", label: "Date / Time of Capture" },
+];
+
+const BOTTOM_WIDGET_OPTIONS = [
+    { value: "battery", label: "Battery Level" },
+    { value: "signal", label: "Signal Strength" },
+    { value: "library", label: "Library / Recordings" },
+    { value: "motion", label: "Motion Detection" },
+    { value: "sound", label: "Audio Detection" },
+    { value: "stream", label: "Live Stream Toggle" },
+    { value: "snapshot", label: "Take Snapshot" },
+    { value: "onoff", label: "Camera On/Off" },
+    { value: "lock", label: "Primary Door Lock" },
+    { value: "light", label: "Primary Light" },
+    { value: "bell", label: "Primary Doorbell" },
+    { value: "door", label: "Primary Door Contact" },
+    { value: "lock2", label: "Secondary Door Lock" },
+    { value: "light2", label: "Secondary Light" },
+    { value: "bell2", label: "Secondary Doorbell" },
+    { value: "door2", label: "Secondary Door Contact" },
+    { value: "previous", label: "Previous Camera (Multi-cam)" },
+    { value: "next", label: "Next Camera (Multi-cam)" },
+];
+
 const EDITOR_SCHEMA = [
     { name: "entity", selector: { entity: { domain: "camera" } } },
     { name: "name", selector: { text: {} } },
@@ -2803,8 +2830,42 @@ const EDITOR_SCHEMA = [
             },
         },
     },
-    { name: "image_top", selector: { text: {} } },
-    { name: "image_bottom", selector: { text: {} } },
+    {
+        name: "top_left",
+        selector: {
+            select: {
+                multiple: true,
+                options: TOP_WIDGET_OPTIONS,
+            },
+        },
+    },
+    {
+        name: "top_right",
+        selector: {
+            select: {
+                multiple: true,
+                options: TOP_WIDGET_OPTIONS,
+            },
+        },
+    },
+    {
+        name: "bottom_left",
+        selector: {
+            select: {
+                multiple: true,
+                options: BOTTOM_WIDGET_OPTIONS,
+            },
+        },
+    },
+    {
+        name: "bottom_right",
+        selector: {
+            select: {
+                multiple: true,
+                options: BOTTOM_WIDGET_OPTIONS,
+            },
+        },
+    },
     { name: "door_lock", selector: { entity: { domain: "lock" } } },
     { name: "light", selector: { entity: { domain: "light" } } },
     { name: "door_bell", selector: { entity: { domain: "binary_sensor" } } },
@@ -2842,9 +2903,11 @@ class AarloGlanceEditor extends HTMLElement {
         const labels = {
             entity: "Camera Entity",
             name: "Display Name (Optional)",
-            image_click: "Click Action",
-            image_top: "Top Bar Widgets (e.g. name,status|date)",
-            image_bottom: "Bottom Bar Widgets (e.g. motion,battery,stream,library|lock,light)",
+            image_click: "Click Preview Action",
+            top_left: "Top Bar Widgets (Left)",
+            top_right: "Top Bar Widgets (Right)",
+            bottom_left: "Bottom Bar Widgets (Left)",
+            bottom_right: "Bottom Bar Widgets (Right)",
             door_lock: "Front Door Lock",
             light: "Entrance Light",
             door_bell: "Doorbell Sensor",
@@ -2854,6 +2917,15 @@ class AarloGlanceEditor extends HTMLElement {
             logging: "Enable Debug Logging",
         };
         return labels[schema.name] || schema.name;
+    }
+
+    _parseWidgets(field) {
+        if (!field) return [[], []];
+        const raw = Array.isArray(field) ? field.join("|") : String(field);
+        const parts = raw.split("|");
+        const left = parts[0] ? parts[0].split(",").map((s) => s.trim()).filter(Boolean) : [];
+        const right = parts[1] ? parts[1].split(",").map((s) => s.trim()).filter(Boolean) : [];
+        return [left, right];
     }
 
     _valueChanged(ev) {
@@ -2868,6 +2940,27 @@ class AarloGlanceEditor extends HTMLElement {
                 newConfig[k] = v;
             }
         }
+
+        const topL = (value.top_left || []).join(",");
+        const topR = (value.top_right || []).join(",");
+        if (topL || topR) {
+            newConfig.image_top = topR ? `${topL}|${topR}` : topL;
+        } else {
+            delete newConfig.image_top;
+        }
+
+        const bottomL = (value.bottom_left || []).join(",");
+        const bottomR = (value.bottom_right || []).join(",");
+        if (bottomL || bottomR) {
+            newConfig.image_bottom = bottomR ? `${bottomL}|${bottomR}` : bottomL;
+        } else {
+            delete newConfig.image_bottom;
+        }
+
+        delete newConfig.top_left;
+        delete newConfig.top_right;
+        delete newConfig.bottom_left;
+        delete newConfig.bottom_right;
 
         this._config = newConfig;
         const event = new CustomEvent("config-changed", {
@@ -2897,13 +2990,16 @@ class AarloGlanceEditor extends HTMLElement {
             this._form.computeLabel = (s) => this._computeLabel(s);
         }
 
-        const formData = { ...this._config };
-        if (Array.isArray(formData.image_bottom)) {
-            formData.image_bottom = formData.image_bottom.join("|");
-        }
-        if (Array.isArray(formData.image_top)) {
-            formData.image_top = formData.image_top.join("|");
-        }
+        const [topLeft, topRight] = this._parseWidgets(this._config.image_top);
+        const [bottomLeft, bottomRight] = this._parseWidgets(this._config.image_bottom);
+
+        const formData = {
+            ...this._config,
+            top_left: topLeft,
+            top_right: topRight,
+            bottom_left: bottomLeft,
+            bottom_right: bottomRight,
+        };
 
         this._form.hass = this._hass;
         this._form.schema = EDITOR_SCHEMA;
