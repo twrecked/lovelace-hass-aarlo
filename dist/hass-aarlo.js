@@ -105,7 +105,7 @@ class AarloGlance extends HTMLElement {
         super();
 
         // current version
-        this._version = "0.3.0b4"
+        this._version = "0.4.0.alpha.1"
 
         // State and config.
         this._ready = "stopped"

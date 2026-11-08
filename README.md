@@ -1,8 +1,8 @@
 # lovelace-hass-arlo
 
-## Version 0.3
+## Version 0.4
 
-**Be warned, 0.3 is beta**
+**Be warned, 0.4 is alpha**
 
 It's working for me, but be prepared to return to version 0.2 if things go
 wrong.

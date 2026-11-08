@@ -7,9 +7,9 @@ Lovelace card designed specifically for the [AArlo Integration](https://github.c
 **The "Old Configuration" format has been deprecated, this code throws an error
 if it detects the old style.**
 
-## Version 0.3
+## Version 0.4
 
-**Be warned, 0.3 is beta**
+**Be warned, 0.4 is alpha**
 
 It's working for me, but be prepared to return to version 0.2 if things go
 wrong.
