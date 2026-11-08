@@ -11,7 +11,7 @@ It provides:
 * Live streaming with smart, Arlo-direct, and Home Assistant proxy modes.
 * Support for doorbell and door opening notifications.
 * Support for toggling lights and locks during streaming.
-* Card picker UI discovery and Home Assistant Sections / Grid layout support.
+* Card picker UI discovery, native Visual Editor support, and Home Assistant Sections / Grid layout support.
 
 ## Example
 ![The Image Window](/images/arlo-glance-01.png)

@@ -1,3 +1,5 @@
+0.4.0.alpha.2:
+  add native visual card editor (aarlo-glance-editor) using ha-form
 0.4.0.alpha.1:
   embed default english dictionary for instant offline loading
   remove external w3schools stylesheet dependency
