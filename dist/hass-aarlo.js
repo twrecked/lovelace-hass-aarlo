@@ -867,7 +867,7 @@ class AarloGlance extends HTMLElement {
         }
         if(this.cc.door2LockId) {
             const door2LockState = this._getState(this.cc.door2LockId, 'locked')
-            const is_locked      = doorLockState.state === 'locked'
+            const is_locked      = door2LockState.state === 'locked'
             this.cs.details.lock2 = _tsi(
                 `${door2LockState.attributes.friendly_name}: ${is_locked ? this._i.status.lock_locked : this._i.status.lock_unlocked}`,
                 is_locked ? 'state-on' : 'state-warn',
