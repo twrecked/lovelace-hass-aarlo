@@ -74,9 +74,9 @@ HACS and the home assistant interface.
 You don't need to run this if you used **HACS** to install.
 
 ```sh
-install /config
+./scripts/install /config
 # check output looks good
-install go /config
+./scripts/install go /config
 ```
 
 Add the following to the top of your UI configuration file.

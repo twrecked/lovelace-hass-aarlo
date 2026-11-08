@@ -2,6 +2,8 @@
 
 # Installation code.
 
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
 if [[ "${1}" == "go" ]]; then
 	ECHO=
 	shift
@@ -20,11 +22,10 @@ if [[ ! -d "${DEST}" ]]; then
 fi
 
 if [[ -n "${ECHO}" ]]; then
-	echo "**** would run the following commands, use './install go $1' to do the work"
+	echo "**** would run the following commands, use './scripts/install go $1' to do the work"
 fi
 
 echo -- installing
 ${ECHO} mkdir -p "${DEST}/www"
-${ECHO} cp -afv dist/hass-aarlo.js "${DEST}/www/aarlo-glance.js"
+${ECHO} cp -afv "${REPO_ROOT}/dist/hass-aarlo.js" "${DEST}/www/aarlo-glance.js"
 echo -- finished at "$(date '+%A at %H:%M:%S')"
-
