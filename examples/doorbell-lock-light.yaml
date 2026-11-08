@@ -1,0 +1,17 @@
+# Modern Aarlo Glance Card - Video Doorbell with Lock and Light Controls (v0.4.0+)
+# Configured for a 1:1 aspect ratio doorbell camera with attached entry devices.
+
+type: custom:aarlo-glance
+entity: camera.aarlo_front_door
+name: Front Door
+image_view: square
+image_top: name,status
+image_bottom: motion,sound,battery,signal|bell,lock,light,library,stream
+image_click: stream
+door: binary_sensor.front_door_contact
+door_bell: binary_sensor.aarlo_ding_front_door
+door_bell_mute: switch.aarlo_silent_mode_front_door
+door_lock: lock.front_door_deadbolt
+light: light.porch_light
+library_view: duration,download
+library_sizes: 2,3

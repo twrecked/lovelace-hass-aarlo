@@ -1,0 +1,12 @@
+# Modern Aarlo Glance Card - Single Camera Example (v0.4.0+)
+# Place in your Lovelace dashboard YAML or paste into the GUI card editor.
+
+type: custom:aarlo-glance
+entity: camera.aarlo_driveway
+name: Driveway
+image_top: name,status|date
+image_bottom: motion,sound,battery,signal|library,stream,snapshot
+image_click: stream
+library_view: duration,download
+library_sizes: 2,3,4
+max_recordings: 50

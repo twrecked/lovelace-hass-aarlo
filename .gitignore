@@ -123,3 +123,4 @@ test
 notes.md
 config.md
 rel.md
+!examples/*.yaml
