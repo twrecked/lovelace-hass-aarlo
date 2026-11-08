@@ -198,6 +198,7 @@ class AarloGlance extends HTMLElement {
         this._lc = {}
         this._ls = {}
         this._cameraIndex = 0
+        this._oldHassStates = null
     }
 
     render() {
@@ -237,9 +238,9 @@ class AarloGlance extends HTMLElement {
                     overflow: hidden;
                 }
                 .box {
-                    white-space: var(--paper-font-common-nowrap_-_white-space);
-                    overflow: var(--paper-font-common-nowrap_-_overflow);
-                    text-overflow: var(--paper-font-common-nowrap_-_text-overflow);
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
                     position: absolute;
                     left: 0;
                     right: 0;
@@ -468,16 +469,116 @@ class AarloGlance extends HTMLElement {
         // All handle internally
     }
 
+    connectedCallback() {
+        if (this._ready === "ready") {
+            this.updateView();
+        }
+    }
+
+    disconnectedCallback() {
+        this.hideVideoControlsCancel();
+        if (this.cs && this.cs.autoPlayTimer !== null) {
+            clearTimeout(this.cs.autoPlayTimer);
+            this.cs.autoPlayTimer = null;
+        }
+        this.destroyHLSStream();
+        if (this.gs && this.gs.dash) {
+            try {
+                this.gs.dash.reset();
+            } catch (e) {}
+            this.gs.dash = null;
+        }
+        const video = this._melement('video-player');
+        if (video) {
+            try {
+                video.pause();
+                video.src = "";
+            } catch (e) {}
+        }
+    }
+
+    _hasMonitoredEntitiesChanged(newHass) {
+        if (!this._oldHassStates || !newHass || !newHass.states) {
+            return true;
+        }
+        for (const ci in this._cc) {
+            const cc = this._cc[ci];
+            if (!cc) continue;
+            const watched = [
+                cc.id, cc.motionId, cc.soundId, cc.batteryId,
+                cc.signalId, cc.capturedTodayId, cc.lastCaptureId,
+                cc.doorId, cc.doorBellId, cc.doorBellMuteId, cc.doorLockId,
+                cc.door2Id, cc.door2BellId, cc.door2BellMuteId, cc.door2LockId,
+                cc.lightId, cc.light2Id
+            ];
+            for (const entityId of watched) {
+                if (entityId && this._oldHassStates[entityId] !== newHass.states[entityId]) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    _recordMonitoredEntityStates(hass) {
+        if (!hass || !hass.states) return;
+        this._oldHassStates = {};
+        for (const ci in this._cc) {
+            const cc = this._cc[ci];
+            if (!cc) continue;
+            const watched = [
+                cc.id, cc.motionId, cc.soundId, cc.batteryId,
+                cc.signalId, cc.capturedTodayId, cc.lastCaptureId,
+                cc.doorId, cc.doorBellId, cc.doorBellMuteId, cc.doorLockId,
+                cc.door2Id, cc.door2BellId, cc.door2BellMuteId, cc.door2LockId,
+                cc.lightId, cc.light2Id
+            ];
+            for (const entityId of watched) {
+                if (entityId && hass.states[entityId]) {
+                    this._oldHassStates[entityId] = hass.states[entityId];
+                }
+            }
+        }
+    }
+
     set hass( hass ) {
+        const hasChanged = this._hasMonitoredEntitiesChanged(hass);
         this._hass = hass;
         if ( this._ready === "stopped" ) {
-            this._ready = "starting"
-            this.initialSetup()
-            this.render()
+            this._ready = "starting";
+            this.initialSetup();
+            this.render();
+            this._recordMonitoredEntityStates(hass);
+        } else if ( this._ready === "ready" && hasChanged ) {
+            this._recordMonitoredEntityStates(hass);
+            this.updateView();
         }
-        if ( this._ready === "ready" ) {
-            this.updateView()
+    }
+
+    static getStubConfig(hass, entities, entitiesFallback) {
+        let cameraEntity = "camera.aarlo_camera";
+        if (entities && entities.length > 0) {
+            const found = entities.find(e => e.startsWith("camera.aarlo_") || e.startsWith("camera."));
+            if (found) cameraEntity = found;
+        } else if (hass && hass.states) {
+            const found = Object.keys(hass.states).find(e => e.startsWith("camera.aarlo_"));
+            if (found) cameraEntity = found;
         }
+        return {
+            type: "custom:aarlo-glance",
+            entity: cameraEntity,
+            image_top: "name,status",
+            image_bottom: "motion,library,play,snapshot,battery",
+        };
+    }
+
+    getLayoutOptions() {
+        return {
+            grid_columns: 4,
+            grid_rows: 3,
+            grid_min_columns: 2,
+            grid_min_rows: 2,
+        };
     }
 
     getCardSize() {
@@ -485,12 +586,12 @@ class AarloGlance extends HTMLElement {
     }
 
     moreInfo( id ) {
-        const event = new Event('hass-more-info', {
+        const event = new CustomEvent('hass-more-info', {
             bubbles: true,
             cancelable: false,
             composed: true,
+            detail: { entityId: id },
         });
-        event.detail = { entityId: id };
         this.dispatchEvent(event);
         return event;
     }
@@ -2713,6 +2814,16 @@ function loadScript(src) {
 
 if (!customElements.get('aarlo-glance')) {
     customElements.define('aarlo-glance', AarloGlance);
+}
+
+window.customCards = window.customCards || [];
+if (!window.customCards.some(card => card.type === "aarlo-glance")) {
+    window.customCards.push({
+        type: "aarlo-glance",
+        name: "Aarlo Glance Card",
+        description: "Aarlo camera glance card with live streaming and library viewer",
+        preview: true,
+    });
 }
 
 // vim: set expandtab:ts=4:sw=4
