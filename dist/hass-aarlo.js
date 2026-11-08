@@ -78,13 +78,10 @@ function _includes( config, item, value = false ) {
  * @private
  */
 function _replaceAll( old_string, from, to ) {
-    while( true ) {
-        const new_string = old_string.replace( from,to )
-        if( new_string === old_string ) {
-            return new_string
-        }
-        old_string = new_string
+    if (!old_string) {
+        return "";
     }
+    return old_string.split(from).join(to);
 }
 function _mergeArrays( left, right ) {
     let merged = Object.assign( {}, left )
@@ -97,6 +94,84 @@ function _tsi(title, state, icon ) {
         icon:  icon
     }
 }
+
+const DEFAULT_MESSAGES = {
+    author: {
+        name: "twrecked",
+    },
+    image: {
+        turn_camera_on:    "turn the camera on",
+        turn_camera_off:   "turn the camera off",
+        take_a_snapshot:   "take a snapshot",
+        start_stream:      "view live stream",
+        stop_stream:       "stop live stream",
+        automatic_capture: "automatically captured at",
+        snapshot_capture:  "snapshot captured at",
+        feature_disabled:  "camera off, feature disabled",
+    },
+    library: {
+        first_page:    "first page",
+        previous_page: "previous page",
+        next_size:     "next grid size",
+        close:         "close library",
+        next_page:     "next page",
+        last_page:     "last page",
+        captured:      "captured",
+        duration:      "duration",
+        reason:        "reason",
+    },
+    video: {
+        stop:       "stop",
+        play:       "play",
+        pause:      "pause",
+        fullscreen: "go full screen",
+    },
+    status: {
+        battery_strength:   "battery strength",
+        detected:           "detected",
+        door_closed:        "closed",
+        door_open:          "open",
+        captured:           "captured",
+        captured_nothing:   "nothing today",
+        captured_something: "clips today, last at",
+        clear:              "clear",
+        plugged_in:         "plugged in",
+        signal_strength:    "signal strength",
+        motion:             "motion",
+        sound:              "sound",
+        lock_locked:        "locked (click to unlock)",
+        lock_unlocked:      "unlocked (click to lock)",
+        doorbell_pressed:   "ding dong!",
+        doorbell_idle:      "idle",
+        doorbell_mute:      "unmuted (click to mute)",
+        doorbell_muted:     "muted (click to unmute)",
+        light_on:           "on",
+        light_off:          "off",
+        next_camera:        "next camera",
+        previous_camera:    "previous camera",
+        library:            "library",
+        library_empty:      "no recordings available",
+        library_open:       "click to open",
+    },
+    trigger: {
+        animal:  "animal",
+        vehicle: "vehicle",
+        person:  "person",
+        package: "package",
+    },
+    state: {
+        off:                "Off",
+        idle:               "Idle",
+        recording:          "Recording",
+        streaming:          "Streaming",
+        recording_snapshot: "Recording + Snapshot",
+        streaming_snapshot: "Streaming + Snapshot",
+        taking_snapshot:    "Taking Snapshot",
+        recently_active:    "Recently Active",
+        unavailable:        "Unavailable",
+        offline_too_cold:   "Offline, Too Cold",
+    },
+};
 
 // noinspection JSUnresolvedVariable,CssUnknownTarget,CssUnresolvedCustomProperty,HtmlRequiredAltAttribute,RequiredAttributes,JSFileReferences
 class AarloGlance extends HTMLElement {
@@ -113,7 +188,7 @@ class AarloGlance extends HTMLElement {
         this._config = null;
 
         // Internationalisation.
-        this._i = null
+        this._i = DEFAULT_MESSAGES
 
         // Maybe gs should be cs/ls; think about multiple videos going...
         this._gc = {}
@@ -127,8 +202,35 @@ class AarloGlance extends HTMLElement {
 
     render() {
         this.innerHTML = `
-            <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
             <style>
+                .w3-modal {
+                    z-index: 1000;
+                    display: none;
+                    padding-top: 100px;
+                    position: fixed;
+                    left: 0;
+                    top: 0;
+                    width: 100%;
+                    height: 100%;
+                    overflow: auto;
+                    background-color: rgb(0,0,0);
+                    background-color: rgba(0,0,0,0.4);
+                }
+                .w3-modal-content {
+                    margin: auto;
+                    background-color: #fff;
+                    position: relative;
+                    padding: 0;
+                    outline: 0;
+                    width: 600px;
+                }
+                .w3-animate-opacity {
+                    animation: opac 0.8s;
+                }
+                @keyframes opac {
+                    from { opacity: 0; }
+                    to { opacity: 1; }
+                }
                 ha-card {
                     position: relative;
                     min-height: 48px;
@@ -1910,21 +2012,22 @@ class AarloGlance extends HTMLElement {
 
     setHLSStreamElementData() {
         const video = this._melement('video-player')
+        if (!video) return;
 
-        if (Hls.isSupported()) {
+        if (window.Hls && Hls.isSupported()) {
             this.gs.hls = new Hls();
             this.gs.hls.attachMedia(video);
             this.gs.hls.on(Hls.Events.MEDIA_ATTACHED, () => {
                 this.gs.hls.loadSource(this.gs.stream);
                 this.gs.hls.on(Hls.Events.MANIFEST_PARSED, () => {
-                    video.play();
+                    this.startVideo(video);
                 });
             })
         } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
             video.src = this.gs.stream;
             video.addEventListener('loadedmetadata', () => {
-                video.play();
-            });
+                this.startVideo(video);
+            }, { once: true });
         }
     }
 
@@ -2034,7 +2137,7 @@ class AarloGlance extends HTMLElement {
 
         // Load language pack
         if( !lang_loaded ) {
-            this.asyncLoadLanguage().then( () => {
+            this.asyncLoadLanguage().finally( () => {
                 this.initialSetup( true, false )
             })
             return
@@ -2097,7 +2200,7 @@ class AarloGlance extends HTMLElement {
             });
             return ( library.videos.length > 0 ) ? library.videos : [];
         } catch (err) {
-            throw `wsLoadLibrary failed ${err}`
+            throw new Error(`wsLoadLibrary failed: ${err}`)
         }
     }
 
@@ -2145,7 +2248,7 @@ class AarloGlance extends HTMLElement {
                 entity_id: this.cc.id,
             })
         } catch (err) {
-            throw `wsStartStream failed ${err}`
+            throw new Error(`wsStartStream failed: ${err}`)
         }
     }
 
@@ -2156,7 +2259,7 @@ class AarloGlance extends HTMLElement {
                 entity_id: this.cc.id,
             })
         } catch (err) {
-            throw `wsStopStream failed ${err}`
+            throw new Error(`wsStopStream failed: ${err}`)
         }
         
     }
@@ -2168,7 +2271,7 @@ class AarloGlance extends HTMLElement {
                 entity_id: this.cc.id
             })
         } catch (err) {
-            throw `wsUpdateSnapshot failed ${err}`
+            throw new Error(`wsUpdateSnapshot failed: ${err}`)
         }
     }
 
@@ -2253,21 +2356,38 @@ class AarloGlance extends HTMLElement {
     }
 
     async asyncLoadLanguage() {
-        let lang = this.gc.lang ? this.gc.lang : this._hass.language
+        this._i = DEFAULT_MESSAGES;
+        let lang = this.gc.lang ? this.gc.lang : (this._hass && this._hass.language ? this._hass.language : "en");
 
-        // Load language pack. Try less specific before reverting to en.
-        // testing: import(`https://twrecked.github.io/lang/${lang}.js?t=${lang_date}`)
-        // final: import(`https://cdn.jsdelivr.net/gh/twrecked/lovelace-hass-aarlo@master/lang/${lang}.js`)
-        let module = null
-        while( !module ) {
-            this._log( `importing ${lang} language` )
+        if (lang.toLowerCase().startsWith("en")) {
+            return;
+        }
+
+        // Try language, then language prefix (e.g. pt-BR -> pt)
+        const candidates = [lang.toLowerCase()];
+        if (lang.includes("-")) {
+            candidates.push(lang.split("-")[0].toLowerCase());
+        }
+
+        for (const candidate of candidates) {
             try {
-                module = await import(`https://twrecked.github.io/lang/${lang.toLowerCase()}.js?t=${new Date().getTime()}`)
-                this._i = module.messages
-            } catch( error ) {
-                this._log( `failed to load language pack: ${lang}` )
-                const lang_pieces = lang.split('-')
-                lang = lang_pieces.length > 1 ? lang_pieces[0] : "en"
+                this._log(`importing ${candidate} language`);
+                const module = await import(`https://cdn.jsdelivr.net/gh/twrecked/lovelace-hass-aarlo@master/lang/${candidate}.js`);
+                if (module && module.messages) {
+                    this._i = {
+                        ...DEFAULT_MESSAGES,
+                        ...module.messages,
+                        image: { ...DEFAULT_MESSAGES.image, ...(module.messages.image || {}) },
+                        library: { ...DEFAULT_MESSAGES.library, ...(module.messages.library || {}) },
+                        video: { ...DEFAULT_MESSAGES.video, ...(module.messages.video || {}) },
+                        status: { ...DEFAULT_MESSAGES.status, ...(module.messages.status || {}) },
+                        trigger: { ...DEFAULT_MESSAGES.trigger, ...(module.messages.trigger || {}) },
+                        state: { ...DEFAULT_MESSAGES.state, ...(module.messages.state || {}) },
+                    };
+                    return;
+                }
+            } catch (err) {
+                this._log(`failed to load language pack: ${candidate}`);
             }
         }
     }
@@ -2463,13 +2583,16 @@ class AarloGlance extends HTMLElement {
     }
 
     controlFullScreen() {
-        let video = this._melement('video-player')
+        const video = this._melement('video-player')
+        if (!video) return;
         if (video.requestFullscreen) {
-            video.requestFullscreen().then()
-        } else if (video.mozRequestFullScreen) {
-            video.mozRequestFullScreen(); // Firefox
+            video.requestFullscreen().catch(err => this._log(`Fullscreen error: ${err}`));
+        } else if (video.webkitEnterFullscreen) {
+            video.webkitEnterFullscreen();
         } else if (video.webkitRequestFullscreen) {
-            video.webkitRequestFullscreen(); // Chrome and Safari
+            video.webkitRequestFullscreen();
+        } else if (video.mozRequestFullScreen) {
+            video.mozRequestFullScreen();
         }
     }
 
@@ -2522,7 +2645,7 @@ class AarloGlance extends HTMLElement {
         });
         seekBar.addEventListener( "mouseup", () => {
             if (!this.gs.streamPaused) {
-                video.play();
+                video.play().catch(err => this._log(`Seek play error: ${err}`));
             }
             this.hideVideoControlsLater()
         });
@@ -2569,23 +2692,27 @@ class AarloGlance extends HTMLElement {
     }
 }
 
-// Bring in our custom scripts
-const scripts = [
-    "https://cdn.jsdelivr.net/npm/hls.js@latest",
-    "https://cdn.dashjs.org/v3.2.1/dash.all.min.js",
-]
-function load_script( number ) {
-    if ( number < scripts.length ) {
-        const script = document.createElement("script")
-        script.src = scripts[ number ]
-        script.onload = () => {
-            load_script( number + 1 )
-        }
-        document.head.appendChild(script)
-    } else {
-        customElements.define('aarlo-glance', AarloGlance)
-    }
+function loadScript(src) {
+    return new Promise((resolve) => {
+        const script = document.createElement("script");
+        script.src = src;
+        script.onload = () => resolve(true);
+        script.onerror = () => resolve(false);
+        document.head.appendChild(script);
+    });
 }
-load_script( 0 )
+
+(async function loadMediaLibraries() {
+    if (!window.Hls) {
+        await loadScript("https://cdn.jsdelivr.net/npm/hls.js@1.5.8/dist/hls.min.js");
+    }
+    if (!window.dashjs) {
+        await loadScript("https://cdn.dashjs.org/v3.2.1/dash.all.min.js");
+    }
+})();
+
+if (!customElements.get('aarlo-glance')) {
+    customElements.define('aarlo-glance', AarloGlance);
+}
 
 // vim: set expandtab:ts=4:sw=4
