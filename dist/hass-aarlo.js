@@ -1,100 +1,3 @@
-/**
- * @module Lovelace class for accessing Arlo camera through the AArlo
- * module.
- *
- * Startup Notes:
- * - hass(); called at startup; set initial internal status and then updates
- *   image element data
- * - setConfig(); called at startup; we read out config data and store inside
- *   `?c` variables.
- * - initialSetup(); loops until HTML is in place then set up which individual
- *   elements are present (eg, motion sensor if asked for) and then displays
- *   the image card.
- *
- * Running Notes:
- * - hass(); called when state changes; update internal status and then updates
- *   image element data
- *
- * Controlling what's on screen:
- * - setup(Image|library|Video|Stream)View; one off, set visibility that doesn't
- *   change
- * - update(Image|Video|Stream)View; set up text, alt, state and visibility that
- *   do change
- * - show(Image|Video|Stream)View; show layers for this card
- * - hide(Image|Video|Stream)View; don't show layers for this card
- *
- * What's what:
- * - this._gc; global configuration
- * - this._gs; global state
- * - this._cc; all cameras configurations
- * - this._cs; all camara states
- * - this._lc; all library configurations
- * - this._ls; all library states
- */
-
-
-function _real(value) {
-    return value !== undefined && value !== null
-}
-function _array( config, value = [] ) {
-    if( !config ) {
-        return value
-    }
-    if( typeof config === "string" ) {
-        return config.includes("|") ? config.split("|") : config.split(",")
-    }
-    if( typeof config === "number" ) {
-        return [ config ]
-    }
-    return config
-}
-function _value( config, value = null ) {
-    return config ? config : value
-}
-function _value_int( config, value = 0 ) {
-    return parseInt( _value( config, value ) )
-}
-function _value_float( config, value = 0 ) {
-    return parseFloat( _value( config, value ) )
-}
-function _includes( config, item, value = false ) {
-    if (config) {
-        config.split(",").forEach((citem) => {
-            if (citem === item) {
-                value = true;
-            }
-        })
-    }
-    return value;
-}
-
-/**
- * Replace all of `from` with `to` and return the new string.
- *
- * @param old_string string we are converting
- * @param from what to replace
- * @param to what to replace it with
- * @returns {*} the new string
- * @private
- */
-function _replaceAll( old_string, from, to ) {
-    if (!old_string) {
-        return "";
-    }
-    return old_string.split(from).join(to);
-}
-function _mergeArrays( left, right ) {
-    let merged = Object.assign( {}, left )
-    return Object.assign( merged, right )
-}
-function _tsi(title, state, icon ) {
-    return {
-        title: title,
-        state: state,
-        icon:  icon
-    }
-}
-
 const CARD_VERSION = "0.4.0.alpha.3";
 
 const DEFAULT_MESSAGES = {
@@ -175,36 +78,7 @@ const DEFAULT_MESSAGES = {
     },
 };
 
-// noinspection JSUnresolvedVariable,CssUnknownTarget,CssUnresolvedCustomProperty,HtmlRequiredAltAttribute,RequiredAttributes,JSFileReferences
-class AarloGlance extends HTMLElement {
-
-    constructor() {
-        super();
-
-        // current version
-        this._version = CARD_VERSION
-
-        // State and config.
-        this._ready = "stopped"
-        this._hass = null;
-        this._config = null;
-
-        // Internationalisation.
-        this._i = DEFAULT_MESSAGES
-
-        // Maybe gs should be cs/ls; think about multiple videos going...
-        this._gc = {}
-        this._gs = {}
-        this._cc = {}
-        this._cs = {}
-        this._lc = {}
-        this._ls = {}
-        this._cameraIndex = 0
-        this._oldHassStates = null
-    }
-
-    render() {
-        this.innerHTML = `
+const CARD_STYLES = `
             <style>
                 .w3-modal {
                     z-index: 1000;
@@ -400,7 +274,100 @@ class AarloGlance extends HTMLElement {
                     height: 10px;
                     cursor: pointer;
                 }
-            </style>
+`;
+
+function _real(value) {
+    return value !== undefined && value !== null
+}
+function _array( config, value = [] ) {
+    if( !config ) {
+        return value
+    }
+    if( typeof config === "string" ) {
+        return config.includes("|") ? config.split("|") : config.split(",")
+    }
+    if( typeof config === "number" ) {
+        return [ config ]
+    }
+    return config
+}
+function _value( config, value = null ) {
+    return config ? config : value
+}
+function _value_int( config, value = 0 ) {
+    return parseInt( _value( config, value ) )
+}
+function _value_float( config, value = 0 ) {
+    return parseFloat( _value( config, value ) )
+}
+function _includes( config, item, value = false ) {
+    if (config) {
+        config.split(",").forEach((citem) => {
+            if (citem === item) {
+                value = true;
+            }
+        });
+    }
+    return value;
+}
+
+/**
+ * Replace all of `from` with `to` and return the new string.
+ *
+ * @param old_string string we are converting
+ * @param from what to replace
+ * @param to what to replace it with
+ * @returns {*} the new string
+ * @private
+ */
+function _replaceAll( old_string, from, to ) {
+    if (!old_string) {
+        return "";
+    }
+    return old_string.split(from).join(to);
+}
+function _mergeArrays( left, right ) {
+    let merged = Object.assign( {}, left );
+    return Object.assign( merged, right )
+}
+function _tsi(title, state, icon ) {
+    return {
+        title: title,
+        state: state,
+        icon:  icon
+    }
+}
+
+class AarloGlance extends HTMLElement {
+
+    constructor() {
+        super();
+
+        // current version
+        this._version = CARD_VERSION;
+
+        // State and config.
+        this._ready = "stopped";
+        this._hass = null;
+        this._config = null;
+
+        // Internationalisation.
+        this._i = DEFAULT_MESSAGES;
+
+        // Maybe gs should be cs/ls; think about multiple videos going...
+        this._gc = {};
+        this._gs = {};
+        this._cc = {};
+        this._cs = {};
+        this._lc = {};
+        this._ls = {};
+        this._cameraIndex = 0;
+        this._oldHassStates = null;
+    }
+
+    render() {
+        this.innerHTML = `
+            <style>${CARD_STYLES}</style>
             <div class="w3-modal"
                  id="${this._id('modal-viewer')}"
                  style="display:none">
@@ -458,7 +425,7 @@ class AarloGlance extends HTMLElement {
                      id="${this._id('video-controls')}"
                      style="display:none">
                 </div>
-            </ha-card>`
+            </ha-card>`;
     }
 
     static get properties() {
@@ -609,7 +576,7 @@ class AarloGlance extends HTMLElement {
 
     _log( msg ) {
         if( this.gc.log ) {
-            console.log( `${this.cc.id}: ${msg}` )
+            console.log( `${this.cc.id}: ${msg}` );
         }
     }
 
@@ -642,23 +609,23 @@ class AarloGlance extends HTMLElement {
     }
 
     __show( element, show ) {
-        if ( element ) { element.style.display = (show ? '' : 'none') }
+        if ( element ) { element.style.display = (show ? '' : 'none'); }
     }
     _show( id, show = true ) {
-        this.__show( this._element(id), show )
+        this.__show( this._element(id), show );
     }
     _mshow( id, show = true ) {
-        this.__show( this._melement(id), show )
+        this.__show( this._melement(id), show );
     }
 
     __hide( element ) {
-        if ( element ) { element.style.display = 'none' }
+        if ( element ) { element.style.display = 'none'; }
     }
     _hide( id ) {
-        this.__hide( this._element(id) )
+        this.__hide( this._element(id) );
     }
     _mhide( id ) {
-        this.__hide( this._melement(id) )
+        this.__hide( this._melement(id) );
     }
 
     __isHidden( element ) {
@@ -669,49 +636,49 @@ class AarloGlance extends HTMLElement {
     }
 
     __title( element, title ) {
-        if ( element ) { element.title = title }
+        if ( element ) { element.title = title; }
     }
     __text( element, text ) {
-        if ( element ) { element.innerText = text }
+        if ( element ) { element.innerText = text; }
     }
     __alt( element, alt ) {
-        if ( element ) { element.alt = alt }
+        if ( element ) { element.alt = alt; }
     }
     __src( element, src ) {
-        if ( element ) { element.src = src }
+        if ( element ) { element.src = src; }
     }
     __poster( element, poster ) {
-        if ( element ) { element.poster = poster }
+        if ( element ) { element.poster = poster; }
     }
     __icon( element, icon ) {
-        if ( element ) { element.icon = icon }
+        if ( element ) { element.icon = icon; }
     }
     __state( element, state ) {
-        let color = ""
+        let color = "";
         switch( state ) {
             case "on":
             case "state-on":
-                color = "white"
+                color = "white";
                 break
             case "warn":
             case "state-warn":
-                color = "orange"
+                color = "orange";
                 break
             case "error":
             case "state-error":
-                color = "red"
+                color = "red";
                 break
             case "update":
             case "state-update":
-                color = "#cccccc"
+                color = "#cccccc";
                 break
             case "off":
             case "state-off":
-                color = "#505050"
+                color = "#505050";
                 break
         }
         if ( element ) {
-            element.style.color = color
+            element.style.color = color;
         }
     }
 
@@ -721,13 +688,13 @@ class AarloGlance extends HTMLElement {
      * It gets called a lot.
      */
     __set( element, title, text, icon, state, src, alt, poster ) {
-        if (_real(title))  { this.__title( element, title ) }
-        if (_real(text))   { this.__text ( element, text ) }
-        if (_real(icon))   { this.__icon ( element, icon ) }
-        if (_real(state))  { this.__state( element, state ) }
-        if (_real(src))    { this.__src( element, src ) }
-        if (_real(alt))    { this.__alt( element, alt ) }
-        if (_real(poster)) { this.__poster( element, poster ) }
+        if (_real(title))  { this.__title( element, title ); }
+        if (_real(text))   { this.__text ( element, text ); }
+        if (_real(icon))   { this.__icon ( element, icon ); }
+        if (_real(state))  { this.__state( element, state ); }
+        if (_real(src))    { this.__src( element, src ); }
+        if (_real(alt))    { this.__alt( element, alt ); }
+        if (_real(poster)) { this.__poster( element, poster ); }
     }
 
     /**
@@ -738,7 +705,7 @@ class AarloGlance extends HTMLElement {
      *     be set.
      */
     _set( id, { title, text, icon, state, src, alt, poster } = {} ) {
-        this.__set( this._element(id), title, text, icon, state, src, alt, poster )
+        this.__set( this._element(id), title, text, icon, state, src, alt, poster );
     }
     /**
      * Set a variety pieces of element data.
@@ -750,17 +717,17 @@ class AarloGlance extends HTMLElement {
      *     be set.
      */
     _mset( id, { title, text, icon, state, src, alt, poster } = {} ) {
-        this.__set( this._melement(id), title, text, icon, state, src, alt, poster )
+        this.__set( this._melement(id), title, text, icon, state, src, alt, poster );
     }
 
     _widthHeight(id, width, height, width_suffix = '' ) {
-        let element = this._element(id)
+        let element = this._element(id);
         if ( element ) {
             if ( width !== null ) {
-                element.style.setProperty("width",`${width}px`,width_suffix)
+                element.style.setProperty("width",`${width}px`,width_suffix);
             }
             if ( height !== null ) {
-                element.style.height = `${height}px`
+                element.style.height = `${height}px`;
             }
         }
     }
@@ -775,10 +742,10 @@ class AarloGlance extends HTMLElement {
     }
 
     _paddingTop( id, top ) {
-        let element = this._element(id)
+        let element = this._element(id);
         if ( element ) {
             if ( top !== null ) {
-                element.style.paddingTop=`${top}px`
+                element.style.paddingTop=`${top}px`;
             }
         }
     }
@@ -800,49 +767,49 @@ class AarloGlance extends HTMLElement {
         return this._gc
     }
     set gc( value ) {
-        this._gc = value
+        this._gc = value;
     }
     get gs() {
         return this._gs
     }
     set gs( value ) {
-        this._gs = value
+        this._gs = value;
     }
     get cc() {
         if( !(`${this._cameraIndex}` in this._cc) ) {
-            this._cc[`${this._cameraIndex}`] = {}
+            this._cc[`${this._cameraIndex}`] = {};
         }
         return this._cc[`${this._cameraIndex}`]
     }
     set cc( value ) {
-        this._cc[`${this._cameraIndex}`] = value
+        this._cc[`${this._cameraIndex}`] = value;
     }
     get cs() {
         if( !(`${this._cameraIndex}` in this._cs) ) {
-            this._cs[`${this._cameraIndex}`] = {}
+            this._cs[`${this._cameraIndex}`] = {};
         }
         return this._cs[this._cameraIndex]
     }
     set cs( value ) {
-        this._cs[this._cameraIndex] = value
+        this._cs[this._cameraIndex] = value;
     }
     get lc() {
         if( !(`${this._cameraIndex}` in this._lc) ) {
-            this._lc[`${this._cameraIndex}`] = {}
+            this._lc[`${this._cameraIndex}`] = {};
         }
         return this._lc[this.gc.blendedMode ? this._cameraCount : this._cameraIndex]
     }
     set lc( value ) {
-        this._lc[this._cameraIndex] = value
+        this._lc[this._cameraIndex] = value;
     }
     get ls() {
         if( !(`${this._cameraIndex}` in this._ls) ) {
-            this._ls[`${this._cameraIndex}`] = {}
+            this._ls[`${this._cameraIndex}`] = {};
         }
         return this._ls[this.gc.blendedMode ? this._cameraCount : this._cameraIndex]
     }
     set ls( value ) {
-        this._ls[this._cameraIndex] = value
+        this._ls[this._cameraIndex] = value;
     }
 
     /**
@@ -859,7 +826,7 @@ class AarloGlance extends HTMLElement {
         const new_what = what.replace(/[^\w\s]|_/g, "")
                 .replace(/\s+/g, " ")
                 .replace(/\s/g, "_")
-                .toLowerCase()
+                .toLowerCase();
         return new_what in this._i[section] ? this._i[section][new_what] : what
     }
 
@@ -884,61 +851,61 @@ class AarloGlance extends HTMLElement {
         // Set the camera name now. We have to wait until now to ensure `_hass`
         // is set and we can get to the camera state.
         if ( this.cc.name === null ) {
-            this.cc.name = camera.attributes.friendly_name
+            this.cc.name = camera.attributes.friendly_name;
         }
 
         // Camera state has changed. Update the image URL so we update the
         // view. If we've moved from "taking snapshot" to anything else then
         // queue up some image update requests.
         if ( camera.state !== this.cs.state ) {
-            this._log( `state-update: ${this.cs.state} --> ${camera.state}` )
+            this._log( `state-update: ${this.cs.state} --> ${camera.state}` );
             if( camera.state !== 'off' ) {
-                this.generateImageURL()
+                this.generateImageURL();
             } else {
-                this.cs.image = camera.attributes.last_thumbnail
+                this.cs.image = camera.attributes.last_thumbnail;
             }
             if ( this.cs.state === 'taking snapshot' ) {
                 this.cc.snapshotTimeouts.forEach( (seconds) => {
-                    this.generateImageURLLater( seconds )
-                })
+                    this.generateImageURLLater( seconds );
+                });
             }
-            this.gc.lastActive = this._cameraIndex
-            this.cs.state = camera.state
-            this.cs.details.status = { text: this._tr("state",this.cs.state) }
+            this.gc.lastActive = this._cameraIndex;
+            this.cs.state = camera.state;
+            this.cs.details.status = { text: this._tr("state",this.cs.state) };
         }
 
         // Entity picture has changed. This means there is a new auth key
         // attached. Update the image URL so we update the view.
         if ( this.cs.imageBase !== camera.attributes.entity_picture ) {
-            this._log( `auth-update: ${this.cs.imageBase} --> ${camera.attributes.entity_picture}` )
-            this.generateImageURL()
+            this._log( `auth-update: ${this.cs.imageBase} --> ${camera.attributes.entity_picture}` );
+            this.generateImageURL();
         }
 
         // Image source has changed. This means it was from a new capture or
         // snapshot. Update the image URL so we update the view.
         if ( this.cs.imageSource !== camera.attributes.image_source ) {
-            this._log( `source-update: ${this.cs.imageSource} --> ${camera.attributes.image_source}` )
-            this.generateImageURL()
-            this.gc.lastActive = this._cameraIndex
-            this.cs.imageSource = camera.attributes.image_source
+            this._log( `source-update: ${this.cs.imageSource} --> ${camera.attributes.image_source}` );
+            this.generateImageURL();
+            this.gc.lastActive = this._cameraIndex;
+            this.cs.imageSource = camera.attributes.image_source;
         }
 
         // Update status details.
         if( this.cs.image !== null ) {
-            let date = ""
-            let full_date = this.cs.imageSource ? this.cs.imageSource : ''
+            let date = "";
+            let full_date = this.cs.imageSource ? this.cs.imageSource : '';
             if( full_date.startsWith('capture/') ) { 
                 date      = full_date.substring(8);
-                full_date = `${this._i.image.automatic_capture} ${date}`
+                full_date = `${this._i.image.automatic_capture} ${date}`;
             } else if( full_date.startsWith('snapshot/') ) { 
                 date      = full_date.substring(9);
-                full_date = `${this._i.image.snapshot_capture} ${date}`
+                full_date = `${this._i.image.snapshot_capture} ${date}`;
             }
-            this.cs.details.viewer = {title: full_date, alt: full_date, src: this.cs.image}
-            this.cs.details.date = {title: full_date, text: date}
+            this.cs.details.viewer = {title: full_date, alt: full_date, src: this.cs.image};
+            this.cs.details.date = {title: full_date, text: date};
         } else {
-            this.cs.details.viewer = {title: "", alt: "", src: null}
-            this.cs.details.date = {title: "", text: ""}
+            this.cs.details.viewer = {title: "", alt: "", src: null};
+            this.cs.details.date = {title: "", text: ""};
         }
 
         // LIBRARY
@@ -948,44 +915,44 @@ class AarloGlance extends HTMLElement {
         // - having new recordings
         if( "last_video" in camera.attributes ) {
             if( this.cs.lastRecording !== camera.attributes.last_video ) {
-                this._log( `video-changed: updating library` )
+                this._log( `video-changed: updating library` );
                 this.asyncLoadLibrary( this._cameraIndex ).then( () => {
-                    this.mergeLibraries()
-                    this._updateLibraryView()
-                })
-                this.cs.lastRecording = camera.attributes.last_video
+                    this.mergeLibraries();
+                    this._updateLibraryView();
+                });
+                this.cs.lastRecording = camera.attributes.last_video;
             }
         } else {
             if( this.cs.lastRecording !== null ) {
-                this._log( `no-videos: clearing library` )
-                this.ls.recordings    = []
-                this.cs.lastRecording = null
+                this._log( `no-videos: clearing library` );
+                this.ls.recordings    = [];
+                this.cs.lastRecording = null;
             }
         }
 
         // IMAGE 
         // FUNCTIONS
         if (this.cs.state === 'off') {
-            this.cs.details.stream = _tsi(this._i.image.feature_disabled, 'off', 'mdi:play')
+            this.cs.details.stream = _tsi(this._i.image.feature_disabled, 'off', 'mdi:play');
         } else {
-            this.cs.details.stream = _tsi(this._i.image.start_stream, 'on', 'mdi:play')
+            this.cs.details.stream = _tsi(this._i.image.start_stream, 'on', 'mdi:play');
         }
 
         if ( this.cs.state === 'off' ) {
-            this.cs.details.onoff = _tsi(this._i.image.turn_camera_on, 'state-on', 'mdi:camera')
+            this.cs.details.onoff = _tsi(this._i.image.turn_camera_on, 'state-on', 'mdi:camera');
         } else {
-            this.cs.details.onoff = _tsi(this._i.image.turn_camera_off, '', 'mdi:camera-off')
+            this.cs.details.onoff = _tsi(this._i.image.turn_camera_off, '', 'mdi:camera-off');
         }
 
         if(this.cs.state !== 'off') {
-            this.cs.details.snapshot = _tsi(this._i.image.take_a_snapshot, '', 'mdi:camera-enhance')
+            this.cs.details.snapshot = _tsi(this._i.image.take_a_snapshot, '', 'mdi:camera-enhance');
         } else {
-            this.cs.details.snapshot = _tsi(this._i.image.feature_disabled, 'off', 'mdi:camera-off')
+            this.cs.details.snapshot = _tsi(this._i.image.feature_disabled, 'off', 'mdi:camera-off');
         }
 
         // SENSORS
         if ( camera.attributes.wired_only ) {
-            this.cs.details.battery = _tsi( this._i.status.plugged_in, 'state-update', 'mdi:power-plug')
+            this.cs.details.battery = _tsi( this._i.status.plugged_in, 'state-update', 'mdi:power-plug');
         } else {
             const battery = this._getState(this.cc.batteryId, 0);
             const prefix = camera.attributes.charging ? 'battery-charging' : 'battery';
@@ -994,7 +961,7 @@ class AarloGlance extends HTMLElement {
                 battery.state < 25 ? 'state-warn' : ( battery.state < 15 ? 'state-error' : 'state-update' ),
                 `mdi:${prefix}` + (battery.state < 10 ? '-outline' :
                             (battery.state > 90 ? '' : '-' + Math.round(battery.state/10) + '0' ))
-            )
+            );
         }
 
         const signal = this._getState(this.cc.signalId, 0);
@@ -1002,28 +969,28 @@ class AarloGlance extends HTMLElement {
             `${this._i.status.signal_strength}: ${signal.state}`,
             '',
             signal.state === "0" ? 'mdi:wifi-outline' : `mdi:wifi-strength-${signal.state}`
-        )
+        );
 
         if ( this.cs.state !== 'off' ) {
-            const has_motion = this._getState(this.cc.motionId,'off').state === 'on'
+            const has_motion = this._getState(this.cc.motionId,'off').state === 'on';
             this.cs.details.motion = _tsi(
                 `${this._i.status.motion}: ${has_motion ? this._i.status.detected : this._i.status.clear}`,
                 has_motion ? 'on' : '',
                 has_motion ? "mdi:run" : "mdi:walk",
-            )
+            );
         } else {
-            this.cs.details.motion = _tsi(this._i.image.feature_disabled, 'off', "mdi:walk")
+            this.cs.details.motion = _tsi(this._i.image.feature_disabled, 'off', "mdi:walk");
         }
 
         if ( this.cs.state !== 'off' ) {
-            const has_sound = this._getState(this.cc.soundId,'off').state === 'on'
+            const has_sound = this._getState(this.cc.soundId,'off').state === 'on';
             this.cs.details.sound = _tsi(
                 `${this._i.status.sound}: ${has_sound ? this._i.status.detected : this._i.status.clear}`,
                 has_sound ? 'state-on' : '',
                 "mdi:ear-hearing"
-            )
+            );
         } else {
-            this.cs.details.sound = _tsi(this._i.image.feature_disabled, 'off', "mdi:ear-hearing-off")
+            this.cs.details.sound = _tsi(this._i.image.feature_disabled, 'off', "mdi:ear-hearing-off");
         }
 
         // We always save this, used by library code to check for updates
@@ -1036,122 +1003,122 @@ class AarloGlance extends HTMLElement {
                         this._i.status.library_open,
                 captured !== "0" ? 'on' : '',
                 this.cc.numericView ? 'mdi:numeric-' + (captured > 9 ? "9-plus" : captured) + '-box' : 'mdi:file-video'
-            )
+            );
         } else {
             this.cs.details.library = _tsi(
                 `${this._i.status.library}: ${this._i.status.library_empty}`,
                 'off',
                 this.cc.numericView ? 'mdi:numeric-0-box' : 'mdi:file-video-outline'
-            )
+            );
         }
 
         // OPTIONAL DOORS
         if(this.cc.doorId) {
-            const doorState = this._getState(this.cc.doorId, 'off')
-            const is_open   = doorState.state === 'on'
+            const doorState = this._getState(this.cc.doorId, 'off');
+            const is_open   = doorState.state === 'on';
             this.cs.details.door = _tsi(
                 `${doorState.attributes.friendly_name}: ${is_open ? this._i.status.door_open : this._i.status.door_closed}`,
                 is_open ? 'on' : '',
                 is_open ? 'mdi:door-open' : 'mdi:door',
-            )
+            );
         }
         if(this.cc.door2Id) {
-            const doorState = this._getState(this.cc.door2Id, 'off')
-            const is_open   = doorState.state === 'on'
+            const doorState = this._getState(this.cc.door2Id, 'off');
+            const is_open   = doorState.state === 'on';
             this.cs.details.door2 = _tsi(
                 `${doorState.attributes.friendly_name}: ${is_open ? this._i.status.door2_open : this._i.status.door2_closed}`,
                 is_open ? 'on' : '',
                 is_open ? 'mdi:door-open' : 'mdi:door',
-            )
+            );
         }
 
         if(this.cc.doorLockId) {
             const doorLockState = this._getState(this.cc.doorLockId, 'locked');
-            const is_locked     = doorLockState.state === 'locked'
+            const is_locked     = doorLockState.state === 'locked';
             this.cs.details.lock = _tsi(
                 `${doorLockState.attributes.friendly_name}: ${is_locked ? this._i.status.lock_locked : this._i.status.lock_unlocked}`,
                 is_locked ? 'state-on' : 'state-warn',
                 is_locked ? 'mdi:lock' : 'mdi:lock-open',
-            )
+            );
         }
         if(this.cc.door2LockId) {
-            const door2LockState = this._getState(this.cc.door2LockId, 'locked')
-            const is_locked      = door2LockState.state === 'locked'
+            const door2LockState = this._getState(this.cc.door2LockId, 'locked');
+            const is_locked      = door2LockState.state === 'locked';
             this.cs.details.lock2 = _tsi(
                 `${door2LockState.attributes.friendly_name}: ${is_locked ? this._i.status.lock_locked : this._i.status.lock_unlocked}`,
                 is_locked ? 'state-on' : 'state-warn',
                 is_locked ? 'mdi:lock' : 'mdi:lock-open',
-            )
+            );
         }
 
         if(this.cc.doorBellId) {
             const bell = this._getState(this.cc.doorBellId, 'off');
-            const name = bell.attributes.friendly_name
-            const mute = bell.attributes.chimes_silenced || bell.attributes.calls_silenced
-            const muteable = !!this.cc.doorBellMuteId
+            const name = bell.attributes.friendly_name;
+            const mute = bell.attributes.chimes_silenced || bell.attributes.calls_silenced;
+            const muteable = !!this.cc.doorBellMuteId;
             if ( bell.state === 'on' ) {
-                this.cs.details.bell = _tsi(`${name}: ${this._i.status.doorbell_pressed}`, 'on', 'mdi:bell-ring')
+                this.cs.details.bell = _tsi(`${name}: ${this._i.status.doorbell_pressed}`, 'on', 'mdi:bell-ring');
             } else if( muteable ) {
                 if ( mute ) {
-                    this.cs.details.bell = _tsi(`${name}: ${this._i.status.doorbell_muted}`, 'warn', 'mdi:bell-off')
+                    this.cs.details.bell = _tsi(`${name}: ${this._i.status.doorbell_muted}`, 'warn', 'mdi:bell-off');
                 } else {
-                    this.cs.details.bell = _tsi(`${name}: ${this._i.status.doorbell_mute}`, '', 'mdi:bell')
+                    this.cs.details.bell = _tsi(`${name}: ${this._i.status.doorbell_mute}`, '', 'mdi:bell');
                 }
             } else {
-                this.cs.details.bell = _tsi(`${name}: ${this._i.status.doorbell_idle}`, '', 'mdi:bell')
+                this.cs.details.bell = _tsi(`${name}: ${this._i.status.doorbell_idle}`, '', 'mdi:bell');
             }
         }
 
         if(this.cc.door2BellId) {
             const bell = this._getState(this.cc.door2BellId, 'off');
-            const name = bell.attributes.friendly_name
-            const mute = bell.attributes.chimes_silenced || bell.attributes.calls_silenced
-            const muteable = !!this.cc.door2BellMuteId
+            const name = bell.attributes.friendly_name;
+            const mute = bell.attributes.chimes_silenced || bell.attributes.calls_silenced;
+            const muteable = !!this.cc.door2BellMuteId;
             if ( bell.state === 'on' ) {
-                this.cs.details.bell2 = _tsi(`${name}: ${this._i.status.doorbell_pressed}`, 'on', 'mdi:bell-ring')
+                this.cs.details.bell2 = _tsi(`${name}: ${this._i.status.doorbell_pressed}`, 'on', 'mdi:bell-ring');
             } else if( muteable ) {
                 if ( mute ) {
-                    this.cs.details.bell2 = _tsi(`${name}: ${this._i.status.doorbell_muted}`, 'warn', 'mdi:bell-off')
+                    this.cs.details.bell2 = _tsi(`${name}: ${this._i.status.doorbell_muted}`, 'warn', 'mdi:bell-off');
                 } else {
-                    this.cs.details.bell2 = _tsi(`${name}: ${this._i.status.doorbell_mute}`, '', 'mdi:bell')
+                    this.cs.details.bell2 = _tsi(`${name}: ${this._i.status.doorbell_mute}`, '', 'mdi:bell');
                 }
             } else {
-                this.cs.details.bell2 = _tsi(`${name}: ${this._i.status.doorbell_idle}`, '', 'mdi:bell')
+                this.cs.details.bell2 = _tsi(`${name}: ${this._i.status.doorbell_idle}`, '', 'mdi:bell');
             }
         }
 
         if(this.cc.lightId) {
             const lightState = this._getState(this.cc.lightId, 'off');
-            const is_on = lightState.state === 'on'
+            const is_on = lightState.state === 'on';
             this.cs.details.light = _tsi(
                 `${lightState.attributes.friendly_name}: ` + (is_on ?  this._i.status.light_on : this._i.status.light_off),
                 is_on ? 'on' : '',
                 'mdi:lightbulb'
-            )
+            );
         }
         if(this.cc.light2Id) {
             const lightState = this._getState(this.cc.light2Id, 'off');
-            const is_on = lightState.state === 'on'
+            const is_on = lightState.state === 'on';
             this.cs.details.light2 = _tsi(
                 `${lightState.attributes.friendly_name}: ` + (is_on ?  this._i.status.light_on : this._i.status.light_off),
                 is_on ? 'on' : '',
                 'mdi:lightbulb'
-            )
+            );
         }
     }
 
     updateStatuses() {
 
-        this.gc.lastActive = -1
-        const index = this._cameraIndex
+        this.gc.lastActive = -1;
+        const index = this._cameraIndex;
         for( this._cameraIndex = 0; this._cameraIndex < this._cameraCount; this._cameraIndex++ ) {
-            this._updateStatuses()
+            this._updateStatuses();
         }
-        this._cameraIndex = index
+        this._cameraIndex = index;
 
         if( this.gc.activeView ) {
             if( this.gc.lastActive !== -1 && this.gc.lastActive !== index ) {
-                this.setCameraImage( this.gc.lastActive )
+                this.setCameraImage( this.gc.lastActive );
             }
         }
     }
@@ -1165,28 +1132,28 @@ class AarloGlance extends HTMLElement {
             this.throwError( 'unknown camera' );
         }
         if ( this.cc.doorId && !(this.cc.doorId in this._hass.states) ) {
-            this.throwError( 'unknown door' )
+            this.throwError( 'unknown door' );
         }
         if ( this.cc.doorBellId && !(this.cc.doorBellId in this._hass.states) ) {
-            this.throwError( 'unknown door bell' )
+            this.throwError( 'unknown door bell' );
         }
         if ( this.cc.doorLockId && !(this.cc.doorLockId in this._hass.states) ) {
-            this.throwError( 'unknown door lock' )
+            this.throwError( 'unknown door lock' );
         }
         if ( this.cc.door2Id && !(this.cc.door2Id in this._hass.states) ) {
-            this.throwError( 'unknown door (#2)' )
+            this.throwError( 'unknown door (#2)' );
         }
         if ( this.cc.door2BellId && !(this.cc.door2BellId in this._hass.states) ) {
-            this.throwError( 'unknown door bell (#2)' )
+            this.throwError( 'unknown door bell (#2)' );
         }
         if ( this.cc.door2LockId && !(this.cc.door2LockId in this._hass.states) ) {
-            this.throwError( 'unknown door lock (#2)' )
+            this.throwError( 'unknown door lock (#2)' );
         }
         if ( this.cc.lightId && !(this.cc.lightId in this._hass.states) ) {
-            this.throwError( 'unknown light' )
+            this.throwError( 'unknown light' );
         }
         if ( this.cc.light2Id && !(this.cc.light2Id in this._hass.states) ) {
-            this.throwError( 'unknown light (#2)' )
+            this.throwError( 'unknown light (#2)' );
         }
     }
 
@@ -1255,70 +1222,70 @@ class AarloGlance extends HTMLElement {
     }
 
     getCameraConfig( global, local ) {
-        const config = _mergeArrays( global, local )
+        const config = _mergeArrays( global, local );
 
         // Find entity and determine camera name.
-        const entity = config.entity
+        const entity = config.entity;
         if ( !entity || !entity.startsWith( 'camera.' ) ) {
-            this.throwError( "config requires an aarlo camera entity (e.g. camera.aarlo_kitchen)" )
+            this.throwError( "config requires an aarlo camera entity (e.g. camera.aarlo_kitchen)" );
             return {}
         }
-        const camera = entity.startsWith('camera.aarlo_') ? entity.replace( 'camera.aarlo_','' ) : entity.replace('camera.', '')
+        const camera = entity.startsWith('camera.aarlo_') ? entity.replace( 'camera.aarlo_','' ) : entity.replace('camera.', '');
 
-        let cc = {}
+        let cc = {};
 
         // Grab name if there
-        cc.name = _value( config.name, null )
+        cc.name = _value( config.name, null );
 
         // Get the version out.
         if ("version" in config) {
-            this.throwError(`version: ${this._version}`)
+            this.throwError(`version: ${this._version}`);
             return {}
         }
 
         // Save layout
-        cc.image_top = config.image_top
-        cc.image_bottom = config.image_bottom
+        cc.image_top = config.image_top;
+        cc.image_bottom = config.image_bottom;
 
         // How do we display recordings or stream?
-        cc.arloPlay          = _includes(config.image_view, "arlo-stream")
-        cc.haPlay            = _includes(config.image_view, "ha-stream")
-        cc.modalPlayer       = _includes(config.image_view, "modal")
-        cc.smartPlayer       = _includes(config.image_view, "smart-modal")
-        cc.numericView       = _includes(config.image_view, 'numeric')
-        cc.autoPlay          = _includes(config.image_view, 'start-stream')
-        cc.autoPlayRecording = _includes(config.image_view, 'start-recording')
+        cc.arloPlay          = _includes(config.image_view, "arlo-stream");
+        cc.haPlay            = _includes(config.image_view, "ha-stream");
+        cc.modalPlayer       = _includes(config.image_view, "modal");
+        cc.smartPlayer       = _includes(config.image_view, "smart-modal");
+        cc.numericView       = _includes(config.image_view, 'numeric');
+        cc.autoPlay          = _includes(config.image_view, 'start-stream');
+        cc.autoPlayRecording = _includes(config.image_view, 'start-recording');
 
         // Does clicking show the live stream or last recording?
-        cc.playStream = _includes( config.image_click, "stream")
+        cc.playStream = _includes( config.image_click, "stream");
 
         // snapshot updates
-        cc.snapshotTimeouts = _array( config.snapshot_retry, [ 2, 5 ] )
+        cc.snapshotTimeouts = _array( config.snapshot_retry, [ 2, 5 ] );
 
         // camera and sensors
-        cc.id              = _value(config.camera_id,  `camera.aarlo_${camera}`)
-        cc.motionId        = _value(config.motion_id,  `binary_sensor.aarlo_motion_${camera}`)
-        cc.soundId         = _value(config.sound_id,   `binary_sensor.aarlo_sound_${camera}`)
-        cc.batteryId       = _value(config.battery_id, `sensor.aarlo_battery_level_${camera}`)
-        cc.signalId        = _value(config.signal_id,  `sensor.aarlo_signal_strength_${camera}`)
-        cc.capturedTodayId = _value(config.capture_id, `sensor.aarlo_captured_today_${camera}`)
-        cc.lastCaptureId   = _value(config.last_id,    `sensor.aarlo_last_${camera}`)
+        cc.id              = _value(config.camera_id,  `camera.aarlo_${camera}`);
+        cc.motionId        = _value(config.motion_id,  `binary_sensor.aarlo_motion_${camera}`);
+        cc.soundId         = _value(config.sound_id,   `binary_sensor.aarlo_sound_${camera}`);
+        cc.batteryId       = _value(config.battery_id, `sensor.aarlo_battery_level_${camera}`);
+        cc.signalId        = _value(config.signal_id,  `sensor.aarlo_signal_strength_${camera}`);
+        cc.capturedTodayId = _value(config.capture_id, `sensor.aarlo_captured_today_${camera}`);
+        cc.lastCaptureId   = _value(config.last_id,    `sensor.aarlo_last_${camera}`);
 
         // door definition
-        cc.doorId         = _value(config.door)
-        cc.doorBellId     = _value(config.door_bell)
-        cc.doorBellMuteId = _value(config.door_bell_mute)
-        cc.doorLockId     = _value(config.door_lock)
+        cc.doorId         = _value(config.door);
+        cc.doorBellId     = _value(config.door_bell);
+        cc.doorBellMuteId = _value(config.door_bell_mute);
+        cc.doorLockId     = _value(config.door_lock);
 
         // door2 definition
-        cc.door2Id         = _value(config.door2)
-        cc.door2BellId     = _value(config.door2_bell)
-        cc.door2BellMuteId = _value(config.door2_bell_mute)
-        cc.door2LockId     = _value(config.door2_lock)
+        cc.door2Id         = _value(config.door2);
+        cc.door2BellId     = _value(config.door2_bell);
+        cc.door2BellMuteId = _value(config.door2_bell_mute);
+        cc.door2LockId     = _value(config.door2_lock);
 
         // light definitions
-        cc.lightId  = _value(config.light)
-        cc.light2Id = _value(config.light2)
+        cc.lightId  = _value(config.light);
+        cc.light2Id = _value(config.light2);
 
         return cc
     }
@@ -1336,8 +1303,8 @@ class AarloGlance extends HTMLElement {
 
     getLibraryConfig( global, local ) {
 
-        const config = _mergeArrays( global, local )
-        const sizes = _array( config.library_sizes, [ 3 ] )
+        const config = _mergeArrays( global, local );
+        const sizes = _array( config.library_sizes, [ 3 ] );
 
         return {
             // What to when video clicked
@@ -1378,144 +1345,144 @@ class AarloGlance extends HTMLElement {
 
         // save then check new config
         // this._config = _mergeArrays(config, {})
-        this._config = config
+        this._config = config;
 
-        this.gc = this.getGlobalConfig( config )
-        this.gs = this.getGlobalState( config )
+        this.gc = this.getGlobalConfig( config );
+        this.gs = this.getGlobalState( config );
 
         if( "entities" in this._config ) {
-            let ci = 0
+            let ci = 0;
             this._config.entities.forEach( (local_config) => {
-                this._cc[ci] = this.getCameraConfig( config, local_config )
-                this._cs[ci] = this.getCameraState( this._cc[ci] )
-                this._lc[ci] = this.getLibraryConfig( config, local_config )
-                this._ls[ci] = this.getLibraryState( this._lc[ci] )
-                ci++
-            })
+                this._cc[ci] = this.getCameraConfig( config, local_config );
+                this._cs[ci] = this.getCameraState( this._cc[ci] );
+                this._lc[ci] = this.getLibraryConfig( config, local_config );
+                this._ls[ci] = this.getLibraryState( this._lc[ci] );
+                ci++;
+            });
 
             // For blended we fake a library at the end.
             if( this.gc.blendedMode ) {
-                this._lc[ci] = this.getLibraryConfig( config, {} )
-                this._ls[ci] = this.getLibraryState( this._lc[ci] )
+                this._lc[ci] = this.getLibraryConfig( config, {} );
+                this._ls[ci] = this.getLibraryState( this._lc[ci] );
             }
 
             // Use the first camera.
-            this._cameraCount = ci
-            this._cameraIndex = 0
+            this._cameraCount = ci;
+            this._cameraIndex = 0;
 
         } else {
             // Single camera. Much simpler.
-            this._cc[0] = this.getCameraConfig( config, {} )
-            this._cs[0] = this.getCameraState( this._cc[0] )
-            this._lc[0] = this.getLibraryConfig( config, {} )
-            this._ls[0] = this.getLibraryState( this._lc[0] )
+            this._cc[0] = this.getCameraConfig( config, {} );
+            this._cs[0] = this.getCameraState( this._cc[0] );
+            this._lc[0] = this.getLibraryConfig( config, {} );
+            this._ls[0] = this.getLibraryState( this._lc[0] );
 
             // Use the first camera.
-            this._cameraCount = 1
-            this._cameraIndex = 0
+            this._cameraCount = 1;
+            this._cameraIndex = 0;
         }
  
-        this.checkConfig()
+        this.checkConfig();
 
         // web item id suffix
-        this.gc.idSuffix = _replaceAll( this.cc.id,'.','-' )
-        this.gc.idSuffix = _replaceAll( this.gc.idSuffix,'_','-' )
+        this.gc.idSuffix = _replaceAll( this.cc.id,'.','-' );
+        this.gc.idSuffix = _replaceAll( this.gc.idSuffix,'_','-' );
     }
 
     getModalDimensions() {
-        let width  = window.innerWidth * this.gc.modalMultiplier
-        let height = window.innerHeight * this.gc.modalMultiplier
-        const ratio = this.gc.aspectRatioMultiplier
+        let width  = window.innerWidth * this.gc.modalMultiplier;
+        let height = window.innerHeight * this.gc.modalMultiplier;
+        const ratio = this.gc.aspectRatioMultiplier;
         if( height / width > ratio ) {
-            height = width * ratio
+            height = width * ratio;
         } else if( height / width < ratio ) {
-            width = height * (1/ratio)
+            width = height * (1/ratio);
         }
-        this.cs.modalWidth = Math.round(width)
-        this.cs.modalHeight = Math.round(height)
+        this.cs.modalWidth = Math.round(width);
+        this.cs.modalHeight = Math.round(height);
 
-        let topOffset = window.scrollY
+        let topOffset = window.scrollY;
         if( topOffset !== 0 ) {
-            this.cs.modalTop = Math.round( topOffset + ( (window.innerHeight - height) / 2 ) )
+            this.cs.modalTop = Math.round( topOffset + ( (window.innerHeight - height) / 2 ) );
         } else {
-            this.cs.modalTop = null
+            this.cs.modalTop = null;
         }
     }
 
     setModalElementData() {
-        this.getModalDimensions()
-        this._paddingTop( "modal-viewer", this.cs.modalTop )
-        this._widthHeight("modal-content", this.cs.modalWidth - 16, null, "important")
-        this._widthHeight("modal-video-wrapper", this.cs.modalWidth, this.cs.modalHeight - 16)
-        this._widthHeight("modal-video-background", this.cs.modalWidth, this.cs.modalHeight)
-        this._widthHeight("modal-video-player", this.cs.modalWidth, this.cs.modalHeight)
+        this.getModalDimensions();
+        this._paddingTop( "modal-viewer", this.cs.modalTop );
+        this._widthHeight("modal-content", this.cs.modalWidth - 16, null, "important");
+        this._widthHeight("modal-video-wrapper", this.cs.modalWidth, this.cs.modalHeight - 16);
+        this._widthHeight("modal-video-background", this.cs.modalWidth, this.cs.modalHeight);
+        this._widthHeight("modal-video-player", this.cs.modalWidth, this.cs.modalHeight);
     }
 
     showModal( show = true ) {
         if( this.gs.viewer === "modal" ) {
-            this.setModalElementData()
-            this._element('modal-viewer').style.display =  show ? 'block' : 'none'
+            this.setModalElementData();
+            this._element('modal-viewer').style.display =  show ? 'block' : 'none';
         }
     }
 
     hideModal() {
-        this._element('modal-viewer').style.display = 'none'
+        this._element('modal-viewer').style.display = 'none';
     }
 
     buildIcon(item, prefix, listener) {
-        let elem = document.createElement("ha-icon")
-        elem.classList.add(`aarlo-icon-${this._sizeSuffix()}`)
+        let elem = document.createElement("ha-icon");
+        elem.classList.add(`aarlo-icon-${this._sizeSuffix()}`);
         elem.addEventListener('click', listener);
-        elem.id = this._id(`${prefix}${item}`)
+        elem.id = this._id(`${prefix}${item}`);
         return elem
     }
 
     buildText(item, prefix) {
-        let elem = document.createElement("span")
-        elem.classList.add(`${prefix}-${item}`)
-        elem.classList.add(`aarlo-text-${this._sizeSuffix()}`)
-        elem.id = this._id(`${prefix}${item}`)
+        let elem = document.createElement("span");
+        elem.classList.add(`${prefix}-${item}`);
+        elem.classList.add(`aarlo-text-${this._sizeSuffix()}`);
+        elem.id = this._id(`${prefix}${item}`);
         return elem
     }
 
     buildGap() {
-        let elem = document.createElement("span")
-        elem.innerHTML = "&nbsp"
+        let elem = document.createElement("span");
+        elem.innerHTML = "&nbsp";
         return elem
     }
 
     buildImageRow(element, sections) {
-        let text_items = ["name", "date", "status"]
-        element.innerHTML = ''
+        let text_items = ["name", "date", "status"];
+        element.innerHTML = '';
         _array(sections).forEach((section, index, array) => {
-            let div = document.createElement("div")
+            let div = document.createElement("div");
             _array(section).forEach((item) => {
                 if (item === '') {
-                    div.appendChild(this.buildGap())
+                    div.appendChild(this.buildGap());
                 } else if (text_items.includes(item)) {
-                    div.appendChild(this.buildText(item, "camera-"))
+                    div.appendChild(this.buildText(item, "camera-"));
                 } else {
                     div.appendChild(this.buildIcon(item, "camera-", (evt) => {
-                        this.imageIconClicked(evt)
-                    }))
+                        this.imageIconClicked(evt);
+                    }));
                 }
-            })
+            });
 
             // Set div alignment
             if (index === 0) {
-                div.classList.add(`box-align-left`)
+                div.classList.add(`box-align-left`);
             } else if (index === array.length - 1) {
-                div.classList.add(`box-align-right`)
+                div.classList.add(`box-align-right`);
             }
-            element.appendChild(div)
-        })
+            element.appendChild(div);
+        });
     }
 
     buildVideoIconDiv(items, prefix) {
         let div = document.createElement("div");
         items.forEach((item) => {
             div.appendChild(this.buildIcon(item, prefix, (evt) => {
-                this.videoIconClicked(evt)
+                this.videoIconClicked(evt);
             }));
         });
         return div;
@@ -1527,16 +1494,16 @@ class AarloGlance extends HTMLElement {
         slider.min = "1";
         slider.max = "100";
         slider.value = "0";
-        slider.classList.add('slider')
+        slider.classList.add('slider');
         slider.id = this._id(`${prefix}video-seek`);
 
-        let div = document.createElement("div")
-        div.appendChild(slider)
+        let div = document.createElement("div");
+        div.appendChild(slider);
         return div
     }
 
     buildVideoControl(element, prefix) {
-        element.innerHTML = ''
+        element.innerHTML = '';
         element.appendChild(this.buildVideoIconDiv(["video-door-lock", "video-door2-lock",
                         "video-light-on", "video-light2-on", "video-toggle-sound", "video-play-pause", "video-stop"],
                         prefix));
@@ -1548,110 +1515,110 @@ class AarloGlance extends HTMLElement {
         let div = document.createElement("div");
         items.forEach((item) => {
             div.appendChild(this.buildIcon(item, prefix, (evt) => {
-                this.libraryIconClicked(evt)
+                this.libraryIconClicked(evt);
             }));
         });
         return div;
     }
 
     buildLibraryControl(element, prefix) {
-        element.innerHTML = ''
-        element.appendChild(this.buildLibraryIconDiv(["library-control-first", "library-control-previous"], prefix))
-        element.appendChild(this.buildLibraryIconDiv(["library-control-resize", "library-control-close"], prefix))
-        element.appendChild(this.buildLibraryIconDiv(["library-control-next", "library-control-last"], prefix))
+        element.innerHTML = '';
+        element.appendChild(this.buildLibraryIconDiv(["library-control-first", "library-control-previous"], prefix));
+        element.appendChild(this.buildLibraryIconDiv(["library-control-resize", "library-control-close"], prefix));
+        element.appendChild(this.buildLibraryIconDiv(["library-control-next", "library-control-last"], prefix));
     }
 
     imageIconClicked(evt) {
-        const id = evt.target.id
-        const modified = evt.ctrlKey || evt.shiftKey
+        const id = evt.target.id;
+        const modified = evt.ctrlKey || evt.shiftKey;
 
         if (id.startsWith("camera-motion")) {
-            this.moreInfo(this.cc.motionId)
+            this.moreInfo(this.cc.motionId);
         } else if (id.startsWith("camera-sound")) {
-            this.moreInfo(this.cc.soundId)
+            this.moreInfo(this.cc.soundId);
         } else if (id.startsWith("camera-battery")) {
-            this.moreInfo(this.cc.batteryId)
+            this.moreInfo(this.cc.batteryId);
         } else if (id.startsWith("camera-signal")) {
-            this.moreInfo(this.cc.signalId)
+            this.moreInfo(this.cc.signalId);
 
         } else if (id.startsWith("camera-onoff")) {
-            this.toggleCamera()
+            this.toggleCamera();
         } else if (id.startsWith("camera-library")) {
-            this.openLibrary()
+            this.openLibrary();
         } else if (id.startsWith("camera-stream")) {
-            this.showOrStopStream()
+            this.showOrStopStream();
         } else if (id.startsWith("camera-snapshot")) {
-            this.updateSnapshot()
+            this.updateSnapshot();
 
         } else if (id.startsWith("camera-door2")) {
-            this.moreInfo(this.cc.door2Id)
+            this.moreInfo(this.cc.door2Id);
         } else if (id.startsWith("camera-lock2")) {
             if (modified) {
-                this.moreInfo(this.cc.door2LockId)
+                this.moreInfo(this.cc.door2LockId);
             } else {
-                this.toggleLock(this.cc.door2LockId)
+                this.toggleLock(this.cc.door2LockId);
             }
         } else if (id.startsWith("camera-bell2")) {
             if (!this.cc.door2BellMuteId || modified) {
-                this.moreInfo(this.cc.door2BellId)
+                this.moreInfo(this.cc.door2BellId);
             } else {
-                this.toggleSwitch(this.cc.door2BellMuteId)
+                this.toggleSwitch(this.cc.door2BellMuteId);
             }
         } else if (id.startsWith("camera-door")) {
-            this.moreInfo(this.cc.doorId)
+            this.moreInfo(this.cc.doorId);
         } else if (id.startsWith("camera-lock")) {
             if (modified) {
-                this.moreInfo(this.cc.doorLockId)
+                this.moreInfo(this.cc.doorLockId);
             } else {
-                this.toggleLock(this.cc.doorLockId)
+                this.toggleLock(this.cc.doorLockId);
             }
         } else if (id.startsWith("camera-bell")) {
             if (!this.cc.doorBellMuteId || modified) {
-                this.moreInfo(this.cc.doorBellId)
+                this.moreInfo(this.cc.doorBellId);
             } else {
-                this.toggleSwitch(this.cc.doorBellMuteId)
+                this.toggleSwitch(this.cc.doorBellMuteId);
             }
         } else if (id.startsWith("camera-light2")) {
             if (modified) {
-                this.moreInfo(this.cc.light2Id)
+                this.moreInfo(this.cc.light2Id);
             } else {
-                this.toggleLight(this.cc.light2Id)
+                this.toggleLight(this.cc.light2Id);
             }
         } else if (id.startsWith("camera-light")) {
             if (modified) {
-                this.moreInfo(this.cc.lightId)
+                this.moreInfo(this.cc.lightId);
             } else {
-                this.toggleLight(this.cc.lightId)
+                this.toggleLight(this.cc.lightId);
             }
 
         } else if (id.startsWith("camera-previous")) {
-            this.previousCameraImage()
+            this.previousCameraImage();
         } else if (id.startsWith("camera-next")) {
-            this.nextCameraImage()
+            this.nextCameraImage();
         } else {
-            this._log("something clicked")
+            this._log("something clicked");
         }
     }
 
     setupImageView() {
         if( this.cc.image_top ) {
-            this.buildImageRow(this._element('top-bar'), this.cc.image_top)
+            this.buildImageRow(this._element('top-bar'), this.cc.image_top);
         }
         if( this.cc.image_bottom ) {
-            this.buildImageRow(this._element('bottom-bar'), this.cc.image_bottom)
+            this.buildImageRow(this._element('bottom-bar'), this.cc.image_bottom);
         }
 
         if( this.gc.isMobile ) {
-            this._hide("camera-previous")
-            this._hide("camera-next")
+            this._hide("camera-previous");
+            this._hide("camera-next");
         } else {
-            this._set("camera-previous", {title: this._i.status.previous_camera, icon: "mdi:chevron-left", state: "on"})
-            this._set("camera-next", {title: this._i.status.next_camera, icon: "mdi:chevron-right", state: "on"})
+            this._set("camera-previous", {title: this._i.status.previous_camera, icon: "mdi:chevron-left", state: "on"});
+            this._set("camera-next", {title: this._i.status.next_camera, icon: "mdi:chevron-right", state: "on"});
         }
     }
 
     setupImageHandlers() {
-        const viewer = this._element("camera-viewer")
+        const viewer = this._element("camera-viewer");
 
         viewer.addEventListener('error', () => {
             this.imageFailed();
@@ -1662,33 +1629,33 @@ class AarloGlance extends HTMLElement {
 
         if( this.gc.isMobile ) {
             viewer.addEventListener('touchstart', (e) => {
-                this.ls.xDown = e.touches[0].clientX
-                this.ls.xUp = null
-            }, { passive: true })
+                this.ls.xDown = e.touches[0].clientX;
+                this.ls.xUp = null;
+            }, { passive: true });
 
             viewer.addEventListener('touchmove', (e) => {
-                this.ls.xUp = e.touches[0].clientX
-            }, { passive: true })
+                this.ls.xUp = e.touches[0].clientX;
+            }, { passive: true });
 
             viewer.addEventListener('touchend', () => {
                 if( this.ls.xDown && this.ls.xUp ) {
                     const xDiff = this.ls.xDown - this.ls.xUp;
                     if( xDiff > this.gc.swipeThreshold ) {
-                        this.nextCameraImage()
+                        this.nextCameraImage();
                     } else if( xDiff < (0 - this.gc.swipeThreshold) ) {
-                        this.previousCameraImage()
+                        this.previousCameraImage();
                     }
                 }
-            }, { passive: true })
+            }, { passive: true });
         }
     }
 
     updateImageView() {
-        this._set("camera-name", {text: this.cc.name})
+        this._set("camera-name", {text: this.cc.name});
 
         for (const item in this.cs.details) {
             // noinspection JSUnfilteredForInLoop
-            this._set(`camera-${item}`, this.cs.details[item])
+            this._set(`camera-${item}`, this.cs.details[item]);
         }
     }
 
@@ -1706,38 +1673,38 @@ class AarloGlance extends HTMLElement {
         
         // For cast compatibility, use hassUrl()
         // matches https://github.com/home-assistant/frontend/blob/dev/src/panels/lovelace/components/hui-image.ts
-        this.cs.image = this._hass.hassUrl(camera.attributes.entity_picture + "&t=" + new Date().getTime()) 
-        this.cs.imageBase = camera.attributes.entity_picture
+        this.cs.image = this._hass.hassUrl(camera.attributes.entity_picture + "&t=" + new Date().getTime()); 
+        this.cs.imageBase = camera.attributes.entity_picture;
     }
 
     generateImageURLLater(seconds = 2) {
         setTimeout(() => {
-            this.generateImageURL()
-            this.updateImageView()
+            this.generateImageURL();
+            this.updateImageView();
         }, seconds * 1000);
     }
 
     showImageView() {
         if( this.cs.image !== null ) {
-            this._show("camera-viewer")
-            this._hide("broken-image")
+            this._show("camera-viewer");
+            this._hide("broken-image");
         } else {
-            this._show("broken-image")
-            this._hide("camera-viewer")
+            this._show("broken-image");
+            this._hide("camera-viewer");
         }
-        this._show('top-bar', !!this.cc.image_top)
-        this._show('bottom-bar', !!this.cc.image_bottom)
-        this.hideRecordingView()
-        this.hideStreamView()
-        this.hideLibraryView()
-        this.hideModal()
+        this._show('top-bar', !!this.cc.image_top);
+        this._show('bottom-bar', !!this.cc.image_bottom);
+        this.hideRecordingView();
+        this.hideStreamView();
+        this.hideLibraryView();
+        this.hideModal();
     }
 
     hideImageView() {
-        this._hide("camera-viewer")
-        this._hide("broken-image")
-        this._hide('top-bar')
-        this._hide('bottom-bar')
+        this._hide("camera-viewer");
+        this._hide("broken-image");
+        this._hide('top-bar');
+        this._hide('bottom-bar');
     }
 
     libraryIconClicked(evt) {
@@ -1759,188 +1726,188 @@ class AarloGlance extends HTMLElement {
     }
 
     setupLibraryView() {
-        this.buildLibraryControl(this._element('library-controls'), "")
+        this.buildLibraryControl(this._element('library-controls'), "");
         // TODO maybe modal?
     }
 
     setupLibraryHandlers() {
         // rudimentary swipe support
-        const viewer = this._element("library-viewer")
+        const viewer = this._element("library-viewer");
 
         if( this.gc.isMobile ) {
             viewer.addEventListener('touchstart', (e) => {
-                this.ls.xDown = e.touches[0].clientX
-                this.ls.xUp = null
-            }, { passive: true })
+                this.ls.xDown = e.touches[0].clientX;
+                this.ls.xUp = null;
+            }, { passive: true });
 
             viewer.addEventListener('touchmove', (e) => {
-                this.ls.xUp = e.touches[0].clientX
-            }, { passive: true })
+                this.ls.xUp = e.touches[0].clientX;
+            }, { passive: true });
 
             viewer.addEventListener('touchend', () => {
                 if( this.ls.xDown && this.ls.xUp ) {
                     const xDiff = this.ls.xDown - this.ls.xUp;
                     if( xDiff > this.gc.swipeThreshold ) {
-                        this.nextLibraryPage()
+                        this.nextLibraryPage();
                     } else if( xDiff < (0 - this.gc.swipeThreshold) ) {
-                        this.previousLibraryPage()
+                        this.previousLibraryPage();
                     }
                 }
-            }, { passive: true })
+            }, { passive: true });
         }
     }
 
     _updateLibraryHTML() {
         // update library state to reflect the new layout
-        this.gs.librarySize = this.lc.sizes[this.ls.sizeIndex]
-        this.ls.gridCount = this.gs.librarySize * this.gs.librarySize
+        this.gs.librarySize = this.lc.sizes[this.ls.sizeIndex];
+        this.ls.gridCount = this.gs.librarySize * this.gs.librarySize;
 
-        let grid = document.createElement("div")
-        grid.style.display = "grid"
-        grid.style['grid-template-columns'] = `repeat(${this.gs.librarySize},1fr)`
-        grid.style['grid-template-rows'] = `repeat(${this.gs.librarySize},1fr)`
-        grid.style['grid-gap'] = '1px'
-        grid.style.padding= '2px'
+        let grid = document.createElement("div");
+        grid.style.display = "grid";
+        grid.style['grid-template-columns'] = `repeat(${this.gs.librarySize},1fr)`;
+        grid.style['grid-template-rows'] = `repeat(${this.gs.librarySize},1fr)`;
+        grid.style['grid-gap'] = '1px';
+        grid.style.padding= '2px';
 
         for( let i = 0; i < this.gs.librarySize * this.gs.librarySize; ++i ) {
 
             // The thumbnail element.
-            let img = document.createElement("img")
-            img.id = this._id(`library-${i}`)
-            img.style.width = "100%"
-            img.style.height = "100%"
-            img.style.objectFit = "cover"
-            img.addEventListener("click", () => { this.playRecording(i) } )
-            img.addEventListener("mouseover", () => { this.showDownloadIcon(i) } )
-            img.addEventListener("mouseout", () => { this.hideDownloadIcon(i) } )
+            let img = document.createElement("img");
+            img.id = this._id(`library-${i}`);
+            img.style.width = "100%";
+            img.style.height = "100%";
+            img.style.objectFit = "cover";
+            img.addEventListener("click", () => { this.playRecording(i); } );
+            img.addEventListener("mouseover", () => { this.showDownloadIcon(i); } );
+            img.addEventListener("mouseout", () => { this.hideDownloadIcon(i); } );
 
             // The region highlight element
-            let box = document.createElement("div")
-            box.id = this._id(`library-box-${i}`)
-            box.style.width = "100%"
-            box.style.height = "100%"
-            box.style.position = "absolute"
-            box.style.top = "0"
-            box.addEventListener("click", () => { this.playRecording(i) } )
-            box.addEventListener("mouseover", () => { this.showDownloadIcon(i) } )
-            box.addEventListener("mouseout", () => { this.hideDownloadIcon(i) } )
+            let box = document.createElement("div");
+            box.id = this._id(`library-box-${i}`);
+            box.style.width = "100%";
+            box.style.height = "100%";
+            box.style.position = "absolute";
+            box.style.top = "0";
+            box.addEventListener("click", () => { this.playRecording(i); } );
+            box.addEventListener("mouseover", () => { this.showDownloadIcon(i); } );
+            box.addEventListener("mouseout", () => { this.hideDownloadIcon(i); } );
 
             // The download icon
-            let a = document.createElement("a")
-            a.id = this._id(`library-a-${i}`)
-            a.style.position = "absolute"
-            a.style.left = `2%`
-            a.style.top  = `5%`
-            a.setAttribute("download","")
-            a.innerHTML = `<ha-icon class="aarlo-icon-small" icon="mdi:download" style="color: white;"></ha-icon>`
+            let a = document.createElement("a");
+            a.id = this._id(`library-a-${i}`);
+            a.style.position = "absolute";
+            a.style.left = `2%`;
+            a.style.top  = `5%`;
+            a.setAttribute("download","");
+            a.innerHTML = `<ha-icon class="aarlo-icon-small" icon="mdi:download" style="color: white;"></ha-icon>`;
 
-            const column = Math.floor((i % this.gs.librarySize) + 1)
-            const row = Math.floor((i / this.gs.librarySize) + 1)
-            let div = document.createElement("div")
-            div.style.position= 'relative'
-            div.style.gridColumn = `${column}`
-            div.style.gridRow    = `${row}`
-            div.appendChild(img)
-            div.appendChild(box)
-            div.appendChild(a)
-            grid.appendChild(div)
+            const column = Math.floor((i % this.gs.librarySize) + 1);
+            const row = Math.floor((i / this.gs.librarySize) + 1);
+            let div = document.createElement("div");
+            div.style.position= 'relative';
+            div.style.gridColumn = `${column}`;
+            div.style.gridRow    = `${row}`;
+            div.appendChild(img);
+            div.appendChild(box);
+            div.appendChild(a);
+            grid.appendChild(div);
         }
 
         // replace.
-        let container = this._element('library-viewer')
-        container.innerHTML = ''
-        container.appendChild(grid)
+        let container = this._element('library-viewer');
+        container.innerHTML = '';
+        container.appendChild(grid);
     }
 
     _updateLibraryView() {
         // Massage offset so it fits in library.
         if( this.ls.offset + this.ls.gridCount > this.ls.recordings.length ) {
-            this.ls.offset = Math.max(this.ls.recordings.length - this.ls.gridCount, 0)
+            this.ls.offset = Math.max(this.ls.recordings.length - this.ls.gridCount, 0);
         } else if( this.ls.offset < 0 ) {
-            this.ls.offset = 0
+            this.ls.offset = 0;
         }
 
         let i = 0;
         let j= this.ls.offset;
-        const show_triggers = this.lc.regions.includes(this.gs.librarySize)
-        const last = Math.min(j + this.ls.gridCount, this.ls.recordings.length)
+        const show_triggers = this.lc.regions.includes(this.gs.librarySize);
+        const last = Math.min(j + this.ls.gridCount, this.ls.recordings.length);
         for( ; j < last; i++, j++ ) {
-            const id = `library-${i}`
-            const bid = `library-box-${i}`
-            const video = this.ls.recordings[j]
-            let captured_text = `${this._i.library.captured}: ${video.created_at_pretty}`
+            const id = `library-${i}`;
+            const bid = `library-box-${i}`;
+            const video = this.ls.recordings[j];
+            let captured_text = `${this._i.library.captured}: ${video.created_at_pretty}`;
             if( this.lc.duration ) {
-                const minutes = Math.floor(video.duration / 60)
-                const seconds = video.duration % 60
-                captured_text += `\n${this._i.library.duration}: ${minutes}:${seconds.toString().padStart(2,'0')}`
+                const minutes = Math.floor(video.duration / 60);
+                const seconds = video.duration % 60;
+                captured_text += `\n${this._i.library.duration}: ${minutes}:${seconds.toString().padStart(2,'0')}`;
             }
             if ( video.trigger && video.trigger !== '' ) {
-                captured_text += `\n${this._i.library.reason}: ${this._i.trigger[video.trigger.toLowerCase()]}`
+                captured_text += `\n${this._i.library.reason}: ${this._i.trigger[video.trigger.toLowerCase()]}`;
             }
-            this._set( id,{title: captured_text, alt: captured_text, src: video.thumbnail} )
-            this._show( id )
+            this._set( id,{title: captured_text, alt: captured_text, src: video.thumbnail} );
+            this._show( id );
 
             // highlight is on at this level and we have something?
             if( show_triggers && video.trigger !== null && video.trigger_region !== null ) {
-                const coords = video.trigger_region.split(",")
+                const coords = video.trigger_region.split(",");
 
-                let box = this._element( bid )
-                box.style.left = `${parseFloat(coords[0]) * 100}%`
-                box.style.top = `${parseFloat(coords[1]) * 100}%`
-                box.style.width = `${(parseFloat(coords[2]) - parseFloat(coords[0])) * 100}%`
-                box.style.height = `${(parseFloat(coords[3]) - parseFloat(coords[1])) * 100}%`
-                box.style.borderStyle = "solid"
-                box.style.borderWidth = "thin"
+                let box = this._element( bid );
+                box.style.left = `${parseFloat(coords[0]) * 100}%`;
+                box.style.top = `${parseFloat(coords[1]) * 100}%`;
+                box.style.width = `${(parseFloat(coords[2]) - parseFloat(coords[0])) * 100}%`;
+                box.style.height = `${(parseFloat(coords[3]) - parseFloat(coords[1])) * 100}%`;
+                box.style.borderStyle = "solid";
+                box.style.borderWidth = "thin";
                 box.style.borderColor = video.trigger in this.lc.colors ?
-                                               this.lc.colors[video.trigger] : "cyan"
-                this._set( bid,{title: captured_text, alt: captured_text } )
-                this._show( bid )
+                                               this.lc.colors[video.trigger] : "cyan";
+                this._set( bid,{title: captured_text, alt: captured_text } );
+                this._show( bid );
             } else {
-                this._hide( bid )
+                this._hide( bid );
             }
 
             // download icon
-            const aid = `library-a-${i}`
-            this._element( aid ).href = video.url
-            this._hide( aid )
+            const aid = `library-a-${i}`;
+            this._element( aid ).href = video.url;
+            this._hide( aid );
 
         }
         for( ; i < this.ls.gridCount; i++ ) {
-            this._hide(`library-${i}`)
-            this._hide(`library-box-${i}`)
-            this._hide(`library-a-${i}`)
+            this._hide(`library-${i}`);
+            this._hide(`library-box-${i}`);
+            this._hide(`library-a-${i}`);
         }
 
         // save state
-        this.ls.lastOffset = this.ls.offset
-        this.gs.libraryCamera = this._cameraIndex
+        this.ls.lastOffset = this.ls.offset;
+        this.gs.libraryCamera = this._cameraIndex;
 
-        const not_at_start = this.ls.offset !== 0
+        const not_at_start = this.ls.offset !== 0;
         this._set( "library-control-first",{
             title: not_at_start ? this._i.library.first_page : "",
             icon: 'mdi:page-first',
             state: not_at_start ? "on" : "off"
-        })
+        });
         this._set( "library-control-previous",{
             title: not_at_start ? this._i.library.previous_page : "",
             icon: 'mdi:chevron-left',
             state: not_at_start ? "on" : "off"
-        })
+        });
 
-        this._set( "library-control-resize",{ title: this._i.library.next_size, icon: 'mdi:resize', state: "on" })
-        this._set( "library-control-close",{ title: this._i.library.close, icon: 'mdi:close', state: "on" })
+        this._set( "library-control-resize",{ title: this._i.library.next_size, icon: 'mdi:resize', state: "on" });
+        this._set( "library-control-close",{ title: this._i.library.close, icon: 'mdi:close', state: "on" });
 
-        const not_at_end = this.ls.offset + this.ls.gridCount < this.ls.recordings.length
+        const not_at_end = this.ls.offset + this.ls.gridCount < this.ls.recordings.length;
         this._set( "library-control-next",{
             title: not_at_end ? this._i.library.next_page : "",
             icon: 'mdi:chevron-right',
             state: not_at_end ? "on" : "off"
-        })
+        });
         this._set( "library-control-last",{
             title: not_at_end ? this._i.library.last_page : "",
             icon: 'mdi:page-last',
             state: not_at_end ? "on" : "off"
-        })
+        });
     }
 
     updateLibraryView() {
@@ -1948,35 +1915,35 @@ class AarloGlance extends HTMLElement {
 
         // If camera index has changed then load library
         if ( this.gs.libraryCamera !== this._cameraIndex ) {
-            this._log( `library-camera-change` )
-            this._updateLibraryHTML()
-            this._updateLibraryView()
+            this._log( `library-camera-change` );
+            this._updateLibraryHTML();
+            this._updateLibraryView();
 
         // Resized? Rebuild grid and force reload of images.
         } else if ( this.gs.librarySize !== this.lc.sizes[this.ls.sizeIndex] ) {
-            this._log( `library-size-change` )
-            this._updateLibraryHTML()
-            this._updateLibraryView()
+            this._log( `library-size-change` );
+            this._updateLibraryHTML();
+            this._updateLibraryView();
 
         // If offset has changed then reload images
         } else if ( this.ls.lastOffset !== this.ls.offset ) {
-            this._log( `library-view-update` )
-            this._updateLibraryView()
+            this._log( `library-view-update` );
+            this._updateLibraryView();
         } 
     }
 
     showLibraryView() {
-        this._show("library-viewer")
-        this._show("library-controls")
-        this.hideRecordingView()
-        this.hideStreamView()
-        this.hideImageView()
-        this.hideModal()
+        this._show("library-viewer");
+        this._show("library-controls");
+        this.hideRecordingView();
+        this.hideStreamView();
+        this.hideImageView();
+        this.hideModal();
     }
 
     hideLibraryView() {
-        this._hide("library-viewer")
-        this._hide("library-controls")
+        this._hide("library-viewer");
+        this._hide("library-controls");
     }
 
     // RECORDING VIEW
@@ -2008,28 +1975,28 @@ class AarloGlance extends HTMLElement {
      */
     setupVideoView() {
         // this.buildVideoControls()
-        this.buildVideoControl(this._element('video-controls'), "")
-        this.buildVideoControl(this._element('modal-video-controls'), "modal-")
+        this.buildVideoControl(this._element('video-controls'), "");
+        this.buildVideoControl(this._element('modal-video-controls'), "modal-");
     }
 
     setupVideoHandlers() {
         [this._element( "video-player" ), this._element( "modal-video-player" )]
             .forEach((player) => {
                 player.addEventListener( 'ended', (_evt) => {
-                    this.videoEnded()
+                    this.videoEnded();
                 });
                 player.addEventListener( 'click', (_evt) => {
-                    this.videoClicked()
+                    this.videoClicked();
                 });
                 player.addEventListener( 'mouseover', (_evt) => {
-                    this.videoMouseEvent()
+                    this.videoMouseEvent();
                 });
                 player.addEventListener( 'mousemove', (_evt) => {
-                    this.videoMouseEvent()
+                    this.videoMouseEvent();
                 });
                 player.addEventListener( 'loadedmetadata', (evt) => {
                     this.setUpSeekBar();
-                    this.startVideo( evt.target )
+                    this.startVideo( evt.target );
                     this.showVideoControls(4);
                 });
             });
@@ -2037,55 +2004,55 @@ class AarloGlance extends HTMLElement {
 
 
     setupRecordingPlayer() {
-        this._mset( 'video-player',{src: this.gs.recording, poster: this.gs.poster} )
-        this._mshow("video-seek")
-        this._mshow("video-play-pause")
-        this._mhide("video-door-lock")
-        this._mhide("video-door2-lock")
-        this._mhide("video-light-on")
-        this._mhide("video-light2-on")
+        this._mset( 'video-player',{src: this.gs.recording, poster: this.gs.poster} );
+        this._mshow("video-seek");
+        this._mshow("video-play-pause");
+        this._mhide("video-door-lock");
+        this._mhide("video-door2-lock");
+        this._mhide("video-light-on");
+        this._mhide("video-light2-on");
     }
 
     updateRecordingView() {
         this._mset("video-stop",{title: this._i.video.stop, icon: "mdi:stop"});
         this._mset("video-full-screen",{title: this._i.video.fullscreen, icon: "mdi:fullscreen"});
 
-        let video = this._melement( 'video-player' )
+        let video = this._melement( 'video-player' );
         if( video.paused ) {
-            this._mset("video-play-pause", {title: this._i.video.play, icon:"mdi:play"})
+            this._mset("video-play-pause", {title: this._i.video.play, icon:"mdi:play"});
         } else {
-            this._mset("video-play-pause", {title: this._i.video.pause, icon:"mdi:pause"})
+            this._mset("video-play-pause", {title: this._i.video.pause, icon:"mdi:pause"});
         }
         if( video.muted ) {
-            this._mset("video-toggle-sound", {icon:"mdi:volume-off"})
+            this._mset("video-toggle-sound", {icon:"mdi:volume-off"});
         } else {
-            this._mset("video-toggle-sound", {icon:"mdi:volume-high"})
+            this._mset("video-toggle-sound", {icon:"mdi:volume-high"});
         }
     }
 
     showRecordingView() {
-        this.hideStreamView()
-        this._mshow("video-player")
-        this._mshow("video-controls")
-        this.showModal()
-        this.hideLibraryView()
-        this.hideImageView()
+        this.hideStreamView();
+        this._mshow("video-player");
+        this._mshow("video-controls");
+        this.showModal();
+        this.hideLibraryView();
+        this.hideImageView();
     }
 
     hideRecordingView() {
-        this._mhide("video-player")
-        this._mhide("video-controls")
-        this.hideModal()
+        this._mhide("video-player");
+        this._mhide("video-controls");
+        this.hideModal();
     }
 
     showRecording() {
-        this.setupRecordingPlayer()
-        this.updateRecordingView()
-        this.showRecordingView()
+        this.setupRecordingPlayer();
+        this.updateRecordingView();
+        this.showRecordingView();
     }
  
     setMPEGStreamElementData() {
-        const video = this._melement('video-player')
+        const video = this._melement('video-player');
         const et = this._findEgressToken( this.gs.stream );
 
         this.gs.dash = dashjs.MediaPlayer().create();
@@ -2097,19 +2064,19 @@ class AarloGlance extends HTMLElement {
                 }
             };
         }, true);
-        this.gs.dash.initialize( video, this.gs.stream, true )
+        this.gs.dash.initialize( video, this.gs.stream, true );
     }
 
     destroyMPEGStream() {
         if(this.gs.hls) {
             this.gs.hls.stopLoad();
             this.gs.hls.destroy();
-            this.gs.hls = null
+            this.gs.hls = null;
         }
     }
 
     setHLSStreamElementData() {
-        const video = this._melement('video-player')
+        const video = this._melement('video-player');
         if (!video) return;
 
         if (window.Hls && Hls.isSupported()) {
@@ -2120,7 +2087,7 @@ class AarloGlance extends HTMLElement {
                 this.gs.hls.on(Hls.Events.MANIFEST_PARSED, () => {
                     this.startVideo(video);
                 });
-            })
+            });
         } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
             video.src = this.gs.stream;
             video.addEventListener('loadedmetadata', () => {
@@ -2138,20 +2105,20 @@ class AarloGlance extends HTMLElement {
 
     setupStreamPlayer() {
         if ( this.gs.stream.includes('egressToken') ) {
-            this.setMPEGStreamElementData()
+            this.setMPEGStreamElementData();
         } else {
-            this.setHLSStreamElementData()
+            this.setHLSStreamElementData();
         }
 
-        this._mhide("video-play-pause")
-        this._mhide("video-seek")
+        this._mhide("video-play-pause");
+        this._mhide("video-seek");
         this._mshow("video-door-lock", this.cc.doorLockId !== null);
         this._mshow("video-door2-lock", this.cc.door2LockId !== null);
         this._mshow("video-light-on", this.cc.lightId !== null);
         this._mshow("video-light2-on", this.cc.light2Id !== null);
         this.showVideoControls(4);
 
-        this._mset('video-player', {poster: this.gs.poster})
+        this._mset('video-player', {poster: this.gs.poster});
     }
 
     updateStreamView() {
@@ -2162,8 +2129,8 @@ class AarloGlance extends HTMLElement {
         if ( this.gs.stream === null ) {
             if( this.cs.autoPlay && this.cs.autoPlayTimer === null ) {
                 this.cs.autoPlayTimer = setTimeout( () => {
-                    this.playStream()
-                },5 * 1000 )
+                    this.playStream();
+                },5 * 1000 );
             }
             return
         }
@@ -2174,46 +2141,46 @@ class AarloGlance extends HTMLElement {
         this._mset("video-light2-on", this.cs.details.light2);
 
         if( this._melement( 'video-player' ).muted ) {
-            this._mset("video-toggle-sound", {icon:"mdi:volume-off"})
+            this._mset("video-toggle-sound", {icon:"mdi:volume-off"});
         } else {
-            this._mset("video-toggle-sound", {icon:"mdi:volume-high"})
+            this._mset("video-toggle-sound", {icon:"mdi:volume-high"});
         }
     }
 
     showStreamView() {
-        this.hideRecordingView()
-        this._mshow("video-player")
-        this._mshow("video-controls")
-        this.showModal()
-        this.hideLibraryView()
-        this.hideImageView()
+        this.hideRecordingView();
+        this._mshow("video-player");
+        this._mshow("video-controls");
+        this.showModal();
+        this.hideLibraryView();
+        this.hideImageView();
     }
 
     hideStreamView() {
-        this._mhide("video-player")
-        this._mhide("video-controls")
-        this.hideModal()
+        this._mhide("video-player");
+        this._mhide("video-controls");
+        this.hideModal();
     }
 
     showStream() {
-        this.setupStreamPlayer()
-        this.updateStreamView()
-        this.showStreamView()
+        this.setupStreamPlayer();
+        this.updateStreamView();
+        this.showStreamView();
     }
 
     updateView() {
-        this.updateStatuses()
-        this.updateImageView()
-        this.updateLibraryView()
-        this.updateRecordingView()
-        this.updateStreamView()
+        this.updateStatuses();
+        this.updateImageView();
+        this.updateLibraryView();
+        this.updateRecordingView();
+        this.updateStreamView();
     }
 
     updateVideoOrStreamView() {
         if( this.gs.stream !== null ) {
-            this.updateStreamView()
+            this.updateStreamView();
         } else if( this.gs.recording !== null ) {
-            this.updateRecordingView()
+            this.updateRecordingView();
         }
     }
 
@@ -2236,24 +2203,24 @@ class AarloGlance extends HTMLElement {
         // Load language pack
         if( !lang_loaded ) {
             this.asyncLoadLanguage().finally( () => {
-                this.initialSetup( true, false )
-            })
+                this.initialSetup( true, false );
+            });
             return
         }
 
         // Now load the libraries.
         if( !lib_loaded ) {
             this.asyncLoadLibraries().then( () => {
-                this.initialSetup( true, true )
-            })
+                this.initialSetup( true, true );
+            });
             return
         }
 
         // Now wait for the elements to be added to the shadow DOM.
         if( this._element("camera-viewer") === null ) {
-            this._log( 'waiting for an element ' )
+            this._log( 'waiting for an element ' );
             setTimeout( () => {
-                this.initialSetup( true, true )
+                this.initialSetup( true, true );
             }, 100);
             return
         }
@@ -2262,30 +2229,30 @@ class AarloGlance extends HTMLElement {
         //  - language packs are in
         //  - library are loaded
         //  - DOM is ready
-        this._ready = "ready"
+        this._ready = "ready";
 
         // Set initial state
-        this.updateStatuses()
+        this.updateStatuses();
 
         // Install the static stuff.
-        this.setupImageView()
-        this.setupLibraryView()
-        this.setupVideoView()
-        this.setupImageHandlers()
-        this.setupLibraryHandlers()
-        this.setupVideoHandlers()
+        this.setupImageView();
+        this.setupLibraryView();
+        this.setupVideoView();
+        this.setupImageHandlers();
+        this.setupLibraryHandlers();
+        this.setupVideoHandlers();
 
         // And go...
-        this.updateImageView()
-        this.updateLibraryView()
-        this.showImageView()
+        this.updateImageView();
+        this.updateLibraryView();
+        this.showImageView();
     }
 
     resetView() {
         if ( this.ls.showing ) {
-            this.showLibraryView()
+            this.showLibraryView();
         } else {
-            this.showImageView()
+            this.showImageView();
         }
     }
 
@@ -2357,25 +2324,25 @@ class AarloGlance extends HTMLElement {
         this.wsUpdateSnapshot()
             .then()
             .catch( (e) => {
-                this._log( e )
-            })
+                this._log( e );
+            });
     }
 
     pauseVideo( video ) {
-        video.pause()
-        this.updateVideoOrStreamView()
+        video.pause();
+        this.updateVideoOrStreamView();
     }
 
     startVideo( video ) {
-        let promise = video.play()
+        let promise = video.play();
         if( promise !== undefined ) {
             promise.then( () => {
-                this.updateVideoOrStreamView()
+                this.updateVideoOrStreamView();
             }).catch( () => {
-                this.updateVideoOrStreamView()
-            })
+                this.updateVideoOrStreamView();
+            });
         } else {
-            this.updateVideoOrStreamView()
+            this.updateVideoOrStreamView();
         }
     }
 
@@ -2389,47 +2356,47 @@ class AarloGlance extends HTMLElement {
     }
                                 
     playStream( ) {
-        this.cs.autoPlayTimer = null
+        this.cs.autoPlayTimer = null;
         if ( this.gs.stream === null ) {
             if( this.cc.autoPlay ) {
-                this.cs.autoPlay = this.cc.autoPlay
+                this.cs.autoPlay = this.cc.autoPlay;
             }
-            this._melement('video-player').muted = this.gs.isMuted
+            this._melement('video-player').muted = this.gs.isMuted;
             this.wsStartStream()
                 .then( (stream) => {
-                    this.gs.viewer = this.getViewType( this.cc )
+                    this.gs.viewer = this.getViewType( this.cc );
                     this.gs.stream = stream.url;
                     this.gs.poster = this.cs.image;
-                    this.showStream()
+                    this.showStream();
                 })
                 .catch( (e) => {
-                    this._log( e )
-                })
+                    this._log( e );
+                });
         } else {
-            this.showStream()
+            this.showStream();
         }
     }
 
     stopStream() {
-        this.resetView()
-        this._melement('video-player' ).pause()
-        this.cs.autoPlay = false
+        this.resetView();
+        this._melement('video-player' ).pause();
+        this.cs.autoPlay = false;
         this.gs.stream = null;
-        this.destroyMPEGStream()
-        this.destroyHLSStream()
+        this.destroyMPEGStream();
+        this.destroyHLSStream();
         this.wsStopStream()
             .then()
             .catch( (e) => {
-                this._log( e )
-            })
+                this._log( e );
+            });
     }
 
     showOrStopStream() {
         if (this.gs.stream !== null) {
-            this.stopStream()
+            this.stopStream();
         } else {
-            this.gs.viewer = this.getViewType( this.cc )
-            this.playStream()
+            this.gs.viewer = this.getViewType( this.cc );
+            this.playStream();
         }
     }
 
@@ -2481,48 +2448,48 @@ class AarloGlance extends HTMLElement {
      */
     async asyncLoadLibrary( index ) {
         try {
-            this._ls[index].recordings = await this.wsLoadLibrary( index )
+            this._ls[index].recordings = await this.wsLoadLibrary( index );
         } catch(err) {
-            this._log(err)
-            this._ls[index].recordings = []
+            this._log(err);
+            this._ls[index].recordings = [];
         }
     }
 
     async asyncLoadLibraries( ) {
         for( let i = 0; i < this._cameraCount; i++ ) {
-            await this.asyncLoadLibrary(i)
+            await this.asyncLoadLibrary(i);
         }
-        this.mergeLibraries()
+        this.mergeLibraries();
     }
 
     mergeLibraries() {
         if( !this.gc.blendedMode ) {
             return
         }
-        let recordings = this._ls[0].recordings.slice()
+        let recordings = this._ls[0].recordings.slice();
         for( let i = 1; i < this._cameraCount; i++ ) {
-            let j = 0
-            let k = 0
+            let j = 0;
+            let k = 0;
             while( k < this._ls[i].recordings.length ) {
                 if( j === recordings.length ) {
-                    recordings.push( this._ls[i].recordings[k] )
-                    k++
+                    recordings.push( this._ls[i].recordings[k] );
+                    k++;
                 } else if( recordings[j].created_at < this._ls[i].recordings[k].created_at ) {
-                    recordings.splice( j, 0, this._ls[i].recordings[k] )
-                    k++
+                    recordings.splice( j, 0, this._ls[i].recordings[k] );
+                    k++;
                 }
-                j++
+                j++;
             }
         }
-        this._ls[this._cameraCount].recordings = recordings
+        this._ls[this._cameraCount].recordings = recordings;
     }
 
     openLibrary() {
         if( this.ls.recordings && this.ls.recordings.length > 0 ) {
-            this.ls.showing = true
-            this.getModalDimensions()
-            this.updateLibraryView()
-            this.showLibraryView()
+            this.ls.showing = true;
+            this.getModalDimensions();
+            this.updateLibraryView();
+            this.showLibraryView();
         }
     }
 
@@ -2530,138 +2497,138 @@ class AarloGlance extends HTMLElement {
         if ( this.gs.recording === null ) {
             index += this.ls.offset;
             if (this.ls.recordings && index < this.ls.recordings.length) {
-                this._melement( 'video-player' ).muted = this.gs.isMuted
-                this.gs.viewer    = this.getViewType( this.lc )
+                this._melement( 'video-player' ).muted = this.gs.isMuted;
+                this.gs.viewer    = this.getViewType( this.lc );
                 this.gs.recording = this.ls.recordings[index].url;
                 this.gs.poster    = this.ls.recordings[index].thumbnail;
-                this.showRecording()
+                this.showRecording();
             } 
         }
     }
 
     playLatestRecording() {
-        this._melement( 'video-player' ).muted = this.gs.isMuted
-        this.gs.viewer    = this.getViewType( this.cc )
-        this.gs.recording = this.cs.lastRecording
-        this.gs.poster    = this.cs.image
-        this.showRecording()
+        this._melement( 'video-player' ).muted = this.gs.isMuted;
+        this.gs.viewer    = this.getViewType( this.cc );
+        this.gs.recording = this.cs.lastRecording;
+        this.gs.poster    = this.cs.image;
+        this.showRecording();
     }
 
     stopRecording() {
         if ( this.gs.recording ) {
-            this.pauseVideo(this._melement( 'video-player' ))
-            this.hideModal()
-            this.resetView()
-            this.gs.recording = null
+            this.pauseVideo(this._melement( 'video-player' ));
+            this.hideModal();
+            this.resetView();
+            this.gs.recording = null;
         }
     }
 
     firstLibraryPage() {
-        this.ls.offset = 0
-        this.updateLibraryView()
+        this.ls.offset = 0;
+        this.updateLibraryView();
     }
 
     previousLibraryPage() {
-        this.ls.offset = Math.max(this.ls.offset - this.ls.gridCount, 0)
-        this.updateLibraryView()
+        this.ls.offset = Math.max(this.ls.offset - this.ls.gridCount, 0);
+        this.updateLibraryView();
     }
 
     nextLibraryPage() {
-        const last = Math.max(this.ls.recordings.length - this.ls.gridCount, 0)
-        this.ls.offset = Math.min(this.ls.offset + this.ls.gridCount, last)
-        this.updateLibraryView()
+        const last = Math.max(this.ls.recordings.length - this.ls.gridCount, 0);
+        this.ls.offset = Math.min(this.ls.offset + this.ls.gridCount, last);
+        this.updateLibraryView();
     }
 
     lastLibraryPage() {
-        this.ls.offset = Math.max(this.ls.recordings.length - this.ls.gridCount, 0)
-        this.updateLibraryView()
+        this.ls.offset = Math.max(this.ls.recordings.length - this.ls.gridCount, 0);
+        this.updateLibraryView();
     }
 
     resizeLibrary() {
-        this.ls.sizeIndex += 1
+        this.ls.sizeIndex += 1;
         if( this.ls.sizeIndex === this.lc.sizes.length ) {
-            this.ls.sizeIndex = 0
+            this.ls.sizeIndex = 0;
         }
-        this.updateLibraryView()
+        this.updateLibraryView();
     }
 
     closeLibrary() {
-        this.ls.showing = false
-        this.stopRecording()
-        this.showImageView()
+        this.ls.showing = false;
+        this.stopRecording();
+        this.showImageView();
     }
 
     imageFailed() {
-        this.cs.details.viewer = {title: "", alt: "", src: null}
-        this.cs.image = null
-        this.updateImageView()
-        this.showImageView()
-        this._log("image load failed")
+        this.cs.details.viewer = {title: "", alt: "", src: null};
+        this.cs.image = null;
+        this.updateImageView();
+        this.showImageView();
+        this._log("image load failed");
     }
 
     imageClicked() {
         if ( this.cc.playStream ) {
-            this.playStream()
+            this.playStream();
         } else {
-            this.playLatestRecording()
+            this.playLatestRecording();
         }
     }
 
     setCameraImage( index ) {
-        this._cameraIndex = index
-        this.setupImageView()
-        this.setupLibraryView()
-        this.updateImageView()
+        this._cameraIndex = index;
+        this.setupImageView();
+        this.setupLibraryView();
+        this.updateImageView();
     }
 
     nextCameraImage() {
-        this.setCameraImage( this._cameraIndex === (this._cameraCount - 1) ? 0 : (this._cameraIndex + 1) )
+        this.setCameraImage( this._cameraIndex === (this._cameraCount - 1) ? 0 : (this._cameraIndex + 1) );
     }
 
     previousCameraImage() {
-        this.setCameraImage( this._cameraIndex === 0 ? (this._cameraCount - 1) : (this._cameraIndex - 1) )
+        this.setCameraImage( this._cameraIndex === 0 ? (this._cameraCount - 1) : (this._cameraIndex - 1) );
     }
 
     videoEnded() {
-        this.stopRecording()
-        this.stopStream()
+        this.stopRecording();
+        this.stopStream();
     }
 
     videoClicked() {
         if ( this._misHidden("video-controls") ) {
-            this.showVideoControls(2)
+            this.showVideoControls(2);
         } else {
             this.hideVideoControls();
         }
     }
 
     videoMouseEvent() {
-        this.showVideoControls(2)
+        this.showVideoControls(2);
     }
 
     controlStop() {
-        this.stopRecording()
-        this.stopStream()
+        this.stopRecording();
+        this.stopStream();
     }
 
     controlPlayPause( ) {
-        let video = this._melement( 'video-player' )
+        let video = this._melement( 'video-player' );
         if( video.paused ) {
-            this.startVideo( video )
+            this.startVideo( video );
         } else {
-            this.pauseVideo( video )
+            this.pauseVideo( video );
         }
     }
 
     controlToggleSound( ) {
-        let video = this._melement('video-player')
+        let video = this._melement('video-player');
         video.muted = !video.muted;
-        this.gs.isMuted = video.muted
-        this.updateVideoOrStreamView()
+        this.gs.isMuted = video.muted;
+        this.updateVideoOrStreamView();
     }
 
     controlFullScreen() {
-        const video = this._melement('video-player')
+        const video = this._melement('video-player');
         if (!video) return;
         if (video.requestFullscreen) {
             video.requestFullscreen().catch(err => this._log(`Fullscreen error: ${err}`));
@@ -2676,39 +2643,39 @@ class AarloGlance extends HTMLElement {
 
     toggleCamera( ) {
         if ( this.cs.state === 'off' ) {
-            this._hass.callService( 'camera','turn_on', { entity_id: this.cc.id } )
+            this._hass.callService( 'camera','turn_on', { entity_id: this.cc.id } );
         } else {
-            this._hass.callService( 'camera','turn_off', { entity_id: this.cc.id } )
+            this._hass.callService( 'camera','turn_off', { entity_id: this.cc.id } );
         }
     }
 
     toggleLock( id ) {
         if ( this._getState(id,'locked').state === 'locked' ) {
-            this._hass.callService( 'lock','unlock', { entity_id:id } )
+            this._hass.callService( 'lock','unlock', { entity_id:id } );
         } else {
-            this._hass.callService( 'lock','lock', { entity_id:id } )
+            this._hass.callService( 'lock','lock', { entity_id:id } );
         }
     }
 
     toggleLight( id ) {
         if ( this._getState(id,'on').state === 'on' ) {
-            this._hass.callService( 'light','turn_off', { entity_id:id } )
+            this._hass.callService( 'light','turn_off', { entity_id:id } );
         } else {
-            this._hass.callService( 'light','turn_on', { entity_id:id } )
+            this._hass.callService( 'light','turn_on', { entity_id:id } );
         }
     }
 
     toggleSwitch( id ) {
         if ( this._getState(id,'on').state === 'on' ) {
-            this._hass.callService( 'switch','turn_off', { entity_id:id } )
+            this._hass.callService( 'switch','turn_off', { entity_id:id } );
         } else {
-            this._hass.callService( 'switch','turn_on', { entity_id:id } )
+            this._hass.callService( 'switch','turn_on', { entity_id:id } );
         }
     }
 
     setUpSeekBar() {
-        let video = this._melement('video-player')
-        let seekBar = this._melement('video-seek')
+        let video = this._melement('video-player');
+        let seekBar = this._melement('video-seek');
 
         video.addEventListener( "timeupdate", () => {
             seekBar.value = (100 / video.duration) * video.currentTime;
@@ -2718,20 +2685,20 @@ class AarloGlance extends HTMLElement {
         });
         seekBar.addEventListener( "mousedown", () => {
             this.showVideoControls(0);
-            this.gs.streamPaused = video.paused
+            this.gs.streamPaused = video.paused;
             video.pause();
         });
         seekBar.addEventListener( "mouseup", () => {
             if (!this.gs.streamPaused) {
                 video.play().catch(err => this._log(`Seek play error: ${err}`));
             }
-            this.hideVideoControlsLater()
+            this.hideVideoControlsLater();
         });
     }
   
     showVideoControls(seconds = 0) {
-        this._mshow("video-controls")
-        this._melement("video-player").style.cursor = ""
+        this._mshow("video-controls");
+        this._melement("video-player").style.cursor = "";
         this.hideVideoControlsCancel();
         if (seconds !== 0) {
             this.hideVideoControlsLater(seconds);
@@ -2740,54 +2707,35 @@ class AarloGlance extends HTMLElement {
 
     hideVideoControls() {
         this.hideVideoControlsCancel();
-        this._mhide("video-controls")
-        this._melement("video-player").style.cursor = "none"
+        this._mhide("video-controls");
+        this._melement("video-player").style.cursor = "none";
     }
 
     hideVideoControlsLater(seconds = 2) {
         this.hideVideoControlsCancel();
         this.cs.controlTimeout = setTimeout(() => {
             this.cs.controlTimeout = null;
-            this.hideVideoControls()
+            this.hideVideoControls();
         }, seconds * 1000);
     }
 
     hideVideoControlsCancel() {
         if ( this.cs.controlTimeout !== null ) {
             clearTimeout( this.cs.controlTimeout );
-            this.cs.controlTimeout = null
+            this.cs.controlTimeout = null;
         }
     }
 
     showDownloadIcon(index) {
         if( this.lc.download ) {
-            this._show(`library-a-${index}`)
+            this._show(`library-a-${index}`);
         }
     }
 
     hideDownloadIcon(index) {
-        this._hide(`library-a-${index}`)
+        this._hide(`library-a-${index}`);
     }
 }
-
-function loadScript(src) {
-    return new Promise((resolve) => {
-        const script = document.createElement("script");
-        script.src = src;
-        script.onload = () => resolve(true);
-        script.onerror = () => resolve(false);
-        document.head.appendChild(script);
-    });
-}
-
-(async function loadMediaLibraries() {
-    if (!window.Hls) {
-        await loadScript("https://cdn.jsdelivr.net/npm/hls.js@1.5.8/dist/hls.min.js");
-    }
-    if (!window.dashjs) {
-        await loadScript("https://cdn.dashjs.org/v3.2.1/dash.all.min.js");
-    }
-})();
 
 const TOP_WIDGET_OPTIONS = [
     { value: "name", label: "Camera Name" },
@@ -3007,12 +2955,31 @@ class AarloGlanceEditor extends HTMLElement {
     }
 }
 
+function loadScript(src) {
+    return new Promise((resolve) => {
+        const script = document.createElement("script");
+        script.src = src;
+        script.onload = () => resolve(true);
+        script.onerror = () => resolve(false);
+        document.head.appendChild(script);
+    });
+}
+
+(async function loadMediaLibraries() {
+    if (!window.Hls) {
+        await loadScript("https://cdn.jsdelivr.net/npm/hls.js@1.5.8/dist/hls.min.js");
+    }
+    if (!window.dashjs) {
+        await loadScript("https://cdn.dashjs.org/v3.2.1/dash.all.min.js");
+    }
+})();
+
 if (!customElements.get("aarlo-glance-editor")) {
     customElements.define("aarlo-glance-editor", AarloGlanceEditor);
 }
 
-if (!customElements.get('aarlo-glance')) {
-    customElements.define('aarlo-glance', AarloGlance);
+if (!customElements.get("aarlo-glance")) {
+    customElements.define("aarlo-glance", AarloGlance);
 }
 
 console.info(
@@ -3022,7 +2989,7 @@ console.info(
 );
 
 window.customCards = window.customCards || [];
-if (!window.customCards.some(card => card.type === "aarlo-glance")) {
+if (!window.customCards.some((card) => card.type === "aarlo-glance")) {
     window.customCards.push({
         type: "aarlo-glance",
         name: "Aarlo Glance Card",
@@ -3031,4 +2998,4 @@ if (!window.customCards.some(card => card.type === "aarlo-glance")) {
     });
 }
 
-// vim: set expandtab:ts=4:sw=4
+export { AarloGlance, AarloGlanceEditor };
