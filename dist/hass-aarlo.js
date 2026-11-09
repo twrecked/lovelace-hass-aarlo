@@ -95,7 +95,7 @@ function _tsi(title, state, icon ) {
     }
 }
 
-const CARD_VERSION = "0.4.0.alpha.2";
+const CARD_VERSION = "0.4.0.alpha.3";
 
 const DEFAULT_MESSAGES = {
     author: {
@@ -2804,14 +2804,14 @@ const BOTTOM_WIDGET_OPTIONS = [
     { value: "stream", label: "Live Stream Toggle" },
     { value: "snapshot", label: "Take Snapshot" },
     { value: "onoff", label: "Camera On/Off" },
-    { value: "lock", label: "Primary Door Lock" },
-    { value: "light", label: "Primary Light" },
-    { value: "bell", label: "Primary Doorbell" },
-    { value: "door", label: "Primary Door Contact" },
-    { value: "lock2", label: "Secondary Door Lock" },
-    { value: "light2", label: "Secondary Light" },
-    { value: "bell2", label: "Secondary Doorbell" },
-    { value: "door2", label: "Secondary Door Contact" },
+    { value: "lock", label: "Door Lock" },
+    { value: "light", label: "Light" },
+    { value: "bell", label: "Doorbell" },
+    { value: "door", label: "Door Contact" },
+    { value: "lock2", label: "Door Lock #2" },
+    { value: "light2", label: "Light #2" },
+    { value: "bell2", label: "Doorbell #2" },
+    { value: "door2", label: "Door Contact #2" },
     { value: "previous", label: "Previous Camera (Multi-cam)" },
     { value: "next", label: "Next Camera (Multi-cam)" },
 ];
@@ -2908,8 +2908,8 @@ class AarloGlanceEditor extends HTMLElement {
             top_right: "Top Bar Widgets (Right)",
             bottom_left: "Bottom Bar Widgets (Left)",
             bottom_right: "Bottom Bar Widgets (Right)",
-            door_lock: "Front Door Lock",
-            light: "Entrance Light",
+            door_lock: "Door Lock",
+            light: "Light",
             door_bell: "Doorbell Sensor",
             door_bell_mute: "Doorbell Mute Switch",
             door: "Door Contact Sensor",
