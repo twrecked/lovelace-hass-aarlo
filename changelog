@@ -1,4 +1,4 @@
-0.4.0.alpha.3:
+0.4.0-alpha.3:
   generalize visual editor labels for locks and lights (remove location-specific wording)
 0.4.0.alpha.2:
   add native visual card editor (aarlo-glance-editor) using ha-form

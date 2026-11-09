@@ -1,4 +1,4 @@
-const CARD_VERSION = "0.4.0.alpha.3";
+const CARD_VERSION = "0.4.0-alpha.3";
 
 const DEFAULT_MESSAGES = {
     author: {
