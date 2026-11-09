@@ -1165,8 +1165,8 @@ const StreamViewMixin = {
             const pc = new RTCPeerConnection(pcConfig);
             this.gs.pc = pc;
 
-            pc.addTransceiver("video", { direction: "recvonly" });
             pc.addTransceiver("audio", { direction: "recvonly" });
+            pc.addTransceiver("video", { direction: "recvonly" });
 
             pc.ontrack = (event) => {
                 const v = this._melement('video-player');
