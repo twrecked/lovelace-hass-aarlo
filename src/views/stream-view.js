@@ -207,10 +207,12 @@ export const StreamViewMixin = {
         if (cc.webrtcPlay) return true;
         if (cc.arloPlay || cc.haPlay) return false;
         const state = this._hass && this._hass.states && this._hass.states[cc.id];
-        return Boolean(state && state.attributes && state.attributes.frontend_stream_type === "web_rtc");
+        const attrs = (state && state.attributes) || {};
+        return Boolean(attrs.sip_streaming || attrs.frontend_stream_type === "web_rtc");
     },
 
     async startWebRTCStream() {
+        this._log(`Starting WebRTC stream for ${this.cc.id}`);
         try {
             const video = this._melement('video-player');
             if (video) {
@@ -449,6 +451,9 @@ export const StreamViewMixin = {
     },
 
     stopStream() {
+        if (this.gs.stream === "webrtc") {
+            this._log(`Stopping WebRTC stream for ${this.cc.id}`);
+        }
         this.resetView()
         const video = this._melement('video-player')
         if (video) {
