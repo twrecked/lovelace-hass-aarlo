@@ -11,6 +11,7 @@ The card supports localisation with English, French, German, Spanish, Danish, It
 ## Table of Contents
 - [Introduction](#introduction)
 - [Installation](#installation)
+- [Development](#development)
 - [How it looks](#how-it-looks)
 - [Configuration](#configuration)
 - [Further Documentation](#further-documentation)
@@ -24,11 +25,14 @@ Integration](https://github.com/twrecked/hass-aarlo).
 <a name="introduction-features"></a>
 #### Features
 It provides:
+* Native Visual Card Editor with live preview and interactive chip selectors.
+* Card picker UI discovery and Home Assistant Sections / Grid dashboard support.
+* Live HLS streaming (proxied through Home Assistant by default) and direct cloud streaming.
+* Access to the camera recording library with multi-grid sizing and object trigger highlighting.
 * Motion and sound notifications.
-* Access to the camera library recordings.
-* Live streaming.
 * Support for doorbell and door opening notifications.
-* Support for toggling lights during streaming.
+* Interactive controls for door locks and lights (including controls during streaming).
+* Bundled offline English localization with community translation support.
 
 <a name="introduction-notes"></a>
 #### Notes
@@ -89,6 +93,18 @@ resources:
 
 The card type is `custom:aarlo-glance`.
 
+
+<a name="development"></a>
+## Development
+
+This card uses a modular source structure under `src/` and Rollup for building.
+
+#### Building from Source
+```sh
+npm install
+npm run build   # Compiles src/ into dist/hass-aarlo.js and dist/hass-aarlo.js.map
+npm run watch   # Fast persistent watcher that re-compiles on save
+```
 
 <a name="how-it-looks"></a>
 ## How it looks

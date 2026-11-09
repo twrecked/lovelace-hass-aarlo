@@ -1,5 +1,11 @@
 0.4.0-alpha.3:
   generalize visual editor labels for locks and lights (remove location-specific wording)
+  split widget configuration into left and right chip selectors in visual editor
+  modularize project architecture into src/ with dedicated view components
+  integrate Rollup build pipeline with fast watch mode (npm run watch)
+  generate external sourcemaps (dist/hass-aarlo.js.map)
+  add GitHub Actions CI/CD workflows for HACS validation and release asset builds
+  adopt SemVer hyphen formatting (0.4.0-alpha.3)
 0.4.0.alpha.2:
   add native visual card editor (aarlo-glance-editor) using ha-form
 0.4.0.alpha.1:
