@@ -28,4 +28,8 @@ fi
 echo -- installing
 ${ECHO} mkdir -p "${DEST}/www"
 ${ECHO} cp -afv "${REPO_ROOT}/dist/hass-aarlo.js" "${DEST}/www/aarlo-glance.js"
+if [[ -f "${REPO_ROOT}/dist/hass-aarlo.js.map" ]]; then
+	${ECHO} cp -afv "${REPO_ROOT}/dist/hass-aarlo.js.map" "${DEST}/www/hass-aarlo.js.map"
+	${ECHO} cp -afv "${REPO_ROOT}/dist/hass-aarlo.js.map" "${DEST}/www/aarlo-glance.js.map"
+fi
 echo -- finished at "$(date '+%A at %H:%M:%S')"
