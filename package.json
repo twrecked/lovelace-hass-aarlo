@@ -12,7 +12,7 @@
     "url": "git+https://github.com/twrecked/lovelace-hass-aarlo.git"
   },
   "author": "twrecked",
-  "license": "Apache-2.0",
+  "license": "LGPL-3.0-or-later",
   "devDependencies": {
     "rollup": "^4.68.1"
   }
