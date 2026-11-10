@@ -19,3 +19,6 @@
 ### 3. Touch & Mobile Refinements
 * Extended video control overlay display timeouts on touch and mobile devices (4 seconds vs 2 seconds) for comfortable control interaction.
 * Added touch event debouncing to prevent accidental control flashing during multi-touch gestures.
+
+### 4. Secondary Door Sensor Status Fix
+* Fixed status tooltip lookup for secondary door contact sensors (`door2`) to correctly use `door_open` and `door_closed` localization keys instead of nonexistent `door2_*` keys.

@@ -5,6 +5,7 @@
   cleanly exit fullscreen on stream stop, recording stop, or video end
   support Escape key to exit pseudo-fullscreen mode
   update localization strings for fullscreen toggle
+  fix door2 status strings to use door_open and door_closed language lookups
 
 0.4.0-alpha.4:
   add native Home Assistant WebRTC live streaming support with automatic capability detection
