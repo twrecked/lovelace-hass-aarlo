@@ -2,11 +2,6 @@
 
 ## Version 0.3
 
-**Be warned, 0.3 is beta**
-
-It's working for me, but be prepared to return to version 0.2 if things go
-wrong.
-
 ### **Breaking Changes**
 
 **The "Old Configuration" format has been deprecated, this code throw an error

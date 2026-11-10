@@ -9,13 +9,7 @@ if it detects the old style.**
 
 ## Version 0.3
 
-**Be warned, 0.3 is beta**
-
-It's working for me, but be prepared to return to version 0.2 if things go
-wrong.
-
-I've put it out there so people can try it if they want. The underlying
-architecture is very different and (I hope) a lot more efficient.
+The underlying architecture is very different and a lot more efficient.
 
 The `library_sizes` config is a good place to start.
 
