@@ -1,3 +1,11 @@
+0.4.0-alpha.5:
+  add pseudo-fullscreen view mode for stream playback with overlay controls
+  support container-level fullscreen preserving lights, locks, and glance icons
+  add iOS Safari-friendly viewport pseudo-fullscreen fallback
+  cleanly exit fullscreen on stream stop, recording stop, or video end
+  support Escape key to exit pseudo-fullscreen mode
+  update localization strings for fullscreen toggle
+
 0.4.0-alpha.4:
   add native Home Assistant WebRTC live streaming support with automatic capability detection
   support webrtc / sip in image_view options

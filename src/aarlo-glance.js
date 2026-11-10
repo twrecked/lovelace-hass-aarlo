@@ -123,6 +123,16 @@ export class AarloGlance extends HTMLElement {
     }
 
     disconnectedCallback() {
+        this.exitAllFullScreen();
+        if (this._keydownHandler) {
+            window.removeEventListener('keydown', this._keydownHandler);
+            this._keydownHandler = null;
+        }
+        if (this._fullscreenChangeHandler) {
+            document.removeEventListener('fullscreenchange', this._fullscreenChangeHandler);
+            document.removeEventListener('webkitfullscreenchange', this._fullscreenChangeHandler);
+            this._fullscreenChangeHandler = null;
+        }
         this.hideVideoControlsCancel();
         if (this.cs && this.cs.autoPlayTimer !== null) {
             clearTimeout(this.cs.autoPlayTimer);
@@ -845,7 +855,10 @@ export class AarloGlance extends HTMLElement {
             // HA App
             isHAApp: navigator.userAgent.includes("HomeAssistant"),
             // Is IOS
-            isApple: navigator.userAgent.includes("(iPhone") || navigator.userAgent.includes("(iPad"),
+            isApple: navigator.userAgent.includes("iPhone") ||
+                     navigator.userAgent.includes("iPad") ||
+                     navigator.userAgent.includes("iPod") ||
+                     (navigator.userAgent.includes("Macintosh") && navigator.maxTouchPoints > 1),
             // Is Android
             isAndroid: navigator.userAgent.includes("Android"),
 

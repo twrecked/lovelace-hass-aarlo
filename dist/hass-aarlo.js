@@ -1,4 +1,4 @@
-const CARD_VERSION = "0.4.0-alpha.4";
+const CARD_VERSION = "0.4.0-alpha.5";
 
 const DEFAULT_MESSAGES = {
     author: {
@@ -29,7 +29,8 @@ const DEFAULT_MESSAGES = {
         stop:       "stop",
         play:       "play",
         pause:      "pause",
-        fullscreen: "go full screen",
+        fullscreen:      "go full screen",
+        exit_fullscreen: "exit full screen",
     },
     status: {
         battery_strength:   "battery strength",
@@ -273,6 +274,126 @@ const CARD_STYLES = `
                     width: 10px;
                     height: 10px;
                     cursor: pointer;
+                }
+                ha-card.aarlo-pseudo-fullscreen,
+                ha-card:fullscreen,
+                ha-card:-webkit-full-screen {
+                    position: fixed !important;
+                    top: 0 !important;
+                    left: 0 !important;
+                    right: 0 !important;
+                    bottom: 0 !important;
+                    width: 100vw !important;
+                    height: 100vh !important;
+                    max-width: 100vw !important;
+                    max-height: 100vh !important;
+                    margin: 0 !important;
+                    padding: 0 !important;
+                    border: none !important;
+                    border-radius: 0 !important;
+                    box-shadow: none !important;
+                    z-index: 99999 !important;
+                    background-color: #000 !important;
+                    box-sizing: border-box !important;
+                    overflow: hidden !important;
+                }
+                ha-card.aarlo-pseudo-fullscreen div.aarlo-base,
+                ha-card:fullscreen div.aarlo-base,
+                ha-card:-webkit-full-screen div.aarlo-base {
+                    position: absolute !important;
+                    top: 0 !important;
+                    left: 0 !important;
+                    width: 100% !important;
+                    height: 100% !important;
+                    padding-top: 0 !important;
+                    margin: 0 !important;
+                }
+                ha-card.aarlo-pseudo-fullscreen .aarlo-video,
+                ha-card:fullscreen .aarlo-video,
+                ha-card:-webkit-full-screen .aarlo-video {
+                    position: absolute !important;
+                    top: 0 !important;
+                    left: 0 !important;
+                    width: 100% !important;
+                    height: 100% !important;
+                    transform: none !important;
+                    object-fit: contain !important;
+                }
+                ha-card.aarlo-pseudo-fullscreen .box-bottom,
+                ha-card:fullscreen .box-bottom,
+                ha-card:-webkit-full-screen .box-bottom {
+                    position: absolute !important;
+                    bottom: 0 !important;
+                    left: 0 !important;
+                    right: 0 !important;
+                    z-index: 10 !important;
+                    padding-bottom: max(8px, env(safe-area-inset-bottom)) !important;
+                    padding-left: max(12px, env(safe-area-inset-left)) !important;
+                    padding-right: max(12px, env(safe-area-inset-right)) !important;
+                    background-color: rgba(0, 0, 0, 0.6) !important;
+                }
+                ha-card.aarlo-pseudo-fullscreen ha-icon,
+                ha-card:fullscreen ha-icon,
+                ha-card:-webkit-full-screen ha-icon,
+                .w3-modal.aarlo-pseudo-fullscreen ha-icon,
+                .w3-modal:fullscreen ha-icon,
+                .w3-modal:-webkit-full-screen ha-icon {
+                    --mdc-icon-size: 26px !important;
+                    height: 26px !important;
+                    width: 26px !important;
+                    padding: 4px !important;
+                }
+                .w3-modal.aarlo-pseudo-fullscreen,
+                .w3-modal:fullscreen,
+                .w3-modal:-webkit-full-screen {
+                    padding-top: 0 !important;
+                    background-color: #000 !important;
+                    z-index: 99999 !important;
+                }
+                .w3-modal.aarlo-pseudo-fullscreen .w3-modal-content,
+                .w3-modal:fullscreen .w3-modal-content,
+                .w3-modal:-webkit-full-screen .w3-modal-content {
+                    width: 100vw !important;
+                    height: 100vh !important;
+                    max-width: 100vw !important;
+                    max-height: 100vh !important;
+                    background-color: #000 !important;
+                }
+                .w3-modal.aarlo-pseudo-fullscreen .aarlo-modal-video-wrapper,
+                .w3-modal:fullscreen .aarlo-modal-video-wrapper,
+                .w3-modal:-webkit-full-screen .aarlo-modal-video-wrapper {
+                    width: 100vw !important;
+                    height: 100vh !important;
+                }
+                .w3-modal.aarlo-pseudo-fullscreen .aarlo-modal-video-background,
+                .w3-modal:fullscreen .aarlo-modal-video-background,
+                .w3-modal:-webkit-full-screen .aarlo-modal-video-background {
+                    width: 100vw !important;
+                    height: 100vh !important;
+                    background-color: #000 !important;
+                }
+                .w3-modal.aarlo-pseudo-fullscreen .aarlo-modal-video,
+                .w3-modal:fullscreen .aarlo-modal-video,
+                .w3-modal:-webkit-full-screen .aarlo-modal-video {
+                    width: 100vw !important;
+                    height: 100vh !important;
+                    top: 0 !important;
+                    left: 0 !important;
+                    transform: none !important;
+                    object-fit: contain !important;
+                }
+                .w3-modal.aarlo-pseudo-fullscreen .box-bottom,
+                .w3-modal:fullscreen .box-bottom,
+                .w3-modal:-webkit-full-screen .box-bottom {
+                    position: absolute !important;
+                    bottom: 0 !important;
+                    left: 0 !important;
+                    right: 0 !important;
+                    z-index: 10 !important;
+                    padding-bottom: max(8px, env(safe-area-inset-bottom)) !important;
+                    padding-left: max(12px, env(safe-area-inset-left)) !important;
+                    padding-right: max(12px, env(safe-area-inset-right)) !important;
+                    background-color: rgba(0, 0, 0, 0.6) !important;
                 }
 `;
 
@@ -999,26 +1120,70 @@ const StreamViewMixin = {
     },
 
     setupVideoHandlers() {
-        [this._element( "video-player" ), this._element( "modal-video-player" )]
-            .forEach((player) => {
-                player.addEventListener( 'ended', (_evt) => {
-                    this.videoEnded();
-                });
-                player.addEventListener( 'click', (_evt) => {
-                    this.videoClicked();
-                });
-                player.addEventListener( 'mouseover', (_evt) => {
-                    this.videoMouseEvent();
-                });
-                player.addEventListener( 'mousemove', (_evt) => {
-                    this.videoMouseEvent();
-                });
-                player.addEventListener( 'loadedmetadata', (evt) => {
-                    this.setUpSeekBar();
-                    this.startVideo( evt.target );
+        if (!this._keydownHandler) {
+            this._keydownHandler = (e) => {
+                if (e.key === 'Escape' && this.gs && this.gs.isPseudoFullScreen) {
+                    this.exitPseudoFullScreen();
+                }
+            };
+            window.addEventListener('keydown', this._keydownHandler);
+        }
+        if (!this._fullscreenChangeHandler) {
+            this._fullscreenChangeHandler = () => {
+                this._updateFullScreenButton();
+                if (!this._isFullScreen()) {
+                    this.exitPseudoFullScreen();
+                } else {
                     this.showVideoControls(4);
-                });
+                }
+            };
+            document.addEventListener('fullscreenchange', this._fullscreenChangeHandler);
+            document.addEventListener('webkitfullscreenchange', this._fullscreenChangeHandler);
+        }
+        const players = [this._element( "video-player" ), this._element( "modal-video-player" )];
+        players.forEach((player) => {
+            if (!player) return;
+            player.addEventListener( 'ended', (_evt) => {
+                this.videoEnded();
             });
+            player.addEventListener( 'loadedmetadata', (evt) => {
+                this.setUpSeekBar();
+                this.startVideo( evt.target );
+                this.showVideoControls(this._defaultControlsTimeout());
+            });
+        });
+
+        const interactionTargets = [
+            this._element("video-player"),
+            this._element("modal-video-player"),
+            this._element("aarlo-wrapper"),
+            this._element("modal-video-wrapper"),
+        ];
+        interactionTargets.forEach((target) => {
+            if (!target) return;
+            target.addEventListener('click', (evt) => {
+                this.handleVideoInteraction(evt);
+            });
+            target.addEventListener('touchend', (evt) => {
+                this.handleVideoInteraction(evt);
+            }, { passive: true });
+            target.addEventListener('mousemove', (evt) => {
+                this.videoMouseEvent(evt);
+            });
+        });
+
+        const controlBars = [
+            this._element("video-controls"),
+            this._element("modal-video-controls"),
+        ];
+        controlBars.forEach((bar) => {
+            if (!bar) return;
+            ['pointerdown', 'touchstart', 'mousemove'].forEach((evType) => {
+                bar.addEventListener(evType, () => {
+                    this.showVideoControls(this._defaultControlsTimeout());
+                }, { passive: true });
+            });
+        });
     },
 
     setupRecordingPlayer() {
@@ -1031,9 +1196,24 @@ const StreamViewMixin = {
         this._mhide("video-light2-on");
     },
 
+    _isFullScreen() {
+        const isNativeFs = !!(document.fullscreenElement || document.webkitFullscreenElement);
+        const isPseudoFs = !!(this.gs && this.gs.isPseudoFullScreen);
+        return isNativeFs || isPseudoFs;
+    },
+
+    _updateFullScreenButton() {
+        const isFs = this._isFullScreen();
+        const fsTitle = isFs
+            ? (this._i.video.exit_fullscreen || "exit full screen")
+            : this._i.video.fullscreen;
+        const fsIcon = isFs ? "mdi:fullscreen-exit" : "mdi:fullscreen";
+        this._mset("video-full-screen", { title: fsTitle, icon: fsIcon });
+    },
+
     updateRecordingView() {
         this._mset("video-stop",{title: this._i.video.stop, icon: "mdi:stop"});
-        this._mset("video-full-screen",{title: this._i.video.fullscreen, icon: "mdi:fullscreen"});
+        this._updateFullScreenButton();
     
         let video = this._melement( 'video-player' );
         if( video.paused ) {
@@ -1274,7 +1454,7 @@ const StreamViewMixin = {
 
     updateStreamView() {
         this._mset("video-stop",{title: this._i.video.stop, icon: "mdi:stop"});
-        this._mset("video-full-screen",{title: this._i.video.fullscreen, icon: "mdi:fullscreen"});
+        this._updateFullScreenButton();
     
         // Autostart?
         if ( this.gs.stream === null ) {
@@ -1385,6 +1565,7 @@ const StreamViewMixin = {
     },
 
     stopStream() {
+        this.exitAllFullScreen();
         if (this.gs.stream === "webrtc") {
             this._log(`Stopping WebRTC stream for ${this.cc.id}`);
         }
@@ -1453,6 +1634,7 @@ const StreamViewMixin = {
     },
 
     stopRecording() {
+        this.exitAllFullScreen();
         if (this.gs.recording) {
             const video = this._melement('video-player');
             if (video) {
@@ -1466,23 +1648,54 @@ const StreamViewMixin = {
     },
 
     videoEnded() {
+        this.exitAllFullScreen();
         this.stopRecording();
         this.stopStream();
     },
 
-    videoClicked() {
+    _defaultControlsTimeout() {
+        return (this.gc.isMobile || this.gc.isApple || this._isFullScreen()) ? 4 : 2;
+    },
+
+    handleVideoInteraction(evt) {
+        if (this.gs.stream === null && this.gs.recording === null) {
+            return;
+        }
+
+        const controls = this._melement('video-controls');
+        if (controls && controls.contains(evt.target)) {
+            return;
+        }
+
+        const now = Date.now();
+        if (this._lastInteractionTime && (now - this._lastInteractionTime < 350)) {
+            return;
+        }
+        this._lastInteractionTime = now;
+
+        this.videoClicked(evt);
+    },
+
+    videoClicked(evt) {
         if ( this._misHidden("video-controls") ) {
-            this.showVideoControls(2);
+            this.showVideoControls(this._defaultControlsTimeout());
         } else {
             this.hideVideoControls();
         }
     },
 
-    videoMouseEvent() {
-        this.showVideoControls(2);
+    videoMouseEvent(evt) {
+        if (this.gs.stream === null && this.gs.recording === null) {
+            return;
+        }
+        if (evt && evt.pointerType === 'touch') {
+            return;
+        }
+        this.showVideoControls(this._defaultControlsTimeout());
     },
 
     controlStop() {
+        this.exitAllFullScreen();
         this.stopRecording();
         this.stopStream();
     },
@@ -1504,16 +1717,109 @@ const StreamViewMixin = {
     },
 
     controlFullScreen() {
-        const video = this._melement('video-player');
-        if (!video) return;
-        if (video.requestFullscreen) {
-            video.requestFullscreen().catch(err => this._log(`Fullscreen error: ${err}`));
-        } else if (video.webkitEnterFullscreen) {
-            video.webkitEnterFullscreen();
-        } else if (video.webkitRequestFullscreen) {
-            video.webkitRequestFullscreen();
-        } else if (video.mozRequestFullScreen) {
-            video.mozRequestFullScreen();
+        // If currently in native fullscreen, exit it
+        if (document.fullscreenElement || document.webkitFullscreenElement) {
+            if (document.exitFullscreen) {
+                document.exitFullscreen().catch(() => {});
+            } else if (document.webkitExitFullscreen) {
+                document.webkitExitFullscreen();
+            }
+            return;
+        }
+
+        // If currently in pseudo-fullscreen, exit it
+        if (this.gs && this.gs.isPseudoFullScreen) {
+            this.exitPseudoFullScreen();
+            return;
+        }
+
+        // On iOS: use pseudo-fullscreen (iOS WebKit blocks Fullscreen API on iPhone)
+        if (this.gc.isApple) {
+            this.togglePseudoFullScreen();
+            return;
+        }
+
+        // On desktop: request native fullscreen on the card container
+        const targetElement = this.gs.viewer === 'modal'
+            ? this._element('modal-viewer')
+            : this.querySelector('ha-card');
+
+        if (targetElement && targetElement.requestFullscreen) {
+            targetElement.requestFullscreen().catch((err) => {
+                this._log(`Native requestFullscreen failed, falling back to pseudo-fullscreen: ${err}`);
+                this.togglePseudoFullScreen();
+            });
+        } else if (targetElement && targetElement.webkitRequestFullscreen) {
+            try {
+                targetElement.webkitRequestFullscreen();
+            } catch (err) {
+                this.togglePseudoFullScreen();
+            }
+        } else {
+            this.togglePseudoFullScreen();
+        }
+    },
+
+    togglePseudoFullScreen() {
+        if (!this.gs) {
+            this.gs = {};
+        }
+        this.gs.isPseudoFullScreen = !this.gs.isPseudoFullScreen;
+        const isFs = this.gs.isPseudoFullScreen;
+
+        const haCard = this.querySelector('ha-card');
+        const modalViewer = this._element('modal-viewer');
+
+        if (this.gs.viewer === 'modal') {
+            if (modalViewer) {
+                modalViewer.classList.toggle('aarlo-pseudo-fullscreen', isFs);
+            }
+        } else {
+            if (haCard) {
+                haCard.classList.toggle('aarlo-pseudo-fullscreen', isFs);
+            }
+        }
+
+        try {
+            document.body.style.overflow = isFs ? 'hidden' : '';
+        } catch (e) {}
+
+        this._updateFullScreenButton();
+        if (isFs) {
+            this.showVideoControls(4);
+        }
+    },
+
+    exitPseudoFullScreen() {
+        if (!this.gs || !this.gs.isPseudoFullScreen) return;
+        this.gs.isPseudoFullScreen = false;
+
+        const haCard = this.querySelector('ha-card');
+        if (haCard) {
+            haCard.classList.remove('aarlo-pseudo-fullscreen');
+        }
+        const modalViewer = this._element('modal-viewer');
+        if (modalViewer) {
+            modalViewer.classList.remove('aarlo-pseudo-fullscreen');
+        }
+
+        try {
+            document.body.style.overflow = '';
+        } catch (e) {}
+
+        this._updateFullScreenButton();
+    },
+
+    exitAllFullScreen() {
+        this.exitPseudoFullScreen();
+        if (document.fullscreenElement || document.webkitFullscreenElement) {
+            try {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen().catch(() => {});
+                } else if (document.webkitExitFullscreen) {
+                    document.webkitExitFullscreen();
+                }
+            } catch (e) {}
         }
     },
 
@@ -1555,12 +1861,13 @@ const StreamViewMixin = {
         this._melement("video-player").style.cursor = "none";
     },
 
-    hideVideoControlsLater(seconds = 2) {
+    hideVideoControlsLater(seconds = 0) {
         this.hideVideoControlsCancel();
+        const timeout = seconds || this._defaultControlsTimeout();
         this.cs.controlTimeout = setTimeout(() => {
             this.cs.controlTimeout = null;
             this.hideVideoControls();
-        }, seconds * 1000);
+        }, timeout * 1000);
     },
 
     hideVideoControlsCancel() {
@@ -1679,6 +1986,16 @@ class AarloGlance extends HTMLElement {
     }
 
     disconnectedCallback() {
+        this.exitAllFullScreen();
+        if (this._keydownHandler) {
+            window.removeEventListener('keydown', this._keydownHandler);
+            this._keydownHandler = null;
+        }
+        if (this._fullscreenChangeHandler) {
+            document.removeEventListener('fullscreenchange', this._fullscreenChangeHandler);
+            document.removeEventListener('webkitfullscreenchange', this._fullscreenChangeHandler);
+            this._fullscreenChangeHandler = null;
+        }
         this.hideVideoControlsCancel();
         if (this.cs && this.cs.autoPlayTimer !== null) {
             clearTimeout(this.cs.autoPlayTimer);
@@ -2401,7 +2718,10 @@ class AarloGlance extends HTMLElement {
             // HA App
             isHAApp: navigator.userAgent.includes("HomeAssistant"),
             // Is IOS
-            isApple: navigator.userAgent.includes("(iPhone") || navigator.userAgent.includes("(iPad"),
+            isApple: navigator.userAgent.includes("iPhone") ||
+                     navigator.userAgent.includes("iPad") ||
+                     navigator.userAgent.includes("iPod") ||
+                     (navigator.userAgent.includes("Macintosh") && navigator.maxTouchPoints > 1),
             // Is Android
             isAndroid: navigator.userAgent.includes("Android"),
 

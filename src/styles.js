@@ -194,4 +194,124 @@ export const CARD_STYLES = `
                     height: 10px;
                     cursor: pointer;
                 }
+                ha-card.aarlo-pseudo-fullscreen,
+                ha-card:fullscreen,
+                ha-card:-webkit-full-screen {
+                    position: fixed !important;
+                    top: 0 !important;
+                    left: 0 !important;
+                    right: 0 !important;
+                    bottom: 0 !important;
+                    width: 100vw !important;
+                    height: 100vh !important;
+                    max-width: 100vw !important;
+                    max-height: 100vh !important;
+                    margin: 0 !important;
+                    padding: 0 !important;
+                    border: none !important;
+                    border-radius: 0 !important;
+                    box-shadow: none !important;
+                    z-index: 99999 !important;
+                    background-color: #000 !important;
+                    box-sizing: border-box !important;
+                    overflow: hidden !important;
+                }
+                ha-card.aarlo-pseudo-fullscreen div.aarlo-base,
+                ha-card:fullscreen div.aarlo-base,
+                ha-card:-webkit-full-screen div.aarlo-base {
+                    position: absolute !important;
+                    top: 0 !important;
+                    left: 0 !important;
+                    width: 100% !important;
+                    height: 100% !important;
+                    padding-top: 0 !important;
+                    margin: 0 !important;
+                }
+                ha-card.aarlo-pseudo-fullscreen .aarlo-video,
+                ha-card:fullscreen .aarlo-video,
+                ha-card:-webkit-full-screen .aarlo-video {
+                    position: absolute !important;
+                    top: 0 !important;
+                    left: 0 !important;
+                    width: 100% !important;
+                    height: 100% !important;
+                    transform: none !important;
+                    object-fit: contain !important;
+                }
+                ha-card.aarlo-pseudo-fullscreen .box-bottom,
+                ha-card:fullscreen .box-bottom,
+                ha-card:-webkit-full-screen .box-bottom {
+                    position: absolute !important;
+                    bottom: 0 !important;
+                    left: 0 !important;
+                    right: 0 !important;
+                    z-index: 10 !important;
+                    padding-bottom: max(8px, env(safe-area-inset-bottom)) !important;
+                    padding-left: max(12px, env(safe-area-inset-left)) !important;
+                    padding-right: max(12px, env(safe-area-inset-right)) !important;
+                    background-color: rgba(0, 0, 0, 0.6) !important;
+                }
+                ha-card.aarlo-pseudo-fullscreen ha-icon,
+                ha-card:fullscreen ha-icon,
+                ha-card:-webkit-full-screen ha-icon,
+                .w3-modal.aarlo-pseudo-fullscreen ha-icon,
+                .w3-modal:fullscreen ha-icon,
+                .w3-modal:-webkit-full-screen ha-icon {
+                    --mdc-icon-size: 26px !important;
+                    height: 26px !important;
+                    width: 26px !important;
+                    padding: 4px !important;
+                }
+                .w3-modal.aarlo-pseudo-fullscreen,
+                .w3-modal:fullscreen,
+                .w3-modal:-webkit-full-screen {
+                    padding-top: 0 !important;
+                    background-color: #000 !important;
+                    z-index: 99999 !important;
+                }
+                .w3-modal.aarlo-pseudo-fullscreen .w3-modal-content,
+                .w3-modal:fullscreen .w3-modal-content,
+                .w3-modal:-webkit-full-screen .w3-modal-content {
+                    width: 100vw !important;
+                    height: 100vh !important;
+                    max-width: 100vw !important;
+                    max-height: 100vh !important;
+                    background-color: #000 !important;
+                }
+                .w3-modal.aarlo-pseudo-fullscreen .aarlo-modal-video-wrapper,
+                .w3-modal:fullscreen .aarlo-modal-video-wrapper,
+                .w3-modal:-webkit-full-screen .aarlo-modal-video-wrapper {
+                    width: 100vw !important;
+                    height: 100vh !important;
+                }
+                .w3-modal.aarlo-pseudo-fullscreen .aarlo-modal-video-background,
+                .w3-modal:fullscreen .aarlo-modal-video-background,
+                .w3-modal:-webkit-full-screen .aarlo-modal-video-background {
+                    width: 100vw !important;
+                    height: 100vh !important;
+                    background-color: #000 !important;
+                }
+                .w3-modal.aarlo-pseudo-fullscreen .aarlo-modal-video,
+                .w3-modal:fullscreen .aarlo-modal-video,
+                .w3-modal:-webkit-full-screen .aarlo-modal-video {
+                    width: 100vw !important;
+                    height: 100vh !important;
+                    top: 0 !important;
+                    left: 0 !important;
+                    transform: none !important;
+                    object-fit: contain !important;
+                }
+                .w3-modal.aarlo-pseudo-fullscreen .box-bottom,
+                .w3-modal:fullscreen .box-bottom,
+                .w3-modal:-webkit-full-screen .box-bottom {
+                    position: absolute !important;
+                    bottom: 0 !important;
+                    left: 0 !important;
+                    right: 0 !important;
+                    z-index: 10 !important;
+                    padding-bottom: max(8px, env(safe-area-inset-bottom)) !important;
+                    padding-left: max(12px, env(safe-area-inset-left)) !important;
+                    padding-right: max(12px, env(safe-area-inset-right)) !important;
+                    background-color: rgba(0, 0, 0, 0.6) !important;
+                }
 `;
