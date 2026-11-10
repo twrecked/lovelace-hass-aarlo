@@ -1,6 +1,6 @@
 {
   "name": "lovelace-hass-aarlo",
-  "version": "0.4.0-alpha.3",
+  "version": "0.4.0-alpha.4",
   "description": "Lovelace camera glance card for the AArlo Home Assistant integration",
   "type": "module",
   "scripts": {
@@ -12,9 +12,8 @@
     "url": "git+https://github.com/twrecked/lovelace-hass-aarlo.git"
   },
   "author": "twrecked",
-  "license": "Apache-2.0",
+  "license": "LGPL-3.0-or-later",
   "devDependencies": {
-    "@rollup/plugin-node-resolve": "^16.0.3",
     "rollup": "^4.68.1"
   }
 }

@@ -1,4 +1,4 @@
-const CARD_VERSION = "0.4.0-alpha.3";
+const CARD_VERSION = "0.4.0-alpha.4";
 
 const DEFAULT_MESSAGES = {
     author: {
@@ -1114,6 +1114,139 @@ const StreamViewMixin = {
         }
     },
 
+
+    destroyWebRTCStream() {
+        if (this.gs.webrtcUnsub) {
+            try {
+                this.gs.webrtcUnsub();
+            } catch (e) {
+                this._log(e);
+            }
+            this.gs.webrtcUnsub = null;
+        }
+        if (this.gs.pc) {
+            try {
+                this.gs.pc.close();
+            } catch (e) {
+                this._log(e);
+            }
+            this.gs.pc = null;
+        }
+        const video = this._melement('video-player');
+        if (video && video.srcObject) {
+            video.srcObject = null;
+        }
+    },
+
+    isWebRTC(cc) {
+        if (!cc) return false;
+        if (cc.webrtcPlay) return true;
+        if (cc.arloPlay || cc.haPlay) return false;
+        const state = this._hass && this._hass.states && this._hass.states[cc.id];
+        const attrs = (state && state.attributes) || {};
+        return Boolean(attrs.sip_streaming || attrs.frontend_stream_type === "web_rtc");
+    },
+
+    async startWebRTCStream() {
+        this._log(`Starting WebRTC stream for ${this.cc.id}`);
+        try {
+            const video = this._melement('video-player');
+            if (video) {
+                video.removeAttribute('src');
+                video.muted = this.gs.isMuted;
+            }
+
+            const clientConfig = await this._hass.callWS({
+                type: "camera/webrtc/get_client_config",
+                entity_id: this.cc.id,
+            });
+
+            const pcConfig = (clientConfig && clientConfig.configuration) || {};
+            const pc = new RTCPeerConnection(pcConfig);
+            this.gs.pc = pc;
+
+            pc.addTransceiver("audio", { direction: "recvonly" });
+            pc.addTransceiver("video", { direction: "recvonly" });
+
+            pc.ontrack = (event) => {
+                const v = this._melement('video-player');
+                if (v && event.streams && event.streams[0]) {
+                    v.srcObject = event.streams[0];
+                    this.startVideo(v);
+                }
+            };
+
+            const candidatesQueue = [];
+            let sessionId = null;
+
+            pc.onicecandidate = (event) => {
+                if (event.candidate) {
+                    const candData = event.candidate.toJSON ? event.candidate.toJSON() : event.candidate;
+                    if (sessionId) {
+                        this._hass.callWS({
+                            type: "camera/webrtc/candidate",
+                            entity_id: this.cc.id,
+                            session_id: sessionId,
+                            candidate: candData,
+                        }).catch(() => {});
+                    } else {
+                        candidatesQueue.push(candData);
+                    }
+                }
+            };
+
+            const offer = await pc.createOffer();
+            await pc.setLocalDescription(offer);
+
+            // Brief wait (50ms) to allow initial host candidates to gather into localDescription
+            await new Promise((r) => setTimeout(r, 50));
+
+            const offerSdp = (pc.localDescription && pc.localDescription.sdp) || offer.sdp;
+
+            const unsub = await this._hass.connection.subscribeMessage(
+                async (msg) => {
+                    if (msg.type === "session") {
+                        sessionId = msg.session_id;
+                        while (candidatesQueue.length > 0) {
+                            const c = candidatesQueue.shift();
+                            this._hass.callWS({
+                                type: "camera/webrtc/candidate",
+                                entity_id: this.cc.id,
+                                session_id: sessionId,
+                                candidate: c,
+                            }).catch(() => {});
+                        }
+                    } else if (msg.type === "answer") {
+                        if (pc.signalingState !== "closed") {
+                            await pc.setRemoteDescription({
+                                type: "answer",
+                                sdp: msg.answer,
+                            });
+                        }
+                    } else if (msg.type === "error") {
+                        this._log(`WebRTC error: ${msg.message}`);
+                        this.stopStream();
+                    }
+                },
+                {
+                    type: "camera/webrtc/offer",
+                    entity_id: this.cc.id,
+                    offer: offerSdp,
+                }
+            );
+            this.gs.webrtcUnsub = unsub;
+
+            this.gs.viewer = this.getViewType(this.cc);
+            this.gs.stream = "webrtc";
+            this.gs.poster = this.cs.image;
+            this.showStream();
+        } catch (err) {
+            this._log(`startWebRTCStream failed: ${err}`);
+            this.destroyWebRTCStream();
+            this.gs.stream = null;
+        }
+    },
+
     destroyHLSStream() {
         if(this.gs.dash) {
             this.gs.dash.reset();
@@ -1122,7 +1255,7 @@ const StreamViewMixin = {
     },
 
     setupStreamPlayer() {
-        if ( this.gs.stream.includes('egressToken') ) {
+        if (this.gs.stream === "webrtc") ; else if (this.gs.stream && this.gs.stream.includes('egressToken')) {
             this.setMPEGStreamElementData();
         } else {
             this.setHLSStreamElementData();
@@ -1221,39 +1354,57 @@ const StreamViewMixin = {
         return ""
     },
 
-    playStream( ) {
+    playStream() {
         this.cs.autoPlayTimer = null;
-        if ( this.gs.stream === null ) {
-            if( this.cc.autoPlay ) {
+        if (this.gs.stream === null) {
+            if (this.cc.autoPlay) {
                 this.cs.autoPlay = this.cc.autoPlay;
             }
-            this._melement('video-player').muted = this.gs.isMuted;
-            this.wsStartStream()
-                .then( (stream) => {
-                    this.gs.viewer = this.getViewType( this.cc );
-                    this.gs.stream = stream.url;
-                    this.gs.poster = this.cs.image;
-                    this.showStream();
-                })
-                .catch( (e) => {
-                    this._log( e );
-                });
+            const video = this._melement('video-player');
+            if (video) {
+                video.muted = this.gs.isMuted;
+            }
+
+            if (this.isWebRTC(this.cc)) {
+                this.startWebRTCStream();
+            } else {
+                this.wsStartStream()
+                    .then((stream) => {
+                        this.gs.viewer = this.getViewType(this.cc);
+                        this.gs.stream = stream.url;
+                        this.gs.poster = this.cs.image;
+                        this.showStream();
+                    })
+                    .catch((e) => {
+                        this._log(e);
+                    });
+            }
         } else {
             this.showStream();
         }
     },
 
     stopStream() {
+        if (this.gs.stream === "webrtc") {
+            this._log(`Stopping WebRTC stream for ${this.cc.id}`);
+        }
         this.resetView();
-        this._melement('video-player' ).pause();
+        const video = this._melement('video-player');
+        if (video) {
+            video.pause();
+            if (video.srcObject) {
+                video.srcObject = null;
+            }
+        }
         this.cs.autoPlay = false;
         this.gs.stream = null;
+        this.destroyWebRTCStream();
         this.destroyMPEGStream();
         this.destroyHLSStream();
         this.wsStopStream()
             .then()
-            .catch( (e) => {
-                this._log( e );
+            .catch((e) => {
+                this._log(e);
             });
     },
 
@@ -1267,29 +1418,47 @@ const StreamViewMixin = {
     },
 
     playRecording(index) {
-        if ( this.gs.recording === null ) {
+        if (this.gs.recording === null) {
             index += this.ls.offset;
             if (this.ls.recordings && index < this.ls.recordings.length) {
-                this._melement( 'video-player' ).muted = this.gs.isMuted;
-                this.gs.viewer    = this.getViewType( this.lc );
+                this.destroyWebRTCStream();
+                this.destroyMPEGStream();
+                this.destroyHLSStream();
+                const video = this._melement('video-player');
+                if (video) {
+                    video.muted = this.gs.isMuted;
+                    video.srcObject = null;
+                }
+                this.gs.viewer = this.getViewType(this.lc);
                 this.gs.recording = this.ls.recordings[index].url;
-                this.gs.poster    = this.ls.recordings[index].thumbnail;
+                this.gs.poster = this.ls.recordings[index].thumbnail;
                 this.showRecording();
-            } 
+            }
         }
     },
 
     playLatestRecording() {
-        this._melement( 'video-player' ).muted = this.gs.isMuted;
-        this.gs.viewer    = this.getViewType( this.cc );
+        this.destroyWebRTCStream();
+        this.destroyMPEGStream();
+        this.destroyHLSStream();
+        const video = this._melement('video-player');
+        if (video) {
+            video.muted = this.gs.isMuted;
+            video.srcObject = null;
+        }
+        this.gs.viewer = this.getViewType(this.cc);
         this.gs.recording = this.cs.lastRecording;
-        this.gs.poster    = this.cs.image;
+        this.gs.poster = this.cs.image;
         this.showRecording();
     },
 
     stopRecording() {
-        if ( this.gs.recording ) {
-            this.pauseVideo(this._melement( 'video-player' ));
+        if (this.gs.recording) {
+            const video = this._melement('video-player');
+            if (video) {
+                this.pauseVideo(video);
+                video.removeAttribute('src');
+            }
             this.hideModal();
             this.resetView();
             this.gs.recording = null;
@@ -1515,6 +1684,7 @@ class AarloGlance extends HTMLElement {
             clearTimeout(this.cs.autoPlayTimer);
             this.cs.autoPlayTimer = null;
         }
+        this.destroyWebRTCStream();
         this.destroyHLSStream();
         if (this.gs && this.gs.dash) {
             try {
@@ -2277,6 +2447,8 @@ class AarloGlance extends HTMLElement {
         return {
             dash: null,
             hls: null,
+            pc: null,
+            webrtcUnsub: null,
             libraryCamera: -1,
             isMuted: this.gc.isMuted,
             poster: '',
@@ -2315,6 +2487,7 @@ class AarloGlance extends HTMLElement {
         // How do we display recordings or stream?
         cc.arloPlay          = _includes(config.image_view, "arlo-stream");
         cc.haPlay            = _includes(config.image_view, "ha-stream");
+        cc.webrtcPlay        = _includes(config.image_view, "webrtc") || _includes(config.image_view, "sip");
         cc.modalPlayer       = _includes(config.image_view, "modal");
         cc.smartPlayer       = _includes(config.image_view, "smart-modal");
         cc.numericView       = _includes(config.image_view, 'numeric');

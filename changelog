@@ -1,3 +1,10 @@
+0.4.0-alpha.4:
+  add native Home Assistant WebRTC live streaming support with automatic capability detection
+  support webrtc / sip in image_view options
+  coordinate clean stream teardown when playing library recordings
+  cleanly destroy WebRTC peer connections and release media on element disconnect
+  document WebRTC features and add release notes for v0.4.0-alpha.4
+
 0.4.0-alpha.3:
   generalize visual editor labels for locks and lights (remove location-specific wording)
   split widget configuration into left and right chip selectors in visual editor

@@ -128,6 +128,7 @@ export class AarloGlance extends HTMLElement {
             clearTimeout(this.cs.autoPlayTimer);
             this.cs.autoPlayTimer = null;
         }
+        this.destroyWebRTCStream();
         this.destroyHLSStream();
         if (this.gs && this.gs.dash) {
             try {
@@ -890,6 +891,8 @@ export class AarloGlance extends HTMLElement {
         return {
             dash: null,
             hls: null,
+            pc: null,
+            webrtcUnsub: null,
             libraryCamera: -1,
             isMuted: this.gc.isMuted,
             poster: '',
@@ -928,6 +931,7 @@ export class AarloGlance extends HTMLElement {
         // How do we display recordings or stream?
         cc.arloPlay          = _includes(config.image_view, "arlo-stream")
         cc.haPlay            = _includes(config.image_view, "ha-stream")
+        cc.webrtcPlay        = _includes(config.image_view, "webrtc") || _includes(config.image_view, "sip")
         cc.modalPlayer       = _includes(config.image_view, "modal")
         cc.smartPlayer       = _includes(config.image_view, "smart-modal")
         cc.numericView       = _includes(config.image_view, 'numeric')

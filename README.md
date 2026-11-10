@@ -27,6 +27,7 @@ Integration](https://github.com/twrecked/hass-aarlo).
 It provides:
 * Native Visual Card Editor with live preview and interactive chip selectors.
 * Card picker UI discovery and Home Assistant Sections / Grid dashboard support.
+* Native peer-to-peer WebRTC live streaming for capable cameras, with instant startup and zero server transcoding overhead.
 * Live HLS streaming (proxied through Home Assistant by default) and direct cloud streaming.
 * Access to the camera recording library with multi-grid sizing and object trigger highlighting.
 * Motion and sound notifications.
@@ -192,14 +193,15 @@ These are the options that determine the overall behaviour of the card.
 
 | Name       | Type | Required | Supported Values                                                                   |
 |------------|------|----------|------------------------------------------------------------------------------------|
-| image_view | list | No       | start-stream, start-recording, arlo-stream, ha-stream, modal, smart-modal, numeric |
+| image_view | list | No       | start-stream, start-recording, webrtc, ha-stream, arlo-stream, modal, smart-modal, numeric |
 
 These are the options that determine the overall behaviour of the card when
 showing the image view.
   - `start-stream`; the card will start streaming when opened
   - `start-recording`; _not implemented yet_, the card will play recording when
     finished
-  - `ha-stream`; (default) stream proxied through Home Assistant using native HLS
+  - `webrtc` (or `sip`); stream using native Home Assistant WebRTC (peer-to-peer). **Auto-detected and used by default** for cameras supporting WebRTC (`ArloSipCam`), providing sub-second startup and zero server transcode latency.
+  - `ha-stream`; (default for non-WebRTC) stream proxied through Home Assistant using native HLS
   - `arlo-stream`; stream directly from Arlo Cloud using MPEG-DASH
   - `modal`; open the recording or stream in a modal window
   - `smart-modal`; open the recording or stream in a modal window on a desktop
@@ -511,4 +513,10 @@ library_sizes: '3,4,2'
 ##  Further Documentation
 See [hass-aarlo](https://github.com/twrecked/hass-aarlo/blob/master/README.md)
 for general Aarlo documentation.
+
+### Release Notes
+- [v0.4.0-alpha.4 Release Notes](docs/RELEASE_NOTES_v0.4.0-alpha.4.md) — Native WebRTC live camera streaming and library coordination.
+- [v0.4.0-alpha.3 Release Notes](docs/RELEASE_NOTES_v0.4.0-alpha.3.md) — Visual editor chip selectors and Rollup build pipeline.
+- [v0.4.0-alpha.2 Release Notes](docs/RELEASE_NOTES_v0.4.0-alpha.2.md) — Native visual card editor using `ha-form`.
+- [v0.4.0-alpha.1 Release Notes](docs/RELEASE_NOTES_v0.4.0-alpha.1.md) — Modern Lovelace lifecycle, Section/Grid views, and offline English localization.
 
