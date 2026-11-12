@@ -261,10 +261,32 @@ export const StreamViewMixin = {
         }
     },
 
-    isWebRTC(cc) {
+    async isWebRTC(cc) {
         if (!cc) return false;
         if (cc.webrtcPlay) return true;
         if (cc.arloPlay || cc.haPlay) return false;
+
+        if (this.cs && this.cs.frontendStreamTypes) {
+            return this.cs.frontendStreamTypes.includes("web_rtc");
+        }
+
+        if (this._hass && this._hass.callWS) {
+            try {
+                const caps = await this._hass.callWS({
+                    type: "camera/capabilities",
+                    entity_id: cc.id,
+                });
+                if (caps && Array.isArray(caps.frontend_stream_types)) {
+                    if (this.cs) {
+                        this.cs.frontendStreamTypes = caps.frontend_stream_types;
+                    }
+                    return caps.frontend_stream_types.includes("web_rtc");
+                }
+            } catch (e) {
+                this._log(`Failed to fetch camera capabilities: ${e}`);
+            }
+        }
+
         const state = this._hass && this._hass.states && this._hass.states[cc.id];
         const attrs = (state && state.attributes) || {};
         return Boolean(attrs.sip_streaming || attrs.frontend_stream_type === "web_rtc");
@@ -479,7 +501,7 @@ export const StreamViewMixin = {
         return ""
     },
 
-    playStream() {
+    async playStream() {
         this.cs.autoPlayTimer = null
         if (this.gs.stream === null) {
             if (this.cc.autoPlay) {
@@ -490,7 +512,8 @@ export const StreamViewMixin = {
                 video.muted = this.gs.isMuted
             }
 
-            if (this.isWebRTC(this.cc)) {
+            const useWebRTC = await this.isWebRTC(this.cc);
+            if (useWebRTC) {
                 this.startWebRTCStream()
             } else {
                 this.wsStartStream()
