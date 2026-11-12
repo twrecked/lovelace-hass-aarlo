@@ -200,6 +200,7 @@ export class AarloGlance extends HTMLElement {
     }
 
     set hass( hass ) {
+        this._resolveCameraEntities(hass);
         const hasChanged = this._hasMonitoredEntitiesChanged(hass);
         this._hass = hass;
         if ( this._ready === "stopped" ) {
@@ -957,14 +958,17 @@ export class AarloGlance extends HTMLElement {
         // snapshot updates
         cc.snapshotTimeouts = _array( config.snapshot_retry, [ 2, 5 ] )
 
-        // camera and sensors
+        cc.camera = camera
+        cc.rawConfig = config
+
+        // camera and sensors (auto-resolved dynamically against hass.states)
         cc.id              = _value(config.camera_id,  `camera.aarlo_${camera}`)
-        cc.motionId        = _value(config.motion_id,  `binary_sensor.aarlo_motion_${camera}`)
-        cc.soundId         = _value(config.sound_id,   `binary_sensor.aarlo_sound_${camera}`)
-        cc.batteryId       = _value(config.battery_id, `sensor.aarlo_battery_level_${camera}`)
-        cc.signalId        = _value(config.signal_id,  `sensor.aarlo_signal_strength_${camera}`)
-        cc.capturedTodayId = _value(config.capture_id, `sensor.aarlo_captured_today_${camera}`)
-        cc.lastCaptureId   = _value(config.last_id,    `sensor.aarlo_last_${camera}`)
+        cc.motionId        = _value(config.motion_id,  `binary_sensor.aarlo_${camera}_motion`)
+        cc.soundId         = _value(config.sound_id,   `binary_sensor.aarlo_${camera}_sound`)
+        cc.batteryId       = _value(config.battery_id, `sensor.aarlo_${camera}_battery_level`)
+        cc.signalId        = _value(config.signal_id,  `sensor.aarlo_${camera}_signal_strength`)
+        cc.capturedTodayId = _value(config.capture_id, `sensor.aarlo_${camera}_captured_today`)
+        cc.lastCaptureId   = _value(config.last_id,    `sensor.aarlo_${camera}_last`)
 
         // door definition
         cc.doorId         = _value(config.door)
@@ -983,6 +987,103 @@ export class AarloGlance extends HTMLElement {
         cc.light2Id = _value(config.light2)
 
         return cc
+    }
+
+    _resolveEntityId(hass, explicitId, domain, camera, suffix) {
+        if (explicitId) {
+            if (!hass || !hass.states) return explicitId;
+            if (explicitId in hass.states) return explicitId;
+            // Check if swapped variant exists (legacy <-> modern)
+            const modern = `${domain}.aarlo_${camera}_${suffix}`;
+            const legacy = `${domain}.aarlo_${suffix}_${camera}`;
+            if (explicitId === legacy && modern in hass.states) return modern;
+            if (explicitId === modern && legacy in hass.states) return legacy;
+            const modernNoPrefix = `${domain}.${camera}_${suffix}`;
+            const legacyNoPrefix = `${domain}.${suffix}_${camera}`;
+            if (explicitId === legacyNoPrefix && modernNoPrefix in hass.states) return modernNoPrefix;
+            if (explicitId === modernNoPrefix && legacyNoPrefix in hass.states) return legacyNoPrefix;
+            return explicitId;
+        }
+
+        const candidates = [
+            `${domain}.aarlo_${camera}_${suffix}`,
+            `${domain}.aarlo_${suffix}_${camera}`,
+            `${domain}.${camera}_${suffix}`,
+            `${domain}.${suffix}_${camera}`,
+        ];
+
+        if (hass && hass.states) {
+            for (const id of candidates) {
+                if (id in hass.states) {
+                    return id;
+                }
+            }
+        }
+        return candidates[0];
+    }
+
+    _resolveCameraEntities(hass) {
+        if (!hass || !hass.states || !this._cc) return;
+        for (const ci in this._cc) {
+            const cc = this._cc[ci];
+            if (!cc || !cc.camera) continue;
+            const config = cc.rawConfig || {};
+            const camera = cc.camera;
+
+            // Camera entity resolution
+            if (!config.camera_id) {
+                if (`camera.aarlo_${camera}` in hass.states) {
+                    cc.id = `camera.aarlo_${camera}`;
+                } else if (`camera.${camera}` in hass.states) {
+                    cc.id = `camera.${camera}`;
+                }
+            }
+
+            cc.motionId = this._resolveEntityId(hass, config.motion_id, 'binary_sensor', camera, 'motion');
+            cc.soundId = this._resolveEntityId(hass, config.sound_id, 'binary_sensor', camera, 'sound');
+            cc.batteryId = this._resolveEntityId(hass, config.battery_id, 'sensor', camera, 'battery_level');
+            cc.signalId = this._resolveEntityId(hass, config.signal_id, 'sensor', camera, 'signal_strength');
+            cc.capturedTodayId = this._resolveEntityId(hass, config.capture_id, 'sensor', camera, 'captured_today');
+            cc.lastCaptureId = this._resolveEntityId(hass, config.last_id, 'sensor', camera, 'last');
+
+            // Doorbell ding resolution
+            if (config.door_bell) {
+                cc.doorBellId = this._resolveEntityId(hass, config.door_bell, 'binary_sensor', camera, 'ding');
+            } else if (!cc.doorBellId) {
+                const dingCandidates = [
+                    `binary_sensor.aarlo_${camera}_ding`,
+                    `binary_sensor.aarlo_ding_${camera}`,
+                    `binary_sensor.${camera}_ding`,
+                    `binary_sensor.ding_${camera}`,
+                ];
+                for (const did of dingCandidates) {
+                    if (did in hass.states) {
+                        cc.doorBellId = did;
+                        break;
+                    }
+                }
+            }
+
+            // Spotlight / light resolution
+            if (!config.light && !cc.lightId) {
+                const lightCandidates = [
+                    `light.aarlo_${camera}_spotlight`,
+                    `light.aarlo_spotlight_${camera}`,
+                    `light.aarlo_${camera}`,
+                    `light.${camera}_spotlight`,
+                ];
+                for (const lid of lightCandidates) {
+                    if (lid in hass.states) {
+                        cc.lightId = lid;
+                        break;
+                    }
+                }
+            }
+        }
+        if (this.gc && this.cc && this.cc.id) {
+            this.gc.idSuffix = _replaceAll(this.cc.id, '.', '-');
+            this.gc.idSuffix = _replaceAll(this.gc.idSuffix, '_', '-');
+        }
     }
 
     getCameraState( config ) {
@@ -1077,6 +1178,10 @@ export class AarloGlance extends HTMLElement {
             this._cameraIndex = 0
         }
  
+        if ( this._hass ) {
+            this._resolveCameraEntities( this._hass )
+        }
+
         this.checkConfig()
 
         // web item id suffix

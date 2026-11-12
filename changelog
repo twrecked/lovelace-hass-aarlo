@@ -6,6 +6,8 @@
   support Escape key to exit pseudo-fullscreen mode
   update localization strings for fullscreen toggle
   fix door2 status strings to use door_open and door_closed language lookups
+  add dynamic entity resolution supporting modern and legacy aarlo entity naming
+  auto-detect camera spotlight and doorbell ding entities when omitted from card config
 
 0.4.0-alpha.4:
   add native Home Assistant WebRTC live streaming support with automatic capability detection

@@ -22,3 +22,8 @@
 
 ### 4. Secondary Door Sensor Status Fix
 * Fixed status tooltip lookup for secondary door contact sensors (`door2`) to correctly use `door_open` and `door_closed` localization keys instead of nonexistent `door2_*` keys.
+
+### 5. Dual-Naming Compatibility & Auto-Discovery
+* **Automatic Modern & Legacy Entity Resolution**: Seamlessly works with both modern (`<device>_<function>`, e.g. `sensor.aarlo_front_battery_level`) and legacy (`<function>_<device>`, e.g. `sensor.aarlo_battery_level_front`) entity IDs without requiring card configuration changes.
+* **Auto-Discovery**: Automatically binds camera spotlights (`light.aarlo_<camera>_spotlight`) and doorbell chimes (`binary_sensor.aarlo_<camera>_ding`) when omitted from card configuration.
+* **Migration Resilience**: If legacy entity IDs are explicitly specified in existing card YAML, the card automatically falls back to modern counterparts if the legacy IDs no longer exist in Home Assistant.
