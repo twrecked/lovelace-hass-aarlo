@@ -53,6 +53,8 @@ const DEFAULT_MESSAGES = {
         doorbell_muted:     "muted (click to unmute)",
         light_on:           "on",
         light_off:          "off",
+        siren_on:           "on",
+        siren_off:          "off",
         next_camera:        "next camera",
         previous_camera:    "previous camera",
         library:            "library",
@@ -549,6 +551,12 @@ const ImageViewMixin = {
             } else {
                 this.toggleLight(this.cc.lightId);
             }
+        } else if (id.startsWith("camera-siren")) {
+            if (modified) {
+                this.moreInfo(this.cc.sirenId);
+            } else {
+                this.toggleSiren(this.cc.sirenId);
+            }
     
         } else if (id.startsWith("camera-previous")) {
             this.previousCameraImage();
@@ -709,6 +717,15 @@ const ImageViewMixin = {
             this._hass.callService( 'light','turn_off', { entity_id:id } );
         } else {
             this._hass.callService( 'light','turn_on', { entity_id:id } );
+        }
+    },
+
+    toggleSiren( id ) {
+        if ( !id ) return;
+        if ( this._getState(id,'on').state === 'on' ) {
+            this._hass.callService( 'siren','turn_off', { entity_id:id } );
+        } else {
+            this._hass.callService( 'siren','turn_on', { entity_id:id } );
         }
     },
 
@@ -1085,7 +1102,7 @@ const StreamViewMixin = {
     buildVideoControl(element, prefix) {
         element.innerHTML = '';
         element.appendChild(this.buildVideoIconDiv(["video-door-lock", "video-door2-lock",
-                        "video-light-on", "video-light2-on", "video-toggle-sound", "video-play-pause", "video-stop"],
+                        "video-light-on", "video-light2-on", "video-siren-on", "video-toggle-sound", "video-play-pause", "video-stop"],
                         prefix));
         element.appendChild(this.buildVideoSeekDiv(prefix));
         element.appendChild(this.buildVideoIconDiv(["video-full-screen"], prefix));
@@ -1108,6 +1125,8 @@ const StreamViewMixin = {
             this.toggleLight(this.cc.lightId);
         } else if (id.includes("video-light2-on")) {
             this.toggleLight(this.cc.light2Id);
+        } else if (id.includes("video-siren-on")) {
+            this.toggleSiren(this.cc.sirenId);
         } else if (id.includes("video-full-screen")) {
             this.controlFullScreen();
         }
@@ -1194,6 +1213,7 @@ const StreamViewMixin = {
         this._mhide("video-door2-lock");
         this._mhide("video-light-on");
         this._mhide("video-light2-on");
+        this._mhide("video-siren-on");
     },
 
     _isFullScreen() {
@@ -1469,6 +1489,7 @@ const StreamViewMixin = {
         this._mshow("video-door2-lock", this.cc.door2LockId !== null);
         this._mshow("video-light-on", this.cc.lightId !== null);
         this._mshow("video-light2-on", this.cc.light2Id !== null);
+        this._mshow("video-siren-on", this.cc.sirenId !== null);
         this.showVideoControls(4);
     
         this._mset('video-player', {poster: this.gs.poster});
@@ -1492,6 +1513,7 @@ const StreamViewMixin = {
         this._mset("video-door2-lock", this.cs.details.lock2);
         this._mset("video-light-on", this.cs.details.light);
         this._mset("video-light2-on", this.cs.details.light2);
+        this._mset("video-siren-on", this.cs.details.siren);
     
         if( this._melement( 'video-player' ).muted ) {
             this._mset("video-toggle-sound", {icon:"mdi:volume-off"});
@@ -2053,7 +2075,7 @@ class AarloGlance extends HTMLElement {
                 cc.signalId, cc.capturedTodayId, cc.lastCaptureId,
                 cc.doorId, cc.doorBellId, cc.doorBellMuteId, cc.doorLockId,
                 cc.door2Id, cc.door2BellId, cc.door2BellMuteId, cc.door2LockId,
-                cc.lightId, cc.light2Id
+                cc.lightId, cc.light2Id, cc.sirenId
             ];
             for (const entityId of watched) {
                 if (entityId && this._oldHassStates[entityId] !== newHass.states[entityId]) {
@@ -2075,7 +2097,7 @@ class AarloGlance extends HTMLElement {
                 cc.signalId, cc.capturedTodayId, cc.lastCaptureId,
                 cc.doorId, cc.doorBellId, cc.doorBellMuteId, cc.doorLockId,
                 cc.door2Id, cc.door2BellId, cc.door2BellMuteId, cc.door2LockId,
-                cc.lightId, cc.light2Id
+                cc.lightId, cc.light2Id, cc.sirenId
             ];
             for (const entityId of watched) {
                 if (entityId && hass.states[entityId]) {
@@ -2681,6 +2703,17 @@ class AarloGlance extends HTMLElement {
                 'mdi:lightbulb'
             );
         }
+
+        if(this.cc.sirenId) {
+            const sirenState = this._getState(this.cc.sirenId, 'off');
+            const is_on = sirenState.state === 'on';
+            const name = sirenState.attributes && sirenState.attributes.friendly_name ? sirenState.attributes.friendly_name : 'Siren';
+            this.cs.details.siren = _tsi(
+                `${name}: ` + (is_on ? this._i.status.siren_on : this._i.status.siren_off),
+                is_on ? 'warn' : '',
+                'mdi:bullhorn'
+            );
+        }
     }
 
     updateStatuses() {
@@ -2730,6 +2763,9 @@ class AarloGlance extends HTMLElement {
         }
         if ( this.cc.light2Id && !(this.cc.light2Id in this._hass.states) ) {
             this.throwError( 'unknown light (#2)' );
+        }
+        if ( this.cc.sirenId && !(this.cc.sirenId in this._hass.states) ) {
+            this.throwError( 'unknown siren' );
         }
     }
 
@@ -2872,6 +2908,9 @@ class AarloGlance extends HTMLElement {
         cc.lightId  = _value(config.light);
         cc.light2Id = _value(config.light2);
 
+        // siren definition
+        cc.sirenId  = _value(config.siren);
+
         return cc
     }
 
@@ -2961,6 +3000,23 @@ class AarloGlance extends HTMLElement {
                 for (const lid of lightCandidates) {
                     if (lid in hass.states) {
                         cc.lightId = lid;
+                        break;
+                    }
+                }
+            }
+
+            // Siren resolution
+            if (!config.siren && !cc.sirenId) {
+                const sirenCandidates = [
+                    `siren.aarlo_${camera}_siren`,
+                    `siren.aarlo_siren_${camera}`,
+                    `siren.aarlo_${camera}`,
+                    `siren.${camera}_siren`,
+                    `siren.aarlo_all_sirens`,
+                ];
+                for (const sid of sirenCandidates) {
+                    if (sid in hass.states) {
+                        cc.sirenId = sid;
                         break;
                     }
                 }
@@ -3399,6 +3455,7 @@ const BOTTOM_WIDGET_OPTIONS = [
     { value: "onoff", label: "Camera On/Off" },
     { value: "lock", label: "Door Lock" },
     { value: "light", label: "Light" },
+    { value: "siren", label: "Siren" },
     { value: "bell", label: "Doorbell" },
     { value: "door", label: "Door Contact" },
     { value: "lock2", label: "Door Lock #2" },
@@ -3461,6 +3518,7 @@ const EDITOR_SCHEMA = [
     },
     { name: "door_lock", selector: { entity: { domain: "lock" } } },
     { name: "light", selector: { entity: { domain: "light" } } },
+    { name: "siren", selector: { entity: { domain: "siren" } } },
     { name: "door_bell", selector: { entity: { domain: "binary_sensor" } } },
     { name: "door_bell_mute", selector: { entity: { domain: "switch" } } },
     { name: "door", selector: { entity: { domain: "binary_sensor" } } },
@@ -3503,6 +3561,7 @@ class AarloGlanceEditor extends HTMLElement {
             bottom_right: "Bottom Bar Widgets (Right)",
             door_lock: "Door Lock",
             light: "Light",
+            siren: "Siren",
             door_bell: "Doorbell Sensor",
             door_bell_mute: "Doorbell Mute Switch",
             door: "Door Contact Sensor",

@@ -90,6 +90,12 @@ export const ImageViewMixin = {
             } else {
                 this.toggleLight(this.cc.lightId)
             }
+        } else if (id.startsWith("camera-siren")) {
+            if (modified) {
+                this.moreInfo(this.cc.sirenId)
+            } else {
+                this.toggleSiren(this.cc.sirenId)
+            }
     
         } else if (id.startsWith("camera-previous")) {
             this.previousCameraImage()
@@ -250,6 +256,15 @@ export const ImageViewMixin = {
             this._hass.callService( 'light','turn_off', { entity_id:id } )
         } else {
             this._hass.callService( 'light','turn_on', { entity_id:id } )
+        }
+    },
+
+    toggleSiren( id ) {
+        if ( !id ) return;
+        if ( this._getState(id,'on').state === 'on' ) {
+            this._hass.callService( 'siren','turn_off', { entity_id:id } )
+        } else {
+            this._hass.callService( 'siren','turn_on', { entity_id:id } )
         }
     },
 

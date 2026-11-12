@@ -167,7 +167,7 @@ export class AarloGlance extends HTMLElement {
                 cc.signalId, cc.capturedTodayId, cc.lastCaptureId,
                 cc.doorId, cc.doorBellId, cc.doorBellMuteId, cc.doorLockId,
                 cc.door2Id, cc.door2BellId, cc.door2BellMuteId, cc.door2LockId,
-                cc.lightId, cc.light2Id
+                cc.lightId, cc.light2Id, cc.sirenId
             ];
             for (const entityId of watched) {
                 if (entityId && this._oldHassStates[entityId] !== newHass.states[entityId]) {
@@ -189,7 +189,7 @@ export class AarloGlance extends HTMLElement {
                 cc.signalId, cc.capturedTodayId, cc.lastCaptureId,
                 cc.doorId, cc.doorBellId, cc.doorBellMuteId, cc.doorLockId,
                 cc.door2Id, cc.door2BellId, cc.door2BellMuteId, cc.door2LockId,
-                cc.lightId, cc.light2Id
+                cc.lightId, cc.light2Id, cc.sirenId
             ];
             for (const entityId of watched) {
                 if (entityId && hass.states[entityId]) {
@@ -795,6 +795,17 @@ export class AarloGlance extends HTMLElement {
                 'mdi:lightbulb'
             )
         }
+
+        if(this.cc.sirenId) {
+            const sirenState = this._getState(this.cc.sirenId, 'off');
+            const is_on = sirenState.state === 'on';
+            const name = sirenState.attributes && sirenState.attributes.friendly_name ? sirenState.attributes.friendly_name : 'Siren';
+            this.cs.details.siren = _tsi(
+                `${name}: ` + (is_on ? this._i.status.siren_on : this._i.status.siren_off),
+                is_on ? 'warn' : '',
+                'mdi:bullhorn'
+            );
+        }
     }
 
     updateStatuses() {
@@ -844,6 +855,9 @@ export class AarloGlance extends HTMLElement {
         }
         if ( this.cc.light2Id && !(this.cc.light2Id in this._hass.states) ) {
             this.throwError( 'unknown light (#2)' )
+        }
+        if ( this.cc.sirenId && !(this.cc.sirenId in this._hass.states) ) {
+            this.throwError( 'unknown siren' )
         }
     }
 
@@ -986,6 +1000,9 @@ export class AarloGlance extends HTMLElement {
         cc.lightId  = _value(config.light)
         cc.light2Id = _value(config.light2)
 
+        // siren definition
+        cc.sirenId  = _value(config.siren)
+
         return cc
     }
 
@@ -1075,6 +1092,23 @@ export class AarloGlance extends HTMLElement {
                 for (const lid of lightCandidates) {
                     if (lid in hass.states) {
                         cc.lightId = lid;
+                        break;
+                    }
+                }
+            }
+
+            // Siren resolution
+            if (!config.siren && !cc.sirenId) {
+                const sirenCandidates = [
+                    `siren.aarlo_${camera}_siren`,
+                    `siren.aarlo_siren_${camera}`,
+                    `siren.aarlo_${camera}`,
+                    `siren.${camera}_siren`,
+                    `siren.aarlo_all_sirens`,
+                ];
+                for (const sid of sirenCandidates) {
+                    if (sid in hass.states) {
+                        cc.sirenId = sid;
                         break;
                     }
                 }
