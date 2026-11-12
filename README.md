@@ -30,6 +30,7 @@ It provides:
 * Native peer-to-peer WebRTC live streaming for capable cameras, with instant startup and zero server transcoding overhead.
 * Live HLS streaming (proxied through Home Assistant by default) and direct cloud streaming.
 * Access to the camera recording library with multi-grid sizing and object trigger highlighting.
+* Fullscreen and pseudo-fullscreen streaming modes with interactive overlay controls for lights and locks.
 * Motion and sound notifications.
 * Support for doorbell and door opening notifications.
 * Interactive controls for door locks and lights (including controls during streaming).
@@ -515,6 +516,7 @@ See [hass-aarlo](https://github.com/twrecked/hass-aarlo/blob/master/README.md)
 for general Aarlo documentation.
 
 ### Release Notes
+- [v0.4.0-alpha.5 Release Notes](docs/RELEASE_NOTES_v0.4.0-alpha.5.md) — Container-level fullscreen and iOS pseudo-fullscreen stream modes with active controls.
 - [v0.4.0-alpha.4 Release Notes](docs/RELEASE_NOTES_v0.4.0-alpha.4.md) — Native WebRTC live camera streaming and library coordination.
 - [v0.4.0-alpha.3 Release Notes](docs/RELEASE_NOTES_v0.4.0-alpha.3.md) — Visual editor chip selectors and Rollup build pipeline.
 - [v0.4.0-alpha.2 Release Notes](docs/RELEASE_NOTES_v0.4.0-alpha.2.md) — Native visual card editor using `ha-form`.

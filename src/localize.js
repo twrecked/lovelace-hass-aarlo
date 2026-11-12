@@ -28,7 +28,8 @@ const DEFAULT_MESSAGES = {
         stop:       "stop",
         play:       "play",
         pause:      "pause",
-        fullscreen: "go full screen",
+        fullscreen:      "go full screen",
+        exit_fullscreen: "exit full screen",
     },
     status: {
         battery_strength:   "battery strength",

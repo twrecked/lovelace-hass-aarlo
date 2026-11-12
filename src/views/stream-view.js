@@ -63,26 +63,70 @@ export const StreamViewMixin = {
     },
 
     setupVideoHandlers() {
-        [this._element( "video-player" ), this._element( "modal-video-player" )]
-            .forEach((player) => {
-                player.addEventListener( 'ended', (_evt) => {
-                    this.videoEnded()
-                });
-                player.addEventListener( 'click', (_evt) => {
-                    this.videoClicked()
-                });
-                player.addEventListener( 'mouseover', (_evt) => {
-                    this.videoMouseEvent()
-                });
-                player.addEventListener( 'mousemove', (_evt) => {
-                    this.videoMouseEvent()
-                });
-                player.addEventListener( 'loadedmetadata', (evt) => {
-                    this.setUpSeekBar();
-                    this.startVideo( evt.target )
+        if (!this._keydownHandler) {
+            this._keydownHandler = (e) => {
+                if (e.key === 'Escape' && this.gs && this.gs.isPseudoFullScreen) {
+                    this.exitPseudoFullScreen();
+                }
+            };
+            window.addEventListener('keydown', this._keydownHandler);
+        }
+        if (!this._fullscreenChangeHandler) {
+            this._fullscreenChangeHandler = () => {
+                this._updateFullScreenButton();
+                if (!this._isFullScreen()) {
+                    this.exitPseudoFullScreen();
+                } else {
                     this.showVideoControls(4);
-                });
+                }
+            };
+            document.addEventListener('fullscreenchange', this._fullscreenChangeHandler);
+            document.addEventListener('webkitfullscreenchange', this._fullscreenChangeHandler);
+        }
+        const players = [this._element( "video-player" ), this._element( "modal-video-player" )];
+        players.forEach((player) => {
+            if (!player) return;
+            player.addEventListener( 'ended', (_evt) => {
+                this.videoEnded();
             });
+            player.addEventListener( 'loadedmetadata', (evt) => {
+                this.setUpSeekBar();
+                this.startVideo( evt.target );
+                this.showVideoControls(this._defaultControlsTimeout());
+            });
+        });
+
+        const interactionTargets = [
+            this._element("video-player"),
+            this._element("modal-video-player"),
+            this._element("aarlo-wrapper"),
+            this._element("modal-video-wrapper"),
+        ];
+        interactionTargets.forEach((target) => {
+            if (!target) return;
+            target.addEventListener('click', (evt) => {
+                this.handleVideoInteraction(evt);
+            });
+            target.addEventListener('touchend', (evt) => {
+                this.handleVideoInteraction(evt);
+            }, { passive: true });
+            target.addEventListener('mousemove', (evt) => {
+                this.videoMouseEvent(evt);
+            });
+        });
+
+        const controlBars = [
+            this._element("video-controls"),
+            this._element("modal-video-controls"),
+        ];
+        controlBars.forEach((bar) => {
+            if (!bar) return;
+            ['pointerdown', 'touchstart', 'mousemove'].forEach((evType) => {
+                bar.addEventListener(evType, () => {
+                    this.showVideoControls(this._defaultControlsTimeout());
+                }, { passive: true });
+            });
+        });
     },
 
     setupRecordingPlayer() {
@@ -95,9 +139,24 @@ export const StreamViewMixin = {
         this._mhide("video-light2-on")
     },
 
+    _isFullScreen() {
+        const isNativeFs = !!(document.fullscreenElement || document.webkitFullscreenElement);
+        const isPseudoFs = !!(this.gs && this.gs.isPseudoFullScreen);
+        return isNativeFs || isPseudoFs;
+    },
+
+    _updateFullScreenButton() {
+        const isFs = this._isFullScreen();
+        const fsTitle = isFs
+            ? (this._i.video.exit_fullscreen || "exit full screen")
+            : this._i.video.fullscreen;
+        const fsIcon = isFs ? "mdi:fullscreen-exit" : "mdi:fullscreen";
+        this._mset("video-full-screen", { title: fsTitle, icon: fsIcon });
+    },
+
     updateRecordingView() {
         this._mset("video-stop",{title: this._i.video.stop, icon: "mdi:stop"});
-        this._mset("video-full-screen",{title: this._i.video.fullscreen, icon: "mdi:fullscreen"});
+        this._updateFullScreenButton();
     
         let video = this._melement( 'video-player' )
         if( video.paused ) {
@@ -340,7 +399,7 @@ export const StreamViewMixin = {
 
     updateStreamView() {
         this._mset("video-stop",{title: this._i.video.stop, icon: "mdi:stop"});
-        this._mset("video-full-screen",{title: this._i.video.fullscreen, icon: "mdi:fullscreen"});
+        this._updateFullScreenButton();
     
         // Autostart?
         if ( this.gs.stream === null ) {
@@ -451,6 +510,7 @@ export const StreamViewMixin = {
     },
 
     stopStream() {
+        this.exitAllFullScreen();
         if (this.gs.stream === "webrtc") {
             this._log(`Stopping WebRTC stream for ${this.cc.id}`);
         }
@@ -519,6 +579,7 @@ export const StreamViewMixin = {
     },
 
     stopRecording() {
+        this.exitAllFullScreen();
         if (this.gs.recording) {
             const video = this._melement('video-player')
             if (video) {
@@ -532,23 +593,54 @@ export const StreamViewMixin = {
     },
 
     videoEnded() {
+        this.exitAllFullScreen();
         this.stopRecording()
         this.stopStream()
     },
 
-    videoClicked() {
+    _defaultControlsTimeout() {
+        return (this.gc.isMobile || this.gc.isApple || this._isFullScreen()) ? 4 : 2;
+    },
+
+    handleVideoInteraction(evt) {
+        if (this.gs.stream === null && this.gs.recording === null) {
+            return;
+        }
+
+        const controls = this._melement('video-controls');
+        if (controls && controls.contains(evt.target)) {
+            return;
+        }
+
+        const now = Date.now();
+        if (this._lastInteractionTime && (now - this._lastInteractionTime < 350)) {
+            return;
+        }
+        this._lastInteractionTime = now;
+
+        this.videoClicked(evt);
+    },
+
+    videoClicked(evt) {
         if ( this._misHidden("video-controls") ) {
-            this.showVideoControls(2)
+            this.showVideoControls(this._defaultControlsTimeout());
         } else {
             this.hideVideoControls();
         }
     },
 
-    videoMouseEvent() {
-        this.showVideoControls(2)
+    videoMouseEvent(evt) {
+        if (this.gs.stream === null && this.gs.recording === null) {
+            return;
+        }
+        if (evt && evt.pointerType === 'touch') {
+            return;
+        }
+        this.showVideoControls(this._defaultControlsTimeout());
     },
 
     controlStop() {
+        this.exitAllFullScreen();
         this.stopRecording()
         this.stopStream()
     },
@@ -570,16 +662,109 @@ export const StreamViewMixin = {
     },
 
     controlFullScreen() {
-        const video = this._melement('video-player')
-        if (!video) return;
-        if (video.requestFullscreen) {
-            video.requestFullscreen().catch(err => this._log(`Fullscreen error: ${err}`));
-        } else if (video.webkitEnterFullscreen) {
-            video.webkitEnterFullscreen();
-        } else if (video.webkitRequestFullscreen) {
-            video.webkitRequestFullscreen();
-        } else if (video.mozRequestFullScreen) {
-            video.mozRequestFullScreen();
+        // If currently in native fullscreen, exit it
+        if (document.fullscreenElement || document.webkitFullscreenElement) {
+            if (document.exitFullscreen) {
+                document.exitFullscreen().catch(() => {});
+            } else if (document.webkitExitFullscreen) {
+                document.webkitExitFullscreen();
+            }
+            return;
+        }
+
+        // If currently in pseudo-fullscreen, exit it
+        if (this.gs && this.gs.isPseudoFullScreen) {
+            this.exitPseudoFullScreen();
+            return;
+        }
+
+        // On iOS: use pseudo-fullscreen (iOS WebKit blocks Fullscreen API on iPhone)
+        if (this.gc.isApple) {
+            this.togglePseudoFullScreen();
+            return;
+        }
+
+        // On desktop: request native fullscreen on the card container
+        const targetElement = this.gs.viewer === 'modal'
+            ? this._element('modal-viewer')
+            : this.querySelector('ha-card');
+
+        if (targetElement && targetElement.requestFullscreen) {
+            targetElement.requestFullscreen().catch((err) => {
+                this._log(`Native requestFullscreen failed, falling back to pseudo-fullscreen: ${err}`);
+                this.togglePseudoFullScreen();
+            });
+        } else if (targetElement && targetElement.webkitRequestFullscreen) {
+            try {
+                targetElement.webkitRequestFullscreen();
+            } catch (err) {
+                this.togglePseudoFullScreen();
+            }
+        } else {
+            this.togglePseudoFullScreen();
+        }
+    },
+
+    togglePseudoFullScreen() {
+        if (!this.gs) {
+            this.gs = {};
+        }
+        this.gs.isPseudoFullScreen = !this.gs.isPseudoFullScreen;
+        const isFs = this.gs.isPseudoFullScreen;
+
+        const haCard = this.querySelector('ha-card');
+        const modalViewer = this._element('modal-viewer');
+
+        if (this.gs.viewer === 'modal') {
+            if (modalViewer) {
+                modalViewer.classList.toggle('aarlo-pseudo-fullscreen', isFs);
+            }
+        } else {
+            if (haCard) {
+                haCard.classList.toggle('aarlo-pseudo-fullscreen', isFs);
+            }
+        }
+
+        try {
+            document.body.style.overflow = isFs ? 'hidden' : '';
+        } catch (e) {}
+
+        this._updateFullScreenButton();
+        if (isFs) {
+            this.showVideoControls(4);
+        }
+    },
+
+    exitPseudoFullScreen() {
+        if (!this.gs || !this.gs.isPseudoFullScreen) return;
+        this.gs.isPseudoFullScreen = false;
+
+        const haCard = this.querySelector('ha-card');
+        if (haCard) {
+            haCard.classList.remove('aarlo-pseudo-fullscreen');
+        }
+        const modalViewer = this._element('modal-viewer');
+        if (modalViewer) {
+            modalViewer.classList.remove('aarlo-pseudo-fullscreen');
+        }
+
+        try {
+            document.body.style.overflow = '';
+        } catch (e) {}
+
+        this._updateFullScreenButton();
+    },
+
+    exitAllFullScreen() {
+        this.exitPseudoFullScreen();
+        if (document.fullscreenElement || document.webkitFullscreenElement) {
+            try {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen().catch(() => {});
+                } else if (document.webkitExitFullscreen) {
+                    document.webkitExitFullscreen();
+                }
+            } catch (e) {}
         }
     },
 
@@ -621,12 +806,13 @@ export const StreamViewMixin = {
         this._melement("video-player").style.cursor = "none"
     },
 
-    hideVideoControlsLater(seconds = 2) {
+    hideVideoControlsLater(seconds = 0) {
         this.hideVideoControlsCancel();
+        const timeout = seconds || this._defaultControlsTimeout();
         this.cs.controlTimeout = setTimeout(() => {
             this.cs.controlTimeout = null;
-            this.hideVideoControls()
-        }, seconds * 1000);
+            this.hideVideoControls();
+        }, timeout * 1000);
     },
 
     hideVideoControlsCancel() {
