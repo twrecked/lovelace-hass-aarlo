@@ -461,6 +461,57 @@ function _tsi(title, state, icon ) {
     }
 }
 
+const BATTERY_ICONS = {
+    0: "mdi:battery-alert",
+    10: "mdi:battery-10",
+    20: "mdi:battery-20",
+    30: "mdi:battery-30",
+    40: "mdi:battery-40",
+    50: "mdi:battery-50",
+    60: "mdi:battery-60",
+    70: "mdi:battery-70",
+    80: "mdi:battery-80",
+    90: "mdi:battery-90",
+    100: "mdi:battery",
+};
+
+const BATTERY_CHARGING_ICONS = {
+    0: "mdi:battery-charging-outline",
+    10: "mdi:battery-charging-10",
+    20: "mdi:battery-charging-20",
+    30: "mdi:battery-charging-30",
+    40: "mdi:battery-charging-40",
+    50: "mdi:battery-charging-50",
+    60: "mdi:battery-charging-60",
+    70: "mdi:battery-charging-70",
+    80: "mdi:battery-charging-80",
+    90: "mdi:battery-charging-90",
+    100: "mdi:battery-charging",
+};
+
+function batteryLevelIcon(batteryLevel, isBatteryCharging = false) {
+    const batteryValue = Number(batteryLevel);
+    if (isNaN(batteryValue)) {
+        if (batteryLevel === "off") {
+            return "mdi:battery";
+        }
+        if (batteryLevel === "on") {
+            return "mdi:battery-alert";
+        }
+        return "mdi:battery-unknown";
+    }
+
+    if (batteryValue < 0) {
+        return "mdi:battery-unknown";
+    }
+
+    const threshold = batteryValue >= 100 ? 100 : Math.max(0, Math.floor(batteryValue / 10) * 10);
+    if (isBatteryCharging) {
+        return BATTERY_CHARGING_ICONS[threshold];
+    }
+    return BATTERY_ICONS[threshold];
+}
+
 const ImageViewMixin = {
     buildImageRow(element, sections) {
         let text_items = ["name", "date", "status"];
@@ -2553,12 +2604,18 @@ class AarloGlance extends HTMLElement {
             this.cs.details.battery = _tsi( this._i.status.plugged_in, 'state-update', 'mdi:power-plug');
         } else {
             const battery = this._getState(this.cc.batteryId, 0);
-            const prefix = camera.attributes.charging ? 'battery-charging' : 'battery';
+            const isCharging = Boolean(camera.attributes && (camera.attributes.charging || camera.attributes.battery_charging));
+            const batteryValue = Number(battery.state);
+            const icon = batteryLevelIcon(battery.state, isCharging);
+            const stateClass = isNaN(batteryValue)
+                ? ''
+                : (batteryValue < 15 ? 'state-error' : (batteryValue < 25 ? 'state-warn' : 'state-update'));
+            const friendlyName = (battery.attributes && battery.attributes.friendly_name) || this._i.status.battery_strength;
+            const stateText = isNaN(batteryValue) ? `${friendlyName}: ${battery.state}` : `${friendlyName}: ${battery.state}%`;
             this.cs.details.battery = _tsi(
-                `${this._i.status.battery_strength}: ${battery.state}%`,
-                battery.state < 25 ? 'state-warn' : ( battery.state < 15 ? 'state-error' : 'state-update' ),
-                `mdi:${prefix}` + (battery.state < 10 ? '-outline' :
-                            (battery.state > 90 ? '' : '-' + Math.round(battery.state/10) + '0' ))
+                stateText,
+                stateClass,
+                icon
             );
         }
 

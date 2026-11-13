@@ -1,6 +1,7 @@
 Unreleased:
   detect WebRTC support via Home Assistant camera/capabilities websocket command with state attribute fallback
   add siren control widget and video stream overlay button with auto-detection
+  align battery level icon and status display with Home Assistant standard implementation
 
 0.4.0-alpha.5:
   add pseudo-fullscreen view mode for stream playback with overlay controls

@@ -14,6 +14,7 @@ import {
     _replaceAll,
     _mergeArrays,
     _tsi,
+    batteryLevelIcon,
 } from "./helpers.js";
 
 export class AarloGlance extends HTMLElement {
@@ -645,13 +646,19 @@ export class AarloGlance extends HTMLElement {
             this.cs.details.battery = _tsi( this._i.status.plugged_in, 'state-update', 'mdi:power-plug')
         } else {
             const battery = this._getState(this.cc.batteryId, 0);
-            const prefix = camera.attributes.charging ? 'battery-charging' : 'battery';
+            const isCharging = Boolean(camera.attributes && (camera.attributes.charging || camera.attributes.battery_charging));
+            const batteryValue = Number(battery.state);
+            const icon = batteryLevelIcon(battery.state, isCharging);
+            const stateClass = isNaN(batteryValue)
+                ? ''
+                : (batteryValue < 15 ? 'state-error' : (batteryValue < 25 ? 'state-warn' : 'state-update'));
+            const friendlyName = (battery.attributes && battery.attributes.friendly_name) || this._i.status.battery_strength;
+            const stateText = isNaN(batteryValue) ? `${friendlyName}: ${battery.state}` : `${friendlyName}: ${battery.state}%`;
             this.cs.details.battery = _tsi(
-                `${this._i.status.battery_strength}: ${battery.state}%`,
-                battery.state < 25 ? 'state-warn' : ( battery.state < 15 ? 'state-error' : 'state-update' ),
-                `mdi:${prefix}` + (battery.state < 10 ? '-outline' :
-                            (battery.state > 90 ? '' : '-' + Math.round(battery.state/10) + '0' ))
-            )
+                stateText,
+                stateClass,
+                icon
+            );
         }
 
         const signal = this._getState(this.cc.signalId, 0);
