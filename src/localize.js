@@ -52,6 +52,8 @@ const DEFAULT_MESSAGES = {
         doorbell_muted:     "muted (click to unmute)",
         light_on:           "on",
         light_off:          "off",
+        siren_on:           "on",
+        siren_off:          "off",
         next_camera:        "next camera",
         previous_camera:    "previous camera",
         library:            "library",

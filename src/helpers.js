@@ -60,3 +60,54 @@ export function _tsi(title, state, icon ) {
         icon:  icon
     }
 }
+
+const BATTERY_ICONS = {
+    0: "mdi:battery-alert",
+    10: "mdi:battery-10",
+    20: "mdi:battery-20",
+    30: "mdi:battery-30",
+    40: "mdi:battery-40",
+    50: "mdi:battery-50",
+    60: "mdi:battery-60",
+    70: "mdi:battery-70",
+    80: "mdi:battery-80",
+    90: "mdi:battery-90",
+    100: "mdi:battery",
+};
+
+const BATTERY_CHARGING_ICONS = {
+    0: "mdi:battery-charging-outline",
+    10: "mdi:battery-charging-10",
+    20: "mdi:battery-charging-20",
+    30: "mdi:battery-charging-30",
+    40: "mdi:battery-charging-40",
+    50: "mdi:battery-charging-50",
+    60: "mdi:battery-charging-60",
+    70: "mdi:battery-charging-70",
+    80: "mdi:battery-charging-80",
+    90: "mdi:battery-charging-90",
+    100: "mdi:battery-charging",
+};
+
+export function batteryLevelIcon(batteryLevel, isBatteryCharging = false) {
+    const batteryValue = Number(batteryLevel);
+    if (isNaN(batteryValue)) {
+        if (batteryLevel === "off") {
+            return "mdi:battery";
+        }
+        if (batteryLevel === "on") {
+            return "mdi:battery-alert";
+        }
+        return "mdi:battery-unknown";
+    }
+
+    if (batteryValue < 0) {
+        return "mdi:battery-unknown";
+    }
+
+    const threshold = batteryValue >= 100 ? 100 : Math.max(0, Math.floor(batteryValue / 10) * 10);
+    if (isBatteryCharging) {
+        return BATTERY_CHARGING_ICONS[threshold];
+    }
+    return BATTERY_ICONS[threshold];
+}

@@ -14,6 +14,7 @@ import {
     _replaceAll,
     _mergeArrays,
     _tsi,
+    batteryLevelIcon,
 } from "./helpers.js";
 
 export class AarloGlance extends HTMLElement {
@@ -167,7 +168,7 @@ export class AarloGlance extends HTMLElement {
                 cc.signalId, cc.capturedTodayId, cc.lastCaptureId,
                 cc.doorId, cc.doorBellId, cc.doorBellMuteId, cc.doorLockId,
                 cc.door2Id, cc.door2BellId, cc.door2BellMuteId, cc.door2LockId,
-                cc.lightId, cc.light2Id
+                cc.lightId, cc.light2Id, cc.sirenId
             ];
             for (const entityId of watched) {
                 if (entityId && this._oldHassStates[entityId] !== newHass.states[entityId]) {
@@ -189,7 +190,7 @@ export class AarloGlance extends HTMLElement {
                 cc.signalId, cc.capturedTodayId, cc.lastCaptureId,
                 cc.doorId, cc.doorBellId, cc.doorBellMuteId, cc.doorLockId,
                 cc.door2Id, cc.door2BellId, cc.door2BellMuteId, cc.door2LockId,
-                cc.lightId, cc.light2Id
+                cc.lightId, cc.light2Id, cc.sirenId
             ];
             for (const entityId of watched) {
                 if (entityId && hass.states[entityId]) {
@@ -645,13 +646,19 @@ export class AarloGlance extends HTMLElement {
             this.cs.details.battery = _tsi( this._i.status.plugged_in, 'state-update', 'mdi:power-plug')
         } else {
             const battery = this._getState(this.cc.batteryId, 0);
-            const prefix = camera.attributes.charging ? 'battery-charging' : 'battery';
+            const isCharging = Boolean(camera.attributes && (camera.attributes.charging || camera.attributes.battery_charging));
+            const batteryValue = Number(battery.state);
+            const icon = batteryLevelIcon(battery.state, isCharging);
+            const stateClass = isNaN(batteryValue)
+                ? ''
+                : (batteryValue < 15 ? 'state-error' : (batteryValue < 25 ? 'state-warn' : 'state-update'));
+            const friendlyName = (battery.attributes && battery.attributes.friendly_name) || this._i.status.battery_strength;
+            const stateText = isNaN(batteryValue) ? `${friendlyName}: ${battery.state}` : `${friendlyName}: ${battery.state}%`;
             this.cs.details.battery = _tsi(
-                `${this._i.status.battery_strength}: ${battery.state}%`,
-                battery.state < 25 ? 'state-warn' : ( battery.state < 15 ? 'state-error' : 'state-update' ),
-                `mdi:${prefix}` + (battery.state < 10 ? '-outline' :
-                            (battery.state > 90 ? '' : '-' + Math.round(battery.state/10) + '0' ))
-            )
+                stateText,
+                stateClass,
+                icon
+            );
         }
 
         const signal = this._getState(this.cc.signalId, 0);
@@ -795,6 +802,17 @@ export class AarloGlance extends HTMLElement {
                 'mdi:lightbulb'
             )
         }
+
+        if(this.cc.sirenId) {
+            const sirenState = this._getState(this.cc.sirenId, 'off');
+            const is_on = sirenState.state === 'on';
+            const name = sirenState.attributes && sirenState.attributes.friendly_name ? sirenState.attributes.friendly_name : 'Siren';
+            this.cs.details.siren = _tsi(
+                `${name}: ` + (is_on ? this._i.status.siren_on : this._i.status.siren_off),
+                is_on ? 'warn' : '',
+                'mdi:bullhorn'
+            );
+        }
     }
 
     updateStatuses() {
@@ -844,6 +862,9 @@ export class AarloGlance extends HTMLElement {
         }
         if ( this.cc.light2Id && !(this.cc.light2Id in this._hass.states) ) {
             this.throwError( 'unknown light (#2)' )
+        }
+        if ( this.cc.sirenId && !(this.cc.sirenId in this._hass.states) ) {
+            this.throwError( 'unknown siren' )
         }
     }
 
@@ -986,6 +1007,9 @@ export class AarloGlance extends HTMLElement {
         cc.lightId  = _value(config.light)
         cc.light2Id = _value(config.light2)
 
+        // siren definition
+        cc.sirenId  = _value(config.siren)
+
         return cc
     }
 
@@ -1075,6 +1099,23 @@ export class AarloGlance extends HTMLElement {
                 for (const lid of lightCandidates) {
                     if (lid in hass.states) {
                         cc.lightId = lid;
+                        break;
+                    }
+                }
+            }
+
+            // Siren resolution
+            if (!config.siren && !cc.sirenId) {
+                const sirenCandidates = [
+                    `siren.aarlo_${camera}_siren`,
+                    `siren.aarlo_siren_${camera}`,
+                    `siren.aarlo_${camera}`,
+                    `siren.${camera}_siren`,
+                    `siren.aarlo_all_sirens`,
+                ];
+                for (const sid of sirenCandidates) {
+                    if (sid in hass.states) {
+                        cc.sirenId = sid;
                         break;
                     }
                 }

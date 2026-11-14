@@ -251,6 +251,7 @@ always `SHIFT+CLICK` to see a device history.
   - `bell2`; door bell status, if you supply a mute switch then click to
     mute/unmute
   - `light`; light status, click to turn off and on
+  - `siren`; siren status, click to turn on and off
 
 ##### Notes
 To get the `aarlo` Device sensors to work correctly you need to enable the
@@ -347,6 +348,7 @@ It is per camera.
 | door2_bell      | entity_id | A door bell.                     |
 | door2_bell_mute | entity_id | A switch to mute `door2_bell`.   |
 | light           | entity_id | A light switch.                  |
+| siren           | entity_id | A siren entity.                  |
 
 These options are useful if the camera is pointing at a door.
 
@@ -354,7 +356,7 @@ As well as reporting camera status the card can report on and operate other
 devices. The card can tell you if doors are open, show and operate door locks,
 show and operate lights and show and operate door bells.
 
-The door lock and light controls will appear on the live stream.
+The door lock, light, and siren controls will appear on the live stream.
 
 #### Arlo Device Options
 

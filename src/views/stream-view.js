@@ -28,7 +28,7 @@ export const StreamViewMixin = {
     buildVideoControl(element, prefix) {
         element.innerHTML = ''
         element.appendChild(this.buildVideoIconDiv(["video-door-lock", "video-door2-lock",
-                        "video-light-on", "video-light2-on", "video-toggle-sound", "video-play-pause", "video-stop"],
+                        "video-light-on", "video-light2-on", "video-siren-on", "video-toggle-sound", "video-play-pause", "video-stop"],
                         prefix));
         element.appendChild(this.buildVideoSeekDiv(prefix));
         element.appendChild(this.buildVideoIconDiv(["video-full-screen"], prefix));
@@ -51,6 +51,8 @@ export const StreamViewMixin = {
             this.toggleLight(this.cc.lightId);
         } else if (id.includes("video-light2-on")) {
             this.toggleLight(this.cc.light2Id);
+        } else if (id.includes("video-siren-on")) {
+            this.toggleSiren(this.cc.sirenId);
         } else if (id.includes("video-full-screen")) {
             this.controlFullScreen();
         }
@@ -137,6 +139,7 @@ export const StreamViewMixin = {
         this._mhide("video-door2-lock")
         this._mhide("video-light-on")
         this._mhide("video-light2-on")
+        this._mhide("video-siren-on")
     },
 
     _isFullScreen() {
@@ -261,10 +264,32 @@ export const StreamViewMixin = {
         }
     },
 
-    isWebRTC(cc) {
+    async isWebRTC(cc) {
         if (!cc) return false;
         if (cc.webrtcPlay) return true;
         if (cc.arloPlay || cc.haPlay) return false;
+
+        if (this.cs && this.cs.frontendStreamTypes) {
+            return this.cs.frontendStreamTypes.includes("web_rtc");
+        }
+
+        if (this._hass && this._hass.callWS) {
+            try {
+                const caps = await this._hass.callWS({
+                    type: "camera/capabilities",
+                    entity_id: cc.id,
+                });
+                if (caps && Array.isArray(caps.frontend_stream_types)) {
+                    if (this.cs) {
+                        this.cs.frontendStreamTypes = caps.frontend_stream_types;
+                    }
+                    return caps.frontend_stream_types.includes("web_rtc");
+                }
+            } catch (e) {
+                this._log(`Failed to fetch camera capabilities: ${e}`);
+            }
+        }
+
         const state = this._hass && this._hass.states && this._hass.states[cc.id];
         const attrs = (state && state.attributes) || {};
         return Boolean(attrs.sip_streaming || attrs.frontend_stream_type === "web_rtc");
@@ -392,6 +417,7 @@ export const StreamViewMixin = {
         this._mshow("video-door2-lock", this.cc.door2LockId !== null);
         this._mshow("video-light-on", this.cc.lightId !== null);
         this._mshow("video-light2-on", this.cc.light2Id !== null);
+        this._mshow("video-siren-on", this.cc.sirenId !== null);
         this.showVideoControls(4);
     
         this._mset('video-player', {poster: this.gs.poster})
@@ -415,6 +441,7 @@ export const StreamViewMixin = {
         this._mset("video-door2-lock", this.cs.details.lock2);
         this._mset("video-light-on", this.cs.details.light);
         this._mset("video-light2-on", this.cs.details.light2);
+        this._mset("video-siren-on", this.cs.details.siren);
     
         if( this._melement( 'video-player' ).muted ) {
             this._mset("video-toggle-sound", {icon:"mdi:volume-off"})
@@ -479,7 +506,7 @@ export const StreamViewMixin = {
         return ""
     },
 
-    playStream() {
+    async playStream() {
         this.cs.autoPlayTimer = null
         if (this.gs.stream === null) {
             if (this.cc.autoPlay) {
@@ -490,7 +517,8 @@ export const StreamViewMixin = {
                 video.muted = this.gs.isMuted
             }
 
-            if (this.isWebRTC(this.cc)) {
+            const useWebRTC = await this.isWebRTC(this.cc);
+            if (useWebRTC) {
                 this.startWebRTCStream()
             } else {
                 this.wsStartStream()
