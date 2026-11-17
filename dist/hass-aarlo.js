@@ -1128,10 +1128,21 @@ const LibraryViewMixin = {
 const StreamViewMixin = {
     buildVideoIconDiv(items, prefix) {
         let div = document.createElement("div");
+        const optionalControls = [
+            "video-door-lock",
+            "video-door2-lock",
+            "video-light-on",
+            "video-light2-on",
+            "video-siren-on"
+        ];
         items.forEach((item) => {
-            div.appendChild(this.buildIcon(item, prefix, (evt) => {
+            const icon = this.buildIcon(item, prefix, (evt) => {
                 this.videoIconClicked(evt);
-            }));
+            });
+            if (optionalControls.includes(item)) {
+                icon.style.display = "none";
+            }
+            div.appendChild(icon);
         });
         return div;
     },
@@ -1260,11 +1271,17 @@ const StreamViewMixin = {
         this._mset( 'video-player',{src: this.gs.recording, poster: this.gs.poster} );
         this._mshow("video-seek");
         this._mshow("video-play-pause");
-        this._mhide("video-door-lock");
-        this._mhide("video-door2-lock");
-        this._mhide("video-light-on");
-        this._mhide("video-light2-on");
-        this._mhide("video-siren-on");
+        const optionalControls = [
+            "video-door-lock",
+            "video-door2-lock",
+            "video-light-on",
+            "video-light2-on",
+            "video-siren-on"
+        ];
+        optionalControls.forEach((id) => {
+            this.__hide(this._element(id));
+            this.__hide(this._element(`modal-${id}`));
+        });
     },
 
     _isFullScreen() {
@@ -1534,13 +1551,27 @@ const StreamViewMixin = {
             this.setHLSStreamElementData();
         }
     
+        const config = (this.cc && this.cc.rawConfig) || {};
+        const hasDoorLock  = Boolean(config.door_lock && this.cc.doorLockId);
+        const hasDoor2Lock = Boolean(config.door2_lock && this.cc.door2LockId);
+        const hasLight     = Boolean(config.light && this.cc.lightId);
+        const hasLight2    = Boolean(config.light2 && this.cc.light2Id);
+        const hasSiren     = Boolean(config.siren && this.cc.sirenId);
+
         this._mhide("video-play-pause");
         this._mhide("video-seek");
-        this._mshow("video-door-lock", this.cc.doorLockId !== null);
-        this._mshow("video-door2-lock", this.cc.door2LockId !== null);
-        this._mshow("video-light-on", this.cc.lightId !== null);
-        this._mshow("video-light2-on", this.cc.light2Id !== null);
-        this._mshow("video-siren-on", this.cc.sirenId !== null);
+
+        const setOverlayControl = (id, show) => {
+            this.__show(this._element(id), show);
+            this.__show(this._element(`modal-${id}`), show);
+        };
+
+        setOverlayControl("video-door-lock", hasDoorLock);
+        setOverlayControl("video-door2-lock", hasDoor2Lock);
+        setOverlayControl("video-light-on", hasLight);
+        setOverlayControl("video-light2-on", hasLight2);
+        setOverlayControl("video-siren-on", hasSiren);
+
         this.showVideoControls(4);
     
         this._mset('video-player', {poster: this.gs.poster});
@@ -3069,7 +3100,6 @@ class AarloGlance extends HTMLElement {
                     `siren.aarlo_siren_${camera}`,
                     `siren.aarlo_${camera}`,
                     `siren.${camera}_siren`,
-                    `siren.aarlo_all_sirens`,
                 ];
                 for (const sid of sirenCandidates) {
                     if (sid in hass.states) {

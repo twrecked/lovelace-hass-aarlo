@@ -1,3 +1,7 @@
+Unreleased:
+  only display siren, light, and door lock controls on stream overlay when explicitly configured
+  remove all_sirens fallback from camera-level siren auto-discovery
+
 0.4.0-beta.1:
   detect WebRTC support via Home Assistant camera/capabilities websocket command with state attribute fallback
   add siren control widget and video stream overlay button with auto-detection
