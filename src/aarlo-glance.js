@@ -1111,7 +1111,6 @@ export class AarloGlance extends HTMLElement {
                     `siren.aarlo_siren_${camera}`,
                     `siren.aarlo_${camera}`,
                     `siren.${camera}_siren`,
-                    `siren.aarlo_all_sirens`,
                 ];
                 for (const sid of sirenCandidates) {
                     if (sid in hass.states) {
