@@ -1,4 +1,4 @@
-Unreleased:
+0.4.0-beta.2:
   only display siren, light, and door lock controls on stream overlay when explicitly configured
   remove all_sirens fallback from camera-level siren auto-discovery
 
